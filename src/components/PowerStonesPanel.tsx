@@ -1,73 +1,125 @@
 import React, { useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { teams } from "@/services/mockData";
-import { Shield, Swords, ShieldCheck, ShieldOff } from "lucide-react";
+import { Shield, Swords, ShieldCheck, ShieldOff, ZapOff, Activity } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const PowerStonesPanel = () => {
   const { stones, activateShield, deactivateShield, blockTeam, powersDisabled } = useGame();
   const [showBlockSelect, setShowBlockSelect] = useState(false);
 
   return (
-    <div className="glass-card p-4 space-y-4">
-      <h3 className="font-display font-bold text-sm uppercase tracking-widest text-secondary neon-text-purple">
-        Power Stones
-      </h3>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header Section */}
+      <div className="flex items-center gap-2 border-b border-primary/20 pb-4">
+        <Activity className="text-primary animate-pulse" size={16} />
+        <h3 className="font-bold text-[10px] uppercase tracking-[0.4em] text-primary/80">
+          Infinity Forge
+        </h3>
+      </div>
 
       {powersDisabled && (
-        <p className="text-xs font-body text-destructive animate-neon-pulse">⚠ Powers disabled (last 20 min)</p>
+        <div className="bg-primary/10 border border-primary p-3 animate-neon-pulse">
+          <p className="text-[10px] font-bold text-primary text-center tracking-widest uppercase">
+            ⚠️ FINAL LOCKDOWN: POWERS OFFLINE
+          </p>
+        </div>
       )}
 
-      {/* Shield Stone */}
-      <div className="glass-card p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="text-accent" size={18} />
-            <span className="font-body text-sm font-semibold text-foreground">Shield</span>
+      {/* SHIELD STONE - MARK 85 STYLE */}
+      <div className={cn(
+        "glass-card p-5 border-t-2 relative transition-all duration-500",
+        stones.shieldActive ? "border-primary shadow-[0_0_20px_rgba(255,0,0,0.2)]" : "border-white/10"
+      )}>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-1">Shield Matrix</h4>
+            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Auto-Defense Protocol</p>
           </div>
-          <span className="text-xs font-display text-muted-foreground">×{stones.shieldCount}</span>
+          <div className="px-2 py-1 bg-black border border-primary/30 text-[10px] text-primary font-mono">
+            ×{stones.shieldCount}
+          </div>
         </div>
-        <p className="text-xs font-body text-muted-foreground">Protects from Block attacks</p>
+
+        {/* Energy Bar Decor */}
+        <div className="h-1 w-full bg-white/5 mb-6 overflow-hidden">
+          <div className={cn(
+            "h-full bg-primary transition-all duration-1000",
+            stones.shieldActive ? "w-full animate-pulse" : "w-0"
+          )} />
+        </div>
+
         {stones.shieldActive ? (
-          <button onClick={deactivateShield} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-accent/20 text-accent text-xs font-display font-bold uppercase tracking-wider hover:bg-accent/30 transition-colors">
-            <ShieldCheck size={14} /> Shield Active — Deactivate
+          <button 
+            onClick={deactivateShield} 
+            className="w-full py-3 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(255,0,0,0.4)]"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <ShieldCheck size={14} /> Deactivate Matrix
+            </div>
           </button>
         ) : (
-          <button onClick={activateShield} disabled={stones.shieldCount <= 0 || powersDisabled} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-muted text-foreground text-xs font-display font-bold uppercase tracking-wider hover:bg-muted/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-            <ShieldOff size={14} /> Activate Shield
+          <button 
+            onClick={activateShield} 
+            disabled={stones.shieldCount <= 0 || powersDisabled}
+            className="w-full py-3 border border-primary/50 text-primary text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary/10 transition-colors disabled:opacity-20"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <ShieldOff size={14} /> Engage Shield
+            </div>
           </button>
         )}
       </div>
 
-      {/* Block Stone */}
-      <div className="glass-card p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Swords className="text-destructive" size={18} />
-            <span className="font-body text-sm font-semibold text-foreground">Block</span>
+      {/* BLOCK STONE - MARK 85 STYLE */}
+      <div className="glass-card p-5 border-t-2 border-white/10 relative">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-1">Power Surge</h4>
+            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Offensive Neural Block</p>
           </div>
-          <span className="text-xs font-display text-muted-foreground">×{stones.blockCount}</span>
+          <div className="px-2 py-1 bg-black border border-primary/30 text-[10px] text-primary font-mono">
+            ×{stones.blockCount}
+          </div>
         </div>
-        <p className="text-xs font-body text-muted-foreground">Block a team for 2 minutes</p>
 
         {!showBlockSelect ? (
-          <button onClick={() => setShowBlockSelect(true)} disabled={stones.blockCount <= 0 || powersDisabled} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-destructive/20 text-destructive text-xs font-display font-bold uppercase tracking-wider hover:bg-destructive/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-            <Swords size={14} /> Use Block Stone
+          <button 
+            onClick={() => setShowBlockSelect(true)} 
+            disabled={stones.blockCount <= 0 || powersDisabled}
+            className="w-full py-3 border border-primary text-primary text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all duration-300 disabled:opacity-20"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Swords size={14} /> Execute Block
+            </div>
           </button>
         ) : (
-          <div className="space-y-2 animate-fade-in">
-            <p className="text-xs text-muted-foreground font-body">Select target team:</p>
-            <div className="max-h-40 overflow-y-auto scrollbar-thin space-y-1">
-              {teams.slice(0, 10).map(t => (
-                <button key={t.id} onClick={() => { blockTeam(t.id); setShowBlockSelect(false); }} className="w-full text-left px-3 py-1.5 rounded text-xs font-body hover:bg-muted/50 text-foreground transition-colors">
+          <div className="space-y-3 animate-fade-in">
+            <div className="max-h-48 overflow-y-auto scrollbar-thin space-y-1 bg-black/40 p-2 border border-white/5">
+              {teams.slice(0, 15).map(t => (
+                <button 
+                  key={t.id} 
+                  onClick={() => { blockTeam(t.id); setShowBlockSelect(false); }}
+                  className="w-full text-left px-3 py-2 text-[10px] font-bold tracking-widest hover:bg-primary hover:text-white transition-colors uppercase border border-transparent hover:border-primary"
+                >
                   {t.name}
                 </button>
               ))}
             </div>
-            <button onClick={() => setShowBlockSelect(false)} className="text-xs text-muted-foreground font-body hover:text-foreground transition-colors">
-              Cancel
+            <button 
+              onClick={() => setShowBlockSelect(false)} 
+              className="w-full py-2 text-[8px] text-primary/60 uppercase font-bold hover:text-primary"
+            >
+              Abort Selection
             </button>
           </div>
         )}
+      </div>
+
+      {/* Footer System Specs */}
+      <div className="pt-6 border-t border-primary/10 text-[8px] text-primary/30 font-mono space-y-1">
+        <p>INTEGRITY: 100%</p>
+        <p>FORGE_STATUS: CONNECTED</p>
       </div>
     </div>
   );

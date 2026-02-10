@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+/* 
 @layer base {
   :root {
     --background: 230 25% 7%;
@@ -131,4 +131,29 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted)) transparent;
   }
+} */
+/* src/index.css additions */
+@layer base {
+  :root {
+    /* Cosmic Deep Space Background */
+    --background: 222 47% 7%; 
+    --foreground: 213 31% 91%;
+
+    /* Metallic Titanium Grey */
+    --card: 222 47% 11%;
+    --card-foreground: 213 31% 91%;
+    
+    /* Energy Accents */
+    --primary: 199 89% 48%;    /* Arc Blue */
+    --secondary: 271 91% 65%;  /* Power Stone Purple */
+    --accent: 0 100% 50%;      /* Stark Red (limited use) */
+    
+    --border: 217 33% 17%;
+  }
+}
+
+/* Add a Nebula effect to the background */
+body {
+  background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
+  background-attachment: fixed;
 }

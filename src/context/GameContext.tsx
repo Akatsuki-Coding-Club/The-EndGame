@@ -7,31 +7,7 @@ export interface StoneState {
   shieldCount: number;
   blockCount: number;
   shieldActive: boolean;
-  blockedUntil: number | null; // timestamp
-}
-
-export interface GameState {
-  currentLevel: number;
-  completedLevels: number[];
-  score: number;
-  stones: StoneState;
-  gameStarted: boolean;
-  isFrozen: boolean;
-  frozenUntil: number | null;
-  blipPuzzleSolved: boolean;
-  startGame: () => void;
-  submitAnswer: (levelId: number, answer: string) => boolean;
-  activateShield: () => void;
-  deactivateShield: () => void;
-  blockTeam: (targetTeamId: string) => void;
-  setFrozen: (frozen: boolean, until?: number) => void;
-  solveBlipPuzzle: () => void;
-  powersDisabled: boolean;
-  /* Admin: all teams state */
-  allTeamsState: TeamGameState[];
-  triggerBlip: (blipNumber: 1 | 2) => void;
-  freezeTeam: (teamId: string) => void;
-  unfreezeTeam: (teamId: string) => void;
+  blockedUntil: number | null;
 }
 
 export interface TeamGameState {
@@ -41,121 +17,188 @@ export interface TeamGameState {
   currentLevel: number;
   isFrozen: boolean;
   isBlocked: boolean;
+  isShielded?: boolean;
+}
+
+export interface GameState {
+  currentLevel: number;
+  completedLevels: number[];
+  score: number;
+  stones: StoneState;
+  gameStarted: boolean;
+  isFrozen: boolean;
+  isBlocked: boolean;
+  frozenUntil: number | null;
+  blipPuzzleSolved: boolean;
+  powersDisabled: boolean;
+  gameDuration: number;
+  setGameDuration: (seconds: number) => void;
+  notifications: { id: string; message: string; type: 'attack' | 'success' | 'system'; timestamp: string }[];
+  allTeamsState: TeamGameState[];
+  startGame: () => void;
+  submitAnswer: (levelId: number, answer: string) => boolean;
+  activateShield: () => void;
+  deactivateShield: () => void;
+  blockTeam: (targetTeamId: string) => void;
+  setIsFrozen: (frozen: boolean) => void;
+  setIsBlocked: (blocked: boolean) => void;
+  setFrozen: (frozen: boolean, until?: number) => void;
+  solveBlipPuzzle: () => void;
+  triggerBlip: (blipNumber: 1 | 2) => void;
+  freezeTeam: (teamId: string) => void;
+  unfreezeTeam: (teamId: string) => void;
 }
 
 const GameContext = createContext<GameState | null>(null);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const { team } = useAuth();
+  const [gameDuration, setGameDurationState] = useState(7200);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [completedLevels, setCompletedLevels] = useState<number[]>([]);
   const [score, setScore] = useState(0);
-  const [gameStarted, setGameStarted] = useState(false);
+  const [gameStarted, setGameStarted] = useState(true);
   const [isFrozen, setIsFrozen] = useState(false);
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
   const [blipPuzzleSolved, setBlipPuzzleSolved] = useState(false);
-  const [stones, setStones] = useState<StoneState>({
-    shieldCount: 0, blockCount: 0, shieldActive: false, blockedUntil: null,
-  });
+  const [isBlocked, setIsBlocked] = useState(false);
   const [powersDisabled, setPowersDisabled] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const setGameDuration = useCallback((minutes: number) => {
+    setGameDurationState(minutes * 60);
+  }, []);
+  const addNotification = useCallback((message: string, type: 'attack' | 'success' | 'system') => {
+    const newNotif = {
+      id: Math.random().toString(36).substr(2, 9),
+      message,
+      type,
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    setNotifications(prev => [newNotif, ...prev].slice(0, 20)); // Keep last 20
+  }, []);
+  const [stones, setStones] = useState<StoneState>({
+    shieldCount: 1,
+    blockCount: 0,
+    shieldActive: false,
+    blockedUntil: null,
+  });
 
-  // Mock all teams state for admin
   const [allTeamsState, setAllTeamsState] = useState<TeamGameState[]>(
     teams.map(t => ({
-      teamId: t.id, teamName: t.name, score: Math.floor(Math.random() * 2000),
-      currentLevel: Math.floor(Math.random() * 10) + 1, isFrozen: false, isBlocked: false,
+      teamId: t.id,
+      teamName: t.name,
+      score: Math.floor(Math.random() * 2000),
+      currentLevel: Math.floor(Math.random() * 10) + 1,
+      isFrozen: false,
+      isBlocked: false,
+      isShielded: false
     }))
   );
 
+  useEffect(() => {
+    if (isBlocked) {
+      if (stones.shieldActive) {
+        setIsBlocked(false);
+        setStones(prev => ({ ...prev, shieldActive: false }));
+        toast.success("SHIELD_DEFLECTED_ATTACK", {
+          description: "Incoming Power Surge negated by Shield Matrix.",
+          className: "h-12 border-l-4 border-blue-400 bg-slate-950 text-white font-display text-[10px]"
+        });
+      } else {
+        toast.error("CRITICAL_SYSTEM_BREACH", {
+          description: "Incoming Power Surge detected. System locked.",
+          className: "h-12 border-l-4 border-red-600 bg-slate-950 text-white font-display text-[10px]"
+        });
+      }
+    }
+  }, [isBlocked, stones.shieldActive]);
+
   const startGame = useCallback(() => {
     setGameStarted(true);
-    toast.success("Game started! You have 2 hours.", { className: "neon-border" });
+    toast.success("GAME_START", { description: "Mission parameters initialized." });
   }, []);
 
   const submitAnswer = useCallback((levelId: number, answer: string): boolean => {
-    if (stones.blockedUntil && Date.now() < stones.blockedUntil) {
-      toast.error("You are BLOCKED! Wait for the effect to expire.");
-      return false;
-    }
     const puzzle = puzzles.find(p => p.id === levelId);
     if (!puzzle) return false;
+
     if (answer.trim().toUpperCase() === puzzle.answer.toUpperCase()) {
       setCompletedLevels(prev => [...prev, levelId]);
       setScore(prev => prev + puzzle.points);
       if (levelId < 15) setCurrentLevel(levelId + 1);
-      // Award stones after level 4 and 8
-      if (levelId === 4) {
-        setStones(prev => ({ ...prev, shieldCount: prev.shieldCount + 1, blockCount: prev.blockCount + 1 }));
-        toast.success("🔮 Power Stone earned! You got a Shield and a Block stone!", { duration: 4000 });
+
+      if (levelId === 4 || levelId === 8) {
+        setStones(prev => ({
+          ...prev,
+          shieldCount: prev.shieldCount + 1,
+          blockCount: prev.blockCount + 1
+        }));
+        addNotification(`${team?.name} SOLVED MISSION ${levelId}`, 'success');
+        toast.success("TECH_UPGRADE", { description: "Infinity Stones synthesized." });
       }
-      if (levelId === 8) {
-        setStones(prev => ({ ...prev, shieldCount: prev.shieldCount + 1, blockCount: prev.blockCount + 1 }));
-        toast.success("🔮 Power Stone earned! Another Shield and Block stone!", { duration: 4000 });
-      }
-      toast.success(`Level ${levelId} complete! +${puzzle.points} points`);
+      toast.success(`MISSION_${levelId}_COMPLETE`, { description: `+${puzzle.points} units added.` });
       return true;
     }
-    toast.error("Incorrect answer. Try again!");
+    toast.error("DECRYPTION_FAILED");
     return false;
-  }, [stones.blockedUntil]);
+  }, []);
 
   const activateShield = useCallback(() => {
-    if (powersDisabled) { toast.error("Powers are disabled in the last 20 minutes!"); return; }
-    if (stones.shieldCount <= 0) { toast.error("No Shield stones available!"); return; }
+    if (powersDisabled) return;
+    if (stones.shieldCount <= 0) return;
     setStones(prev => ({ ...prev, shieldActive: true, shieldCount: prev.shieldCount - 1 }));
-    toast.success("🛡️ Shield activated!");
+    toast.success("SHIELD_ACTIVE", { description: "Defense matrix online." });
   }, [stones.shieldCount, powersDisabled]);
 
   const deactivateShield = useCallback(() => {
     setStones(prev => ({ ...prev, shieldActive: false }));
-    toast.info("Shield deactivated.");
+    toast.info("SHIELD_OFFLINE");
   }, []);
 
   const blockTeam = useCallback((targetTeamId: string) => {
-    if (powersDisabled) { toast.error("Powers are disabled in the last 20 minutes!"); return; }
-    if (stones.blockCount <= 0) { toast.error("No Block stones available!"); return; }
+    if (powersDisabled || stones.blockCount <= 0) return;
+    addNotification(`${team?.name} BLOCKED ${targetTeamId}`, 'attack');
     setStones(prev => ({ ...prev, blockCount: prev.blockCount - 1 }));
-    // Simulate blocking effect on target
-    setAllTeamsState(prev => prev.map(t =>
-      t.teamId === targetTeamId ? { ...t, isBlocked: true } : t
-    ));
-    // Auto-unblock after 2 minutes
-    setTimeout(() => {
-      setAllTeamsState(prev => prev.map(t =>
-        t.teamId === targetTeamId ? { ...t, isBlocked: false } : t
-      ));
-    }, 120_000);
-    toast.success(`⚡ Block stone used on ${targetTeamId}!`);
+    setAllTeamsState(prev => prev.map(t => {
+      if (t.teamId === targetTeamId) {
+        if (t.isShielded) {
+          toast.info("TARGET_SHIELDED", { description: `Attack on ${targetTeamId} failed.` });
+          return t;
+        }
+        return { ...t, isBlocked: true };
+      }
+      return t;
+    }));
+    toast.success("POWER_SURGE_SENT", { description: `Targeting unit ${targetTeamId}.` });
   }, [stones.blockCount, powersDisabled]);
 
   const setFrozenState = useCallback((frozen: boolean, until?: number) => {
     setIsFrozen(frozen);
     setFrozenUntil(until || null);
-    if (frozen) toast.error("❄️ You have been FROZEN by the Blip Protocol!");
-    else toast.success("🔥 You are unfrozen! Keep going!");
   }, []);
 
   const solveBlipPuzzle = useCallback(() => {
+    addNotification(`${team?.name} BYPASSED BLIP PROTOCOL`, 'success');
     setBlipPuzzleSolved(true);
     setIsFrozen(false);
     setFrozenUntil(null);
     setScore(prev => prev + 200);
-    toast.success("🎉 Blip puzzle solved! You're free + 200 bonus points!");
+    toast.success("BLIP_BYPASS_SUCCESS");
   }, []);
 
-  /* Admin controls */
   const triggerBlip = useCallback((blipNumber: 1 | 2) => {
-    const teamsCopy = [...allTeamsState];
-    const unfrozen = teamsCopy.filter(t => !t.isFrozen);
-    const toFreeze = unfrozen.sort(() => Math.random() - 0.5).slice(0, 15);
+    const toFreeze = [...allTeamsState]
+      .filter(t => !t.isFrozen)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 15);
+
     setAllTeamsState(prev => prev.map(t =>
       toFreeze.find(f => f.teamId === t.teamId) ? { ...t, isFrozen: true } : t
     ));
-    // If current team is in the freeze list
+
     if (team && toFreeze.find(f => f.teamId === team.id)) {
       setFrozenState(true, Date.now() + 5 * 60 * 1000);
     }
-    toast.info(`Blip ${blipNumber} triggered! 15 teams frozen.`);
   }, [allTeamsState, team, setFrozenState]);
 
   const freezeTeam = useCallback((teamId: string) => {
@@ -171,10 +214,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   return (
     <GameContext.Provider value={{
       currentLevel, completedLevels, score, stones, gameStarted,
-      isFrozen, frozenUntil, blipPuzzleSolved,
-      startGame, submitAnswer, activateShield, deactivateShield,
-      blockTeam, setFrozen: setFrozenState, solveBlipPuzzle, powersDisabled,
-      allTeamsState, triggerBlip, freezeTeam, unfreezeTeam,
+      isFrozen, frozenUntil, blipPuzzleSolved, isBlocked, powersDisabled,
+      allTeamsState, startGame, submitAnswer, activateShield, deactivateShield,
+      blockTeam, setIsFrozen, setIsBlocked, setFrozen: setFrozenState, notifications, solveBlipPuzzle,
+      triggerBlip, freezeTeam, unfreezeTeam, gameDuration,
+      setGameDuration,
     }}>
       {children}
     </GameContext.Provider>

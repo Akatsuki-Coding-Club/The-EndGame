@@ -9,8 +9,6 @@ interface TimerState {
   minutesElapsed: number;
 }
 
-const GAME_DURATION = 2 * 60 * 60; // 7200 seconds
-
 const TimerContext = createContext<TimerState | null>(null);
 
 function formatTime(seconds: number): string {
@@ -21,7 +19,7 @@ function formatTime(seconds: number): string {
 }
 
 export const TimerProvider = ({ children }: { children: ReactNode }) => {
-  const { gameStarted } = useGame();
+  const { gameStarted, gameDuration } = useGame();
   const [totalSeconds, setTotalSeconds] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -29,18 +27,18 @@ export const TimerProvider = ({ children }: { children: ReactNode }) => {
     if (gameStarted) {
       intervalRef.current = setInterval(() => {
         setTotalSeconds(prev => {
-          if (prev >= GAME_DURATION) {
+          // Use the dynamic gameDuration instead of hardcoded constant [cite: 401]
+          if (prev >= gameDuration) {
             if (intervalRef.current) clearInterval(intervalRef.current);
-            return GAME_DURATION;
+            return gameDuration;
           }
           return prev + 1;
         });
       }, 1000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [gameStarted]);
-
-  const remainingSeconds = Math.max(0, GAME_DURATION - totalSeconds);
+  }, [gameStarted, gameDuration]);
+  const remainingSeconds = Math.max(0, gameDuration - totalSeconds);
   const minutesElapsed = Math.floor(totalSeconds / 60);
 
   return (
