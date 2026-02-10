@@ -94,6 +94,19 @@ export default {
           "0%": { transform: "translateX(100%)" },
           "100%": { transform: "translateX(0)" },
         },
+        "snap-fade": {
+          "0%": { opacity: "0", transform: "scale(0.97)" },
+          "50%": { opacity: "1", transform: "scale(1.02)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "repulsor-pulse": {
+          "0%, 100%": { opacity: "0.9" },
+          "50%": { opacity: "1" },
+        },
+        "arc-spin": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -101,6 +114,9 @@ export default {
         "fade-in": "fade-in 0.4s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
+        "snap-fade": "snap-fade 0.5s ease-out forwards",
+        "repulsor-pulse": "repulsor-pulse 2s ease-in-out infinite",
+        "arc-spin": "arc-spin 12s linear infinite",
       },
     },
   },

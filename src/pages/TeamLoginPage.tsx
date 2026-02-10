@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { ShieldAlert, Zap, Lock } from "lucide-react";
+import { ShieldAlert, Lock, User } from "lucide-react";
 
 const TeamLoginPage = () => {
   const [teamId, setTeamId] = useState("");
@@ -12,81 +12,82 @@ const TeamLoginPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(teamId, password)) { // [cite: 209, 212]
-      navigate("/rules"); // [cite: 152]
+    if (login(teamId, password)) {
+      navigate("/rules", { replace: true });
     } else {
       setError("ACCESS DENIED: INVALID CREDENTIALS");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden font-display">
-      {/* Cinematic Background Pulse */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_70%)] from-red-900/20 to-transparent pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-[#1e293b] p-4 relative overflow-hidden font-sans">
       
-      <div className="glass-card-glow w-full max-w-md p-10 border-t-2 border-primary/50 relative overflow-hidden animate-scale-in">
-        <div className="scanner-line" />
-        
-        {/* Header Section */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/5 border border-primary/20 mb-6 shadow-[0_0_30px_rgba(255,0,0,0.1)]">
-            <Zap className="w-10 h-10 text-primary animate-pulse" />
-          </div>
-          <h1 className="text-4xl font-bold text-primary tracking-[0.2em] uppercase neon-text mb-2">
-            PROTOCOL: REDLINE
-          </h1>
-          <p className="text-muted-foreground font-body text-xs tracking-widest uppercase">
-            Final Phase — System Authorization Required
-          </p>
-        </div>
+      {/* Animated Border Container */}
+      <div className="relative w-full max-w-md p-[2px] overflow-hidden rounded-xl bg-white/10 group">
+        {/* The Rotating Animation Layer */}
+        <div className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2E8F0_0%,#EF4444_50%,#E2E8F0_100%)] opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="relative group">
-            <label className="text-[10px] text-primary/70 uppercase tracking-widest mb-2 block font-bold">
-              Team Identifier
-            </label>
-            <input
-              type="text"
-              value={teamId}
-              onChange={e => setTeamId(e.target.value)}
-              className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all outline-none"
-              placeholder="TEAM-00"
-              required
-            />
-          </div>
-
-          <div className="relative group">
-            <label className="text-[10px] text-primary/70 uppercase tracking-widest mb-2 block font-bold">
-              Authorization Key
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all outline-none"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-primary text-[10px] font-bold justify-center animate-bounce">
-              <ShieldAlert size={14} /> {error}
+        {/* The Card Body */}
+        <div className="relative z-10 w-full h-full bg-[#26242a] rounded-[10px] p-10">
+          
+          {/* Header Section */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-red-600 mb-6 bg-red-600/5 shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+              <Lock className="w-8 h-8 text-red-600" />
             </div>
-          )}
+            <h1 className="text-3xl font-black text-white tracking-[0.2em] uppercase mb-2 italic">
+              TEAM <span className="text-red-600">LOGIN</span>
+            </h1>
+          </div>
 
-          <button
-            type="submit"
-            className="w-full py-4 bg-primary/10 border border-primary text-primary font-bold text-xs uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all duration-500 shadow-[0_0_15px_rgba(255,0,0,0.2)]"
-          >
-            Initiate Sequence
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] text-red-500 uppercase tracking-widest block font-bold ml-1">
+                Team Identifier
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+                <input
+                  type="text"
+                  value={teamId}
+                  onChange={e => setTeamId(e.target.value)}
+                  className="w-full bg-black/40 border border-white/20 rounded-md py-3 pl-10 pr-4 text-white placeholder:text-white/20 outline-none focus:border-red-600 transition-all text-sm"
+                  placeholder="ENTER ID"
+                  required
+                />
+              </div>
+            </div>
 
-        <div className="mt-8 flex justify-between items-center opacity-30">
-          <div className="h-[1px] bg-primary/50 flex-1" />
-          <Lock className="mx-4 text-primary" size={14} />
-          <div className="h-[1px] bg-primary/50 flex-1" />
+            <div className="space-y-2">
+              <label className="text-[10px] text-red-500 uppercase tracking-widest block font-bold ml-1">
+                Access Key
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full bg-black/40 border border-white/20 rounded-md py-3 pl-10 pr-4 text-white placeholder:text-white/10 outline-none focus:border-red-600 transition-all text-sm"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 text-red-500 text-[10px] font-bold justify-center animate-pulse border border-red-500/20 py-2 rounded bg-red-500/5">
+                <ShieldAlert size={14} /> {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full py-4 bg-red-600 text-white font-black text-xs uppercase tracking-[0.3em] hover:bg-red-700 transition-all duration-300 rounded-md shadow-[0_0_20px_rgba(220,38,38,0.2)] active:scale-95"
+            >
+              Login
+            </button>
+          </form>
         </div>
       </div>
     </div>

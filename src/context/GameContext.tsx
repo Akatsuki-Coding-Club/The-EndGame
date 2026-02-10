@@ -67,6 +67,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const setGameDuration = useCallback((minutes: number) => {
     setGameDurationState(minutes * 60);
   }, []);
+  const resetBlipState = () => {
+    setBlipPuzzleSolved(false);
+  };
   const addNotification = useCallback((message: string, type: 'attack' | 'success' | 'system') => {
     const newNotif = {
       id: Math.random().toString(36).substr(2, 9),
@@ -78,7 +81,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   const [stones, setStones] = useState<StoneState>({
     shieldCount: 1,
-    blockCount: 0,
+    blockCount: 1,
     shieldActive: false,
     blockedUntil: null,
   });
@@ -179,12 +182,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const solveBlipPuzzle = useCallback(() => {
     addNotification(`${team?.name} BYPASSED BLIP PROTOCOL`, 'success');
-    setBlipPuzzleSolved(true);
     setIsFrozen(false);
     setFrozenUntil(null);
     setScore(prev => prev + 200);
     toast.success("BLIP_BYPASS_SUCCESS");
-  }, []);
+
+    // IMPORTANT: Reset the solved flag so the next attack can trigger the overlay 
+    setBlipPuzzleSolved(false);
+  }, [team, setIsFrozen, setFrozenUntil, setScore, setBlipPuzzleSolved]);
 
   const triggerBlip = useCallback((blipNumber: 1 | 2) => {
     const toFreeze = [...allTeamsState]
@@ -218,7 +223,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       allTeamsState, startGame, submitAnswer, activateShield, deactivateShield,
       blockTeam, setIsFrozen, setIsBlocked, setFrozen: setFrozenState, notifications, solveBlipPuzzle,
       triggerBlip, freezeTeam, unfreezeTeam, gameDuration,
-      setGameDuration,
+      setGameDuration, resetBlipState
     }}>
       {children}
     </GameContext.Provider>

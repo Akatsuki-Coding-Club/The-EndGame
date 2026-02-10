@@ -1,183 +1,248 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
 import { puzzles } from "@/services/mockData";
-import PowerStonesPanel from "@/components/PowerStonesPanel";
-import { CheckCircle2, Circle, Send, Terminal, ShieldAlert } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Send, Shield, Zap, Skull, Target, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BlipOverlay from "@/components/BlipOverlay";
-import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 const Dashboard = () => {
   const {
     currentLevel,
     completedLevels,
     submitAnswer,
-    isFrozen,
-    setFrozen,
     stones,
-    isBlocked,
-    setIsBlocked,
-    deactivateShield,
-    blipPuzzleSolved 
+    activateShield,
+    blockTeam,
+    triggerBlip,
+    isFrozen,
+    allTeamsState
   } = useGame();
 
-  const [selectedLevel, setSelectedLevel] = useState(currentLevel);
   const [answer, setAnswer] = useState("");
-  const [isInitialFreeze, setIsInitialFreeze] = useState(false);
-
-  const activePuzzle = puzzles.find((p) => p.id === selectedLevel) || puzzles[0];
-  const isSolved = completedLevels.includes(selectedLevel);
+  const [showPowerSurgeMenu, setShowPowerSurgeMenu] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState("");
 
   useEffect(() => {
-    if (isFrozen && !blipPuzzleSolved) {
-      setIsInitialFreeze(true);
-      const timer = setTimeout(() => {
-        setIsInitialFreeze(false);
-      }, 5000); // Matches the 5s delay in BlipOverlay
-      return () => clearTimeout(timer);
-    } else {
-      setIsInitialFreeze(false);
-    }
-  }, [isFrozen, blipPuzzleSolved]);
+    const lockStack = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", lockStack);
+    const blockMenu = (e: MouseEvent) => e.preventDefault();
+    window.addEventListener("contextmenu", blockMenu);
+
+    return () => {
+      window.removeEventListener("popstate", lockStack);
+      window.removeEventListener("contextmenu", blockMenu);
+    };
+  }, []);
 
   useEffect(() => {
-    if (isBlocked) {
-      if (stones.shieldActive) {
-        deactivateShield();
-        setIsBlocked(false);
-        toast.success("SHIELD MATRIX DEPLETED", {
-          description: "Incoming block attack negated.",
-          className: "h-12 border-l-4 border-blue-500 bg-slate-950 text-white font-display text-[10px]"
-        });
-      } else {
-        setIsBlocked(false); 
-        setFrozen(true, Date.now() + 120000); 
-
-        toast.error("SYSTEM COMPROMISED", {
-          description: "Incoming Power Surge detected. System locked.",
-          className: "h-12 border-l-4 border-red-600 bg-slate-950 text-white font-display text-[10px]"
-        });
-      }
+    if (completedLevels.length > 0) {
+      const end = Date.now() + 1 * 1000;
+      const frame = () => {
+        const colors = ['#ffffff', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'];
+        confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors });
+        confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
     }
-  }, [isBlocked, stones.shieldActive, deactivateShield, setIsBlocked, setFrozen]);
+  }, [completedLevels.length]);
 
-  const handleLevelSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (submitAnswer(selectedLevel, answer)) {
-      setAnswer("");
-    }
-  };
+  const activePuzzle = puzzles.find((p) => p.id === currentLevel) || puzzles[0];
+  const isSolved = completedLevels.includes(currentLevel);
+
+  const currentSetIndex = Math.floor((currentLevel - 1) / 5);
+  const beadsInSet = Array.from({ length: 5 }, (_, i) => {
+    const questionId = currentSetIndex * 5 + (i + 1);
+    return completedLevels.includes(questionId);
+  });
+
+  const StoneCard = ({
+    title,
+    desc,
+    icon,
+    onUse = () => { },
+    count = 0,
+    variant = "stone",
+    isPowerSurge = false
+  }: {
+    title: string;
+    desc: string;
+    icon: React.ReactNode;
+    onUse?: () => void;
+    count?: number;
+    variant?: string;
+    isPowerSurge?: boolean;
+  }) => (
+    <div className={`bg-[#5a5a5a]/90 backdrop-blur-sm border ${variant === "stone" ? "border-white/20" : "border-red-500/30"} p-4 rounded-lg mb-4 text-white shrink-0`}>
+      <div className="flex items-center gap-4 mb-2">
+        <div className={`w-10 h-10 ${variant === "stone" ? "bg-white/10" : "bg-red-500/10"} rounded flex items-center justify-center`}>
+          {icon}
+        </div>
+        <h3 className="font-bold text-sm uppercase tracking-tighter">{title}</h3>
+      </div>
+      <p className="text-[10px] mb-3 text-gray-300 leading-tight">{desc}</p>
+
+      {!showPowerSurgeMenu || !isPowerSurge ? (
+        <button
+          onClick={isPowerSurge ? () => setShowPowerSurgeMenu(true) : onUse}
+          disabled={(variant === "stone" && count <= 0) || isFrozen}
+          className={`w-full py-2 ${variant === "stone" ? "bg-white text-[#484848]" : "bg-red-600 text-white"} text-[10px] font-bold rounded hover:opacity-90 disabled:opacity-30 transition-all`}
+        >
+          {variant === "stone" ? `USE STONE (${count})` : "INITIATE ATTACK"}
+        </button>
+      ) : (
+        <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+          <div className="relative">
+            <select
+              value={selectedTeam}
+              onChange={(e) => setSelectedTeam(e.target.value)}
+              className="w-full bg-black/60 border border-white/20 rounded px-2 py-2 text-[10px] outline-none appearance-none"
+            >
+              <option value="">Select Team...</option>
+              {allTeamsState?.filter(t => t.teamId !== 'current').map((team) => (
+                <option key={team.teamId} value={team.teamId}>
+                  {team.teamName}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={12} className="absolute right-2 top-2.5 opacity-50 pointer-events-none" />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (selectedTeam) {
+                  blockTeam(selectedTeam);
+                  setShowPowerSurgeMenu(false);
+                  setSelectedTeam("");
+                }
+              }}
+              disabled={!selectedTeam}
+              className="flex-1 py-2 bg-red-600 text-white text-[10px] font-bold rounded hover:bg-red-700 disabled:opacity-30"
+            >
+              LOCK TEAM
+            </button>
+            <button
+              onClick={() => setShowPowerSurgeMenu(false)}
+              className="px-2 py-2 border border-white/10 rounded text-[10px] hover:bg-white/5"
+            >
+              CANCEL
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-background text-foreground flex overflow-hidden font-display relative">
-        {/* The high-priority puzzle overlay */}
+    <div
+      className="h-screen max-h-screen flex flex-col overflow-hidden bg-cover bg-center bg-no-repeat text-white font-sans relative"
+      style={{ backgroundImage: `url('https://t4.ftcdn.net/jpg/07/40/54/65/360_F_740546589_eVog5QiPu5WxsTV9IsDdLL5d2B3TQ4nD.webp')` }}
+    >
+      {/* Dark overlay to ensure readability against the bright comic background */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
+
+      <div className="relative z-10 flex flex-col h-full">
+        <Navbar />
         {isFrozen && <BlipOverlay />}
 
-        <aside className="w-64 border-r border-primary/20 bg-black/40 backdrop-blur-xl flex flex-col">
-          <div className="p-6 border-b border-primary/20">
-            <h2 className="text-[10px] tracking-[0.3em] text-primary font-bold uppercase">Mission Log</h2>
-          </div>
-          <nav className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin">
-            {puzzles.map((p) => {
-              const solved = completedLevels.includes(p.id);
-              const locked = p.id > currentLevel;
-              return (
-                <button
-                  key={p.id}
-                  disabled={locked}
-                  onClick={() => setSelectedLevel(p.id)}
-                  className={cn(
-                    "w-full flex items-center justify-between p-3 transition-all duration-300 border",
-                    selectedLevel === p.id ? "bg-primary/10 border-primary shadow-[0_0_10px_rgba(255,0,0,0.2)]" : "border-transparent hover:border-primary/30",
-                    locked ? "opacity-20 cursor-not-allowed" : "opacity-100"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    {solved ? <CheckCircle2 size={14} className="text-primary" /> : <Circle size={14} className="text-primary/40" />}
-                    <span className="text-xs font-bold tracking-widest uppercase">M-{p.id.toString().padStart(2, '0')}</span>
+        <div className="flex flex-1 overflow-hidden p-6 gap-6">
+          <aside className="w-72 flex flex-col overflow-hidden bg-black/40 backdrop-blur-md rounded-xl border border-white/10">
+            <div className="p-4 border-b border-white/10 bg-black/20">
+              <h2 className="text-[10px] font-bold uppercase tracking-widest opacity-80">System Controls</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              <StoneCard title="Shield Matrix" desc="Automatically blocks incoming system attacks." icon={<Shield size={18} />} onUse={activateShield} count={stones.shieldCount} />
+
+              <StoneCard
+                title="Power Surge"
+                desc="Temporarily disable a rival team's console."
+                icon={<Zap size={18} />}
+                isPowerSurge={true}
+                count={stones.blockCount}
+              />
+
+              <div className="mt-2 pt-4 border-t border-white/10">
+                <StoneCard variant="attack" title="Blip Protocol" desc="Freeze random units across the network." icon={<Skull size={18} className="text-red-400" />} onUse={() => triggerBlip(1)} />
+                <StoneCard variant="attack" title="Direct Strike" desc="Target a specific unit for lockdown." icon={<Target size={18} className="text-red-400" />} onUse={() => { }} />
+              </div>
+            </div>
+          </aside>
+
+          <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+            <div className="flex justify-center gap-6  items-center  py-3 rounded-xl ">
+              {/* Neural Progress Link - Seamless Connection */}
+              <div className="flex justify-center  items-center bg-black/40 py-2 rounded-xl shrink-0 border border-white/10 px-10">
+                {beadsInSet.map((isFilled, idx) => (
+                  <div key={idx} className="flex items-center">
+                    {/* The Bead */}
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 transition-all duration-700 z-10 
+          ${isFilled
+                          ? "bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.8)]"
+                          : "bg-[#1b2535] border-white/20"
+                        }`}
+                    />
+
+                    {/* The Connector - Only show if not the last bead */}
+                    {idx < 4 && (
+                      <div
+                        className={`w-12 h-1 -mx-0.5 transition-colors duration-700 
+            ${isFilled && beadsInSet[idx + 1]
+                            ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
+                            : "bg-white/10"
+                          }`}
+                      />
+                    )}
                   </div>
-                  {!locked && <span className="text-[8px] text-primary/60 font-mono">{p.points}P</span>}
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
-
-        <main className="flex-1 relative flex flex-col p-8 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-from)_0%,_transparent_50%)] from-red-900/10">
-          {isInitialFreeze && (
-            <div className="absolute inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center animate-pulse">
-              <div className="text-center">
-                <ShieldAlert size={64} className="text-primary mx-auto mb-4" />
-                <h1 className="text-4xl font-bold text-primary neon-text uppercase tracking-tighter">System Frozen</h1>
-                <p className="text-xs text-muted-foreground mt-2 uppercase tracking-[0.5em]">
-                  Initiating Blip Decryption Protocol...
-                </p>
+                ))}
               </div>
             </div>
-          )}
 
-          <div className="max-w-3xl mx-auto w-full flex flex-col h-full">
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Terminal size={16} className="text-primary" />
-                <span className="text-[10px] text-primary font-bold uppercase tracking-widest">Encrypted Mission Data</span>
-              </div>
-              <h2 className="text-3xl font-bold tracking-tight text-white uppercase">{activePuzzle.title}</h2>
+            <div className="flex-1 overflow-y-auto p-8 rounded-xl mb-6 custom-scrollbar bg-black/30 backdrop-blur-sm border border-white/5">
+              <h2 className="text-white/60 text-[10px] font-bold uppercase mb-4 tracking-[0.3em]">Neural Objective {activePuzzle.id}</h2>
+              <div className="text-xl leading-relaxed whitespace-pre-wrap font-medium drop-shadow-lg">{activePuzzle.question}</div>
             </div>
 
-            <div className="flex-1 glass-card p-10 border-t-4 border-primary/50 relative mb-8">
-              <div className="absolute top-4 right-4 text-[8px] text-primary/30 font-mono uppercase">Reference: STARK_INTEL_{activePuzzle.id}</div>
-              <p className="text-lg leading-relaxed text-foreground/90 font-body first-letter:text-4xl first-letter:text-primary">
-                {activePuzzle.question}
-              </p>
-            </div>
-
-            <form onSubmit={handleLevelSubmit} className="flex gap-4 items-end bg-black/40 p-6 border border-white/5 rounded-none">
-              <div className="flex-1 space-y-2">
-                <label className="text-[10px] text-primary/70 uppercase tracking-widest font-bold">Input Decryption Key</label>
-                <input
-                  type="text"
-                  disabled={isSolved}
-                  value={isSolved ? "MISSION COMPLETE" : answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  className="w-full bg-transparent border-b-2 border-primary/20 py-2 text-xl font-bold focus:border-primary outline-none transition-all placeholder:text-white/5"
-                  placeholder="TYPE ANSWER HERE..."
-                />
-              </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (submitAnswer(currentLevel, answer)) {
+                  setAnswer("");
+                }
+              }}
+              className="flex gap-3 h-11 shrink-0"
+            >
+              <input
+                type="text"
+                value={isSolved ? "MISSION CLEARED" : (isFrozen ? "SYSTEM LOCKED" : answer)}
+                disabled={isSolved || isFrozen}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="ENTER DECRYPTION KEY..."
+                className="flex-1 bg-black/60 backdrop-blur-md border border-white/20 px-4 rounded-md text-sm outline-none focus:border-white/50 transition-all placeholder:text-white/40"
+              />
               <button
                 type="submit"
-                disabled={isSolved}
-                className="px-8 py-4 bg-primary text-white font-bold text-xs uppercase tracking-[0.3em] hover:bg-red-700 transition-all disabled:opacity-20"
+                disabled={isSolved || !answer || isFrozen}
+                className="px-8 bg-white text-[#1b2535] text-xs font-black uppercase rounded-md hover:bg-gray-200 disabled:opacity-40 transition-all shadow-lg"
               >
-                <div className="flex items-center gap-2">
-                  <Send size={16} /> Submit
-                </div>
+                Submit
               </button>
             </form>
-          </div>
-        </main>
-
-        <aside className="w-80 border-l border-primary/20 bg-black/40 backdrop-blur-xl p-6 overflow-y-auto">
-          <PowerStonesPanel />
-        </aside>
-
-        <button
-          onClick={() => setFrozen(true, Date.now() + 60000)}
-          className="fixed bottom-4 left-4 p-2 bg-red-900 text-white text-[8px] opacity-20 hover:opacity-100 transition-opacity"
-        >
-          DEBUG: TRIGGER BLIP
-        </button>
-        <button
-          onClick={() => setIsBlocked(true)}
-          className="fixed bottom-14 left-4 p-2 bg-orange-600 text-white text-[8px] opacity-20 hover:opacity-100 transition-opacity"
-        >
-          DEBUG: RECEIVE POWER STONE ATTACK
-        </button>
+          </main>
+        </div>
       </div>
-    </>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+      `}</style>
+    </div>
   );
 };
 

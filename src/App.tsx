@@ -5,15 +5,15 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { GameProvider } from "@/context/GameContext";
 import { TimerProvider } from "@/context/TimerContext";
-import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
-import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 import TeamLoginPage from "./pages/TeamLoginPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import RulesPage from "./pages/RulesPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import LeaderboardPage from "./pages/LeaderboardPage";
+import ThemeDecorations from "./components/ThemeDecorations";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children, admin = false }: { children: React.ReactNode
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Navigate to="/login" replace />} />
+    <Route path="/" element={<Landing />} />
     <Route path="/login" element={<TeamLoginPage />} />
     <Route path="/admin-access" element={<AdminLoginPage />} />
     <Route path="/rules" element={<RulesPage />} />
@@ -59,6 +59,7 @@ const App = () => (
         }}
       />
       <BrowserRouter>
+        <ThemeDecorations />
         <AuthProvider>
           <GameProvider>
             <TimerProvider>

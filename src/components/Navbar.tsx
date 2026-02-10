@@ -3,7 +3,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { useTimer } from "@/context/TimerContext";
 import { Trophy, Timer, Target, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const Navbar = () => {
     const { team } = useAuth();
