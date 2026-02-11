@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
-import { puzzles } from "@/services/mockData";
 import { Send, Shield, Zap, Skull, Target, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BlipOverlay from "@/components/BlipOverlay";
@@ -8,6 +7,7 @@ import confetti from "canvas-confetti";
 
 const Dashboard = () => {
   const {
+    puzzles,
     currentLevel,
     completedLevels,
     submitAnswer,
@@ -16,7 +16,8 @@ const Dashboard = () => {
     blockTeam,
     triggerBlip,
     isFrozen,
-    allTeamsState
+    allTeamsState,
+    gameLoading,
   } = useGame();
 
   const [answer, setAnswer] = useState("");
@@ -53,6 +54,21 @@ const Dashboard = () => {
 
   const activePuzzle = puzzles.find((p) => p.id === currentLevel) || puzzles[0];
   const isSolved = completedLevels.includes(currentLevel);
+
+  if (gameLoading && puzzles.length === 0) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#1e293b] text-white">
+        <p className="text-sm uppercase tracking-widest">Loading missions...</p>
+      </div>
+    );
+  }
+  if (puzzles.length === 0) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#1e293b] text-white">
+        <p className="text-sm uppercase tracking-widest">No missions available.</p>
+      </div>
+    );
+  }
 
   const currentSetIndex = Math.floor((currentLevel - 1) / 5);
   const beadsInSet = Array.from({ length: 5 }, (_, i) => {
@@ -208,11 +224,10 @@ const Dashboard = () => {
             </div>
 
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                if (submitAnswer(currentLevel, answer)) {
-                  setAnswer("");
-                }
+                const ok = await submitAnswer(currentLevel, answer);
+                if (ok) setAnswer("");
               }}
               className="flex gap-3 h-11 shrink-0"
             >

@@ -10,10 +10,11 @@ const AdminLoginPage = () => {
   const { adminLogin } = useAuth(); // 
   const navigate = useNavigate(); // [cite: 149]
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminLogin(adminId, password)) { // [cite: 151]
-      navigate("/admin"); // [cite: 151]
+    const ok = await adminLogin(adminId, password);
+    if (ok) {
+      navigate("/admin");
     } else {
       setError("CLEARANCE DENIED: ACCESS ATTEMPT LOGGED");
     }

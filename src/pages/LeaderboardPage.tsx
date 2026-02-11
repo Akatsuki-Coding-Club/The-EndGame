@@ -4,8 +4,9 @@ import { Trophy, Activity, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LeaderboardPage = () => {
-  const { allTeamsState, notifications } = useGame();
+  const { allTeamsState, notifications, puzzles } = useGame();
   const sortedTeams = [...allTeamsState].sort((a, b) => b.score - a.score);
+  const maxLevel = puzzles.length || 15;
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 p-8 flex gap-8 font-mono overflow-hidden">
@@ -40,7 +41,7 @@ const LeaderboardPage = () => {
                   {team.teamName}
                 </div>
                 <div className="flex gap-4 mt-1">
-                  <span className="text-[10px] text-slate-500 uppercase">LVL: {team.currentLevel} / 15</span>
+                  <span className="text-[10px] text-slate-500 uppercase">LVL: {team.currentLevel} / {maxLevel}</span>
                   {team.isFrozen && <span className="text-[10px] text-blue-500 animate-pulse font-bold">[FROZEN]</span>}
                   {team.isBlocked && <span className="text-[10px] text-red-500 animate-pulse font-bold">[BLOCKED]</span>}
                 </div>

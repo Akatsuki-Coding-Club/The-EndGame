@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useGame } from "@/context/GameContext";
-import { puzzles } from "@/services/mockData";
 import { ArrowLeft, Send, Lightbulb, CheckCircle } from "lucide-react";
 
 interface Props {
@@ -9,19 +8,19 @@ interface Props {
 }
 
 const LevelView = ({ levelId, onBack }: Props) => {
-  const { submitAnswer, completedLevels } = useGame();
+  const { puzzles, submitAnswer, completedLevels } = useGame();
   const [answer, setAnswer] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
-  const puzzle = puzzles.find(p => p.id === levelId);
+  const puzzle = puzzles.find((p) => p.id === levelId);
   const isCompleted = completedLevels.includes(levelId);
 
   if (!puzzle) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isCompleted) return;
-    const correct = submitAnswer(levelId, answer);
+    const correct = await submitAnswer(levelId, answer);
     setFeedback(correct ? "correct" : "incorrect");
     if (correct) {
       setTimeout(() => onBack(), 1500);

@@ -1,38 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
-import { blipPuzzle, puzzles } from "@/services/mockData";
+import { getBlipPuzzle } from "@/services/api";
 
 const BlipOverlay = () => {
-  // Pull resetBlipState from your context if you added it, 
-  // otherwise we use setIsFrozen(false) as the trigger
-  const { solveBlipPuzzle, frozenUntil, setIsFrozen } = useGame();
-
+  const { submitBlipAnswer, frozenUntil, setIsFrozen } = useGame();
   const [answer, setAnswer] = useState("");
   const [timeLeft, setTimeLeft] = useState(0);
+  const [question, setQuestion] = useState<string | null>(null);
 
-  // This ensures a different question every time the overlay pops up
-  const [currentBlipPuzzle] = useState(() => {
-    const pool = [blipPuzzle, ...puzzles.slice(5, 15)]; // Use a variety of questions
-    return pool[Math.floor(Math.random() * pool.length)];
-  });
+  useEffect(() => {
+    if (!frozenUntil || Date.now() >= frozenUntil) return;
+    getBlipPuzzle()
+      .then((res) => setQuestion(res?.question ?? null))
+      .catch(() => setQuestion(null));
+  }, [frozenUntil]);
 
   useEffect(() => {
     const timer = setInterval(() => {
       if (!frozenUntil) return;
-
-      const remaining = Math.max(
-        0,
-        Math.floor((frozenUntil - Date.now()) / 1000)
-      );
-
+      const remaining = Math.max(0, Math.floor((frozenUntil - Date.now()) / 1000));
       setTimeLeft(remaining);
-
       if (remaining === 0) {
         setIsFrozen(false);
+        setQuestion(null);
         clearInterval(timer);
       }
     }, 1000);
-
     return () => clearInterval(timer);
   }, [frozenUntil, setIsFrozen]);
 
@@ -43,9 +36,7 @@ const BlipOverlay = () => {
           <h2 className="text-xl font-bold text-white uppercase tracking-tighter">
             System Breach
           </h2>
-          <span className="text-red-500 font-mono font-bold text-xl">
-            {timeLeft}s
-          </span>
+          <span className="text-red-500 font-mono font-bold text-xl">{timeLeft}s</span>
         </div>
 
         <div className="bg-black/30 p-6 rounded-md mb-6 border border-white/10">
@@ -53,22 +44,15 @@ const BlipOverlay = () => {
             Decryption Required
           </p>
           <p className="text-sm text-white leading-relaxed">
-            {currentBlipPuzzle.question}
+            {question ?? "Loading puzzle..."}
           </p>
         </div>
 
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            // Compare against the CURRENTly selected random puzzle
-            if (
-              answer.trim().toUpperCase() ===
-              currentBlipPuzzle.answer.toUpperCase()
-            ) {
-              solveBlipPuzzle();
-            } else {
-              setAnswer("");
-            }
+            const ok = await submitBlipAnswer(answer);
+            if (ok) setAnswer("");
           }}
           className="flex gap-2"
         >
@@ -80,7 +64,6 @@ const BlipOverlay = () => {
             placeholder="INPUT CODE..."
             className="flex-1 bg-black/40 border border-red-500/50 px-4 py-3 text-white outline-none focus:border-red-500 transition-all font-mono"
           />
-
           <button
             type="submit"
             className="px-6 py-3 bg-red-600 text-white font-bold uppercase text-xs hover:bg-red-700 transition-colors"

@@ -10,9 +10,10 @@ const TeamLoginPage = () => {
   const { login } = useAuth(); 
   const navigate = useNavigate(); 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(teamId, password)) {
+    const ok = await login(teamId, password);
+    if (ok) {
       navigate("/rules", { replace: true });
     } else {
       setError("ACCESS DENIED: INVALID CREDENTIALS");
