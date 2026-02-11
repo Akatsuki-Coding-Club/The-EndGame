@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useGame } from "@/context/GameContext";
-import { teams } from "@/services/mockData";
 import { Shield, Swords, ShieldCheck, ShieldOff, ZapOff, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PowerStonesPanel = () => {
-  const { stones, activateShield, deactivateShield, blockTeam, powersDisabled } = useGame();
+  const { stones, activateShield, deactivateShield, blockTeam, powersDisabled, allTeamsState } = useGame();
   const [showBlockSelect, setShowBlockSelect] = useState(false);
+  const teamsForBlock = allTeamsState.filter((t) => t.teamId !== "current").slice(0, 15);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -96,13 +96,16 @@ const PowerStonesPanel = () => {
         ) : (
           <div className="space-y-3 animate-fade-in">
             <div className="max-h-48 overflow-y-auto scrollbar-thin space-y-1 bg-black/40 p-2 border border-white/5">
-              {teams.slice(0, 15).map(t => (
-                <button 
-                  key={t.id} 
-                  onClick={() => { blockTeam(t.id); setShowBlockSelect(false); }}
+              {teamsForBlock.map((t) => (
+                <button
+                  key={t.teamId}
+                  onClick={() => {
+                    blockTeam(t.teamId);
+                    setShowBlockSelect(false);
+                  }}
                   className="w-full text-left px-3 py-2 text-[10px] font-bold tracking-widest hover:bg-primary hover:text-white transition-colors uppercase border border-transparent hover:border-primary"
                 >
-                  {t.name}
+                  {t.teamName}
                 </button>
               ))}
             </div>

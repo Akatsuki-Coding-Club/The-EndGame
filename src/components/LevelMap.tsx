@@ -1,6 +1,5 @@
 import React from "react";
 import { useGame } from "@/context/GameContext";
-import { puzzles } from "@/services/mockData";
 import { Lock, CheckCircle, ChevronRight } from "lucide-react";
 
 interface Props {
@@ -8,7 +7,7 @@ interface Props {
 }
 
 const LevelMap = ({ onSelectLevel }: Props) => {
-  const { currentLevel, completedLevels } = useGame();
+  const { puzzles, currentLevel, completedLevels } = useGame();
 
   return (
     <div className="animate-fade-in">

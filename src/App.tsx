@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import ThemeDecorations from "./components/ThemeDecorations";
 import Landing from "./pages/Landing";
+import StoneSelectModal from "./components/StoneSelectModal";
 
 const queryClient = new QueryClient();
 
@@ -28,14 +29,14 @@ const ProtectedRoute = ({ children, admin = false }: { children: React.ReactNode
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Landing />} />
-    <Route path="/login" element={<TeamLoginPage />} />
+     <Route path="/" element={<Landing />} />
+    <Route path="/login" element={<TeamLoginPage />} /> 
     <Route path="/admin-access" element={<AdminLoginPage />} />
     <Route path="/rules" element={<RulesPage />} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     {/* <Route path="/admin" element={<ProtectedRoute admin><AdminPage /></ProtectedRoute>} /> */}
     <Route path="/leaderboard" element={<LeaderboardPage />} />
-    <Route path="/admin" element={<AdminDashboard />} />
+    <Route path="/admin" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
@@ -65,6 +66,7 @@ const App = () => (
             <TimerProvider>
               <AppRoutes />
             </TimerProvider>
+            <StoneSelectModal />
           </GameProvider>
         </AuthProvider>
       </BrowserRouter>

@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import { useGame } from "@/context/GameContext";
-import { puzzles } from "@/services/mockData";
 import { toast } from "sonner";
 import { Shield, Users, Play, Database, Zap, PlusCircle, LayoutList, Activity, Unlock, Lock, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const {
+        puzzles,
         startGame,
         gameStarted,
         allTeamsState,
         freezeTeam,
         triggerBlip,
         unfreezeTeam,
-        setGameDuration, gameDuration,
+        setGameDuration,
+        gameDuration,
     } = useGame();
+    const maxLevel = puzzles.length || 15;
     const [activeTab, setActiveTab] = useState("orchestration");
     const [duration, setDuration] = useState(120);
     const [localDuration, setLocalDuration] = useState(gameDuration / 60);
@@ -349,12 +351,12 @@ const AdminDashboard = () => {
                                         <div className="mt-4">
                                             <div className="flex justify-between text-[8px] uppercase text-slate-500 mb-1 font-bold">
                                                 <span>Mission Progress</span>
-                                                <span>{Math.round((t.currentLevel / 15) * 100)}%</span>
+                                                <span>{maxLevel ? Math.round((t.currentLevel / maxLevel) * 100) : 0}%</span>
                                             </div>
                                             <div className="h-1 w-full bg-slate-800">
                                                 <div
                                                     className="h-full bg-blue-500 transition-all duration-500"
-                                                    style={{ width: `${(t.currentLevel / 15) * 100}%` }}
+                                                    style={{ width: `${maxLevel ? (t.currentLevel / maxLevel) * 100 : 0}%` }}
                                                 />
                                             </div>
                                         </div>
