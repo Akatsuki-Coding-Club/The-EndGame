@@ -4,7 +4,7 @@ import { Shield, Zap, Skull, Target, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BlipOverlay from "@/components/BlipOverlay";
 import confetti from "canvas-confetti";
-
+import HeroManager from "@/components/HeroManager";
 const Dashboard = () => {
   const {
     puzzles,
@@ -44,8 +44,8 @@ const Dashboard = () => {
       const end = Date.now() + 1 * 1000;
       const frame = () => {
         const colors = ['#ffffff', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'];
-        confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors });
-        confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors });
+        confetti({ particleCount: 7, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors });
+        confetti({ particleCount: 7, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors });
         if (Date.now() < end) requestAnimationFrame(frame);
       };
       frame();
@@ -55,7 +55,7 @@ const Dashboard = () => {
   if (gameLoading && puzzles.length === 0) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#1e293b] text-white">
-        <p className="text-sm uppercase tracking-widest font-sans">Initializing Neural Link...</p>
+        <p className="text-sm uppercase tracking-widest font-sans">Loading your game...</p>
       </div>
     );
   }
@@ -128,6 +128,10 @@ const Dashboard = () => {
 
       <div className="relative z-10 flex flex-col h-full">
         <Navbar />
+
+        <HeroManager />
+
+
         {isFrozen && <BlipOverlay />}
 
         <div className="flex flex-1 overflow-hidden p-6 gap-6">
@@ -183,7 +187,7 @@ const Dashboard = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-8 rounded-xl mb-6 custom-scrollbar bg-black/30 backdrop-blur-sm border border-white/5">
-              <h2 className="text-white/60 text-[10px] font-bold uppercase mb-4 tracking-[0.3em]">Neural Objective {activePuzzle.id}</h2>
+              <h2 className="text-white/60 text-[10px] font-bold uppercase mb-4 tracking-[0.3em]">Mission {activePuzzle.id}</h2>
               <div className="text-xl leading-relaxed whitespace-pre-wrap font-medium drop-shadow-lg">{activePuzzle.question}</div>
             </div>
 
@@ -234,6 +238,142 @@ const Dashboard = () => {
         .bead-glow {
           animation: energy-pulse 2s infinite ease-in-out;
         }
+
+        // spiderman
+
+        .spidey-loop {
+          /* Total cycle time 10 seconds */
+          animation: spidey-swing 10s ease-in-out infinite;
+        }
+
+        @keyframes spidey-swing {
+          /* 0% to 10%: Swings Down into view */
+          0% { 
+            transform: translateY(-300%); 
+            opacity: 0; 
+          }
+          10% { 
+            transform: translateY(0); 
+            opacity: 1; 
+          }
+
+          /* 10% to 40%: Hangs there (visible for ~3 seconds) */
+          40% { 
+            transform: translateY(0); 
+            opacity: 1; 
+          }
+
+          /* 40% to 50%: Swings back UP out of view */
+          50% { 
+            transform: translateY(-300%); 
+            opacity: 0; 
+          }
+
+          /* 50% to 100%: Stays invisible (Waiting for next loop) */
+          100% { 
+            transform: translateY(-300%); 
+            opacity: 0; 
+          }
+
+          /* 1. Fly Up (Iron Man) */
+          .fly-up {
+            animation: flyUpAnim 3s linear forwards;
+          }
+          @keyframes flyUpAnim {
+            0% { transform: translateY(100vh) scale(0.8); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(-100vh) scale(0.5); opacity: 1; }
+          }
+
+          /* 2. Fly Across (Iron Man Blast) */
+          .fly-across {
+            animation: flyAcrossAnim 5s ease-in-out forwards;
+          }
+          @keyframes flyAcrossAnim {
+            0% { transform: translateX(-100vw); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(100vw); opacity: 0; }
+          }
+
+          /* 3. Drop Swing (Spidey) */
+          .drop-swing {
+            transform-origin: top center;
+            animation: swingAnim 6s ease-in-out forwards;
+          }
+          @keyframes swingAnim {
+            0% { transform: translateY(-300px) rotate(-10deg); }
+            20% { transform: translateY(50px) rotate(5deg); }
+            40% { transform: translateY(0px) rotate(-3deg); }
+            60% { transform: translateY(10px) rotate(2deg); opacity: 1; }
+            100% { transform: translateY(-300px) rotate(0deg); opacity: 0; }
+          }
+
+          /* 4. Fade Float (Dr Strange) */
+          .fade-float {
+            animation: floatAnim 8s ease-in-out forwards;
+          }
+          @keyframes floatAnim {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 0.9; transform: scale(1) translateY(0px); }
+            50% { transform: scale(1.05) translateY(-20px); }
+            80% { opacity: 0.9; transform: scale(1) translateY(0px); }
+            100% { opacity: 0; transform: scale(0.8); }
+          }
+
+          /* 5. Thunder Strike (Thor) */
+          .thunder-strike {
+            animation: strikeAnim 4s ease-out forwards;
+          }
+          @keyframes strikeAnim {
+            0% { opacity: 0; transform: translateY(-50px) scale(1.5); filter: brightness(3); }
+            10% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+            80% { opacity: 1; filter: brightness(1); }
+            100% { opacity: 0; filter: brightness(0); }
+          }
+                    /* 1. Left to Right (Clockwise) */
+          .roll-left-to-right {
+            position: absolute;
+            animation: rollL2R 4s linear forwards;
+          }
+          @keyframes rollL2R {
+            0% { left: -200px; transform: rotate(0deg); }
+            100% { left: 100vw; transform: rotate(1440deg); } /* Spin Clockwise */
+          }
+
+          /* 2. Right to Left (Counter-Clockwise) */
+          .roll-right-to-left {
+            position: absolute;
+            animation: rollR2L 4s linear forwards;
+          }
+          @keyframes rollR2L {
+            0% { left: 100vw; transform: rotate(0deg); } /* Start at Right Edge */
+            100% { left: -200px; transform: rotate(-1440deg); } /* Spin Counter-Clockwise */
+          }
+          .corner-drop {
+            animation: cornerDropAnim 5s ease-in-out forwards;
+            transform-origin: top center;
+          }
+
+          @keyframes cornerDropAnim {
+            0% { 
+              transform: translateY(-200px); 
+              opacity: 0; 
+            }
+            15% { 
+              transform: translateY(0); 
+              opacity: 1; 
+            }
+            85% { 
+              transform: translateY(0); 
+              opacity: 1; 
+            }
+            100% { 
+              transform: translateY(-200px); 
+              opacity: 0; 
+            }
+          }
+}
       `}</style>
     </div>
   );
