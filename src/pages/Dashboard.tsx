@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
-import { Send, Shield, Zap, Skull, Target, ChevronDown } from "lucide-react";
+import { Shield, Zap, Skull, Target, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BlipOverlay from "@/components/BlipOverlay";
 import confetti from "canvas-confetti";
@@ -52,47 +52,33 @@ const Dashboard = () => {
     }
   }, [completedLevels.length]);
 
-  const activePuzzle = puzzles.find((p) => p.id === currentLevel) || puzzles[0];
-  const isSolved = completedLevels.includes(currentLevel);
-
   if (gameLoading && puzzles.length === 0) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#1e293b] text-white">
-        <p className="text-sm uppercase tracking-widest">Loading missions...</p>
-      </div>
-    );
-  }
-  if (puzzles.length === 0) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-[#1e293b] text-white">
-        <p className="text-sm uppercase tracking-widest">No missions available.</p>
+        <p className="text-sm uppercase tracking-widest font-sans">Initializing Neural Link...</p>
       </div>
     );
   }
 
-  const currentSetIndex = Math.floor((currentLevel - 1) / 5);
-  const beadsInSet = Array.from({ length: 5 }, (_, i) => {
-    const questionId = currentSetIndex * 5 + (i + 1);
-    return completedLevels.includes(questionId);
+  const solvedCount = completedLevels.length;
+  let windowOffset = 0;
+  if (solvedCount >= 5) {
+    windowOffset = Math.min(solvedCount - 4, 10);
+  }
+
+  const visibleBeads = Array.from({ length: 10 }, (_, i) => {
+    const questionNum = windowOffset + i + 1;
+    return {
+      num: questionNum,
+      isFilled: completedLevels.includes(questionNum),
+      isActive: questionNum === currentLevel
+    };
   });
 
-  const StoneCard = ({
-    title,
-    desc,
-    icon,
-    onUse = () => { },
-    count = 0,
-    variant = "stone",
-    isPowerSurge = false
-  }: {
-    title: string;
-    desc: string;
-    icon: React.ReactNode;
-    onUse?: () => void;
-    count?: number;
-    variant?: string;
-    isPowerSurge?: boolean;
-  }) => (
+  const activePuzzle = puzzles.find((p) => p.id === currentLevel) || puzzles[0];
+  const isSolved = completedLevels.includes(currentLevel);
+
+  const StoneCard = ({ title, desc, icon, onUse = () => { }, count = 0, variant = "stone", isPowerSurge = false }: any) => (
     <div className={`bg-[#5a5a5a]/90 backdrop-blur-sm border ${variant === "stone" ? "border-white/20" : "border-red-500/30"} p-4 rounded-lg mb-4 text-white shrink-0`}>
       <div className="flex items-center gap-4 mb-2">
         <div className={`w-10 h-10 ${variant === "stone" ? "bg-white/10" : "bg-red-500/10"} rounded flex items-center justify-center`}>
@@ -101,7 +87,6 @@ const Dashboard = () => {
         <h3 className="font-bold text-sm uppercase tracking-tighter">{title}</h3>
       </div>
       <p className="text-[10px] mb-3 text-gray-300 leading-tight">{desc}</p>
-
       {!showPowerSurgeMenu || !isPowerSurge ? (
         <button
           onClick={isPowerSurge ? () => setShowPowerSurgeMenu(true) : onUse}
@@ -120,33 +105,14 @@ const Dashboard = () => {
             >
               <option value="">Select Team...</option>
               {allTeamsState?.filter(t => t.teamId !== 'current').map((team) => (
-                <option key={team.teamId} value={team.teamId}>
-                  {team.teamName}
-                </option>
+                <option key={team.teamId} value={team.teamId}>{team.teamName}</option>
               ))}
             </select>
             <ChevronDown size={12} className="absolute right-2 top-2.5 opacity-50 pointer-events-none" />
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => {
-                if (selectedTeam) {
-                  blockTeam(selectedTeam);
-                  setShowPowerSurgeMenu(false);
-                  setSelectedTeam("");
-                }
-              }}
-              disabled={!selectedTeam}
-              className="flex-1 py-2 bg-red-600 text-white text-[10px] font-bold rounded hover:bg-red-700 disabled:opacity-30"
-            >
-              LOCK TEAM
-            </button>
-            <button
-              onClick={() => setShowPowerSurgeMenu(false)}
-              className="px-2 py-2 border border-white/10 rounded text-[10px] hover:bg-white/5"
-            >
-              CANCEL
-            </button>
+            <button onClick={() => { if (selectedTeam) { blockTeam(selectedTeam); setShowPowerSurgeMenu(false); setSelectedTeam(""); } }} className="flex-1 py-2 bg-red-600 text-white text-[10px] font-bold rounded">LOCK TEAM</button>
+            <button onClick={() => setShowPowerSurgeMenu(false)} className="px-2 py-2 border border-white/10 rounded text-[10px]">CANCEL</button>
           </div>
         </div>
       )}
@@ -158,7 +124,6 @@ const Dashboard = () => {
       className="h-screen max-h-screen flex flex-col overflow-hidden bg-cover bg-center bg-no-repeat text-white font-sans relative"
       style={{ backgroundImage: `url('https://t4.ftcdn.net/jpg/07/40/54/65/360_F_740546589_eVog5QiPu5WxsTV9IsDdLL5d2B3TQ4nD.webp')` }}
     >
-      {/* Dark overlay to ensure readability against the bright comic background */}
       <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
 
       <div className="relative z-10 flex flex-col h-full">
@@ -167,54 +132,53 @@ const Dashboard = () => {
 
         <div className="flex flex-1 overflow-hidden p-6 gap-6">
           <aside className="w-72 flex flex-col overflow-hidden bg-black/40 backdrop-blur-md rounded-xl border border-white/10">
-            <div className="p-4 border-b border-white/10 bg-black/20">
+            <div className="p-4 border-b border-white/10 bg-black/20 text-center">
               <h2 className="text-[10px] font-bold uppercase tracking-widest opacity-80">System Controls</h2>
             </div>
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              <StoneCard title="Shield Matrix" desc="Automatically blocks incoming system attacks." icon={<Shield size={18} />} onUse={activateShield} count={stones.shieldCount} />
-
-              <StoneCard
-                title="Power Surge"
-                desc="Temporarily disable a rival team's console."
-                icon={<Zap size={18} />}
-                isPowerSurge={true}
-                count={stones.blockCount}
-              />
-
+              <StoneCard title="Shield Matrix" desc="Blocks incoming system attacks." icon={<Shield size={18} />} onUse={activateShield} count={stones.shieldCount} />
+              <StoneCard title="Power Surge" desc="Disable a rival team's console." icon={<Zap size={18} />} isPowerSurge={true} count={stones.blockCount} />
               <div className="mt-2 pt-4 border-t border-white/10">
-                <StoneCard variant="attack" title="Blip Protocol" desc="Freeze random units across the network." icon={<Skull size={18} className="text-red-400" />} onUse={() => triggerBlip(1)} />
-                <StoneCard variant="attack" title="Direct Strike" desc="Target a specific unit for lockdown." icon={<Target size={18} className="text-red-400" />} onUse={() => { }} />
+                <StoneCard variant="attack" title="Blip Protocol" desc="Freeze units across network." icon={<Skull size={18} className="text-red-400" />} onUse={() => triggerBlip(1)} />
+                <StoneCard variant="attack" title="Direct Strike" desc="Target unit for lockdown." icon={<Target size={18} className="text-red-400" />} onUse={() => { }} />
               </div>
             </div>
           </aside>
 
           <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-            <div className="flex justify-center gap-6  items-center  py-3 rounded-xl ">
-              {/* Neural Progress Link - Seamless Connection */}
-              <div className="flex justify-center  items-center bg-black/40 py-2 rounded-xl shrink-0 border border-white/10 px-10">
-                {beadsInSet.map((isFilled, idx) => (
-                  <div key={idx} className="flex items-center">
-                    {/* The Bead */}
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 transition-all duration-700 z-10 
-          ${isFilled
-                          ? "bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.8)]"
-                          : "bg-[#1b2535] border-white/20"
-                        }`}
-                    />
-
-                    {/* The Connector - Only show if not the last bead */}
-                    {idx < 4 && (
+            {/* CONNECTED BEADS SECTION */}
+            <div className="flex justify-center items-center py-3 rounded-xl mb-2 overflow-hidden">
+              <div className="flex w-[90%] justify-center items-center bg-black/60 py-4 rounded-xl shrink-0 border border-white/10 px-10 shadow-2xl overflow-hidden relative">
+                {/* Inner wrapper must be w-full to let flex-1 lines expand */}
+                <div className="flex items-center w-full bead-window-transition">
+                  {visibleBeads.map((bead, idx) => (
+                    <React.Fragment key={bead.num}>
+                      {/* The Bead - shrink-0 prevents it from becoming an oval */}
                       <div
-                        className={`w-12 h-1 -mx-0.5 transition-colors duration-700 
-            ${isFilled && beadsInSet[idx + 1]
-                            ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
-                            : "bg-white/10"
+                        className={`w-10 h-8 rounded-full border-2 transition-all duration-700 z-10 flex items-center justify-center text-[10px] font-bold shadow-inner shrink-0
+              ${bead.isFilled
+                            ? "bg-green-500 border-green-400 text-white bead-glow"
+                            : bead.isActive
+                              ? "bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(59,130,246,0.6)] scale-110"
+                              : "bg-[#1b2535] border-white/20 text-white/40"
                           }`}
-                      />
-                    )}
-                  </div>
-                ))}
+                      >
+                        {bead.num}
+                      </div>
+
+                      {/* The Connector - flex-1 stretches it to fill available space */}
+                      {idx < visibleBeads.length - 1 && (
+                        <div
+                          className={`flex-1 h-1 -mx-0.5 transition-all duration-700 
+                ${bead.isFilled && visibleBeads[idx + 1].isFilled
+                              ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
+                              : "bg-white/10"
+                            }`}
+                        />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -256,6 +220,20 @@ const Dashboard = () => {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+        .bead-window-transition {
+          transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes energy-pulse {
+          0% { box-shadow: 0 0 30px rgba(34,197,94,0.4), inset 0 0 5px rgba(34,197,94,0.2); }
+          50% { box-shadow: 0 0 30px rgba(34,197,94,0.8), inset 0 0 10px rgba(34,197,94,0.4); }
+          100% { box-shadow: 0 0 30px rgba(34,197,94,0.4), inset 0 0 5px rgba(34,197,94,0.2); }
+        }
+
+        .bead-glow {
+          animation: energy-pulse 2s infinite ease-in-out;
+        }
       `}</style>
     </div>
   );

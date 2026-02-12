@@ -14,7 +14,7 @@ const AdminLoginPage = () => {
     e.preventDefault();
     const ok = await adminLogin(adminId, password);
     if (ok) {
-      navigate("/admin");
+      navigate("/leaderboard");
     } else {
       setError("CLEARANCE DENIED: ACCESS ATTEMPT LOGGED");
     }
