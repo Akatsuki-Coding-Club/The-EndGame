@@ -22,14 +22,31 @@ const TeamLoginPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1e293b] p-4 relative overflow-hidden font-sans">
+
+      <div className="absolute inset-0 z-0 bg-[#272227]">
+                <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="h-full w-full object-cover opacity-50"
+                >
+                    <source
+                        src="https://motionbgs.com/media/2871/avengers-heroes-united.960x540.mp4"
+                        type="video/mp4"
+                    />
+                </video>
+                {/* Subtle gradient to blend video edges and ensure text clarity */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#272227]/60 via-transparent to-[#272227]/80" />
+            </div>
       
       {/* Animated Border Container */}
-      <div className="relative w-full max-w-md p-[2px] overflow-hidden rounded-xl bg-white/10 group">
+      <div className="relative w-full max-w-md p-[2px] overflow-hidden rounded-xl bg-transparent group">
         {/* The Rotating Animation Layer */}
-        <div className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2E8F0_0%,#EF4444_50%,#E2E8F0_100%)] opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2E8F0_0%,#EF4444_50%,#E2E8F0_100%)] opacity-10 group-hover:opacity-0 transition-opacity duration-500" />
 
         {/* The Card Body */}
-        <div className="relative z-10 w-full h-full bg-[#26242a] rounded-[10px] p-10">
+        <div className="relative z-10 w-full h-full bg-[#26242a]/80 rounded-[10px] p-10">
           
           {/* Header Section */}
           <div className="text-center mb-10">
