@@ -3,7 +3,6 @@ import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 import * as api from "@/services/api";
 
-/** UI puzzle shape (id is 1-based level index; missionId for API submit) */
 export interface Puzzle {
   id: number;
   title: string;
@@ -97,7 +96,7 @@ function teamToGameState(t: {
     teamId: t._id,
     teamName: t.teamName,
     score: t.score ?? 0,
-    currentLevel: t.missionsCompleted ?? 0,
+    currentLevel: (t.missionsCompleted ?? 0) + 1,
     isFrozen: !!(frozenUntil && now < frozenUntil),
     isBlocked: !!(blockedUntil && now < blockedUntil),
   };
@@ -151,9 +150,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Sync my state from API (me + stone status + game state)
   const syncMyState = useCallback(async () => {
-    if (!api.getToken()) return;
+    if (!api.getToken() || !team) return;
     try {
       const [me, stoneStatus, gameState] = await Promise.all([
         api.getMe(),
@@ -162,6 +160,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       ]);
 
       setScore(me.score ?? 0);
+      const completedCount = me.missionsCompleted ?? 0;
+      setCurrentLevel(completedCount + 1);
+      
+      const alreadyCompleted = Array.from({ length: completedCount }, (_, i) => i + 1);
+      setCompletedLevels(alreadyCompleted);
+
       const fUntil = me.frozenUntil ? new Date(me.frozenUntil).getTime() : null;
       const bUntil = me.blockedUntil ? new Date(me.blockedUntil).getTime() : null;
       setIsFrozen(!!(fUntil && Date.now() < fUntil));
@@ -183,12 +187,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
         setPendingStoneCount(stoneStatus.pendingStoneCount ?? 0);
       }
-    } catch {
-      // ignore
+    } catch (e) {
+        console.error("Sync Error", e);
     }
-  }, []);
+  }, [team]);
 
-  // Load missions (puzzles) and teams
   useEffect(() => {
     if (!team) {
       setGameLoading(false);
@@ -228,7 +231,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return () => { cancelled = true; };
   }, [team?.id, isAdmin, refreshTeams, syncMyState]);
 
-  // Poll to sync state (blip/freeze/block updates from backend)
   useEffect(() => {
     if (!team || isAdmin) return;
     const interval = setInterval(syncMyState, 15000);
@@ -241,12 +243,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       setStones((prev) => ({ ...prev, shieldActive: false }));
       toast.success("SHIELD_DEFLECTED_ATTACK", {
         description: "Incoming Power Surge negated by Shield Matrix.",
-        className: "h-12 border-l-4 border-blue-400 bg-slate-950 text-white font-display text-[10px]",
       });
     } else if (isBlocked) {
       toast.error("CRITICAL_SYSTEM_BREACH", {
         description: "Incoming Power Surge detected. System locked.",
-        className: "h-12 border-l-4 border-red-600 bg-slate-950 text-white font-display text-[10px]",
       });
     }
   }, [isBlocked, stones.shieldActive]);
@@ -255,7 +255,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     try {
       await api.startGame();
       setGameStarted(true);
-      toast.success("GAME_START", { description: "Mission parameters initialized." });
+      toast.success("GAME_START");
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -275,7 +275,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           setScore((prev) => prev + result.points);
           if (levelId < puzzles.length) setCurrentLevel(levelId + 1);
           addNotification(`${team?.name} SOLVED MISSION ${levelId}`, "success");
-          toast.success(`MISSION_${levelId}_COMPLETE`, { description: `+${result.points} units added.` });
+          toast.success(`MISSION_${levelId}_COMPLETE`);
           await syncMyState();
           await refreshTeams();
           return true;
@@ -294,7 +294,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     try {
       await api.useStone("shield");
       setStones((prev) => ({ ...prev, shieldActive: true, shieldCount: prev.shieldCount - 1 }));
-      toast.success("SHIELD_ACTIVE", { description: "Defense matrix online." });
+      toast.success("SHIELD_ACTIVE");
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -313,9 +313,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         addNotification(`${team?.name} BLOCKED ${targetTeamId}`, "attack");
         setStones((prev) => ({ ...prev, blockCount: prev.blockCount - 1 }));
         await refreshTeams();
-        toast.success("POWER_SURGE_SENT", { description: `Targeting unit ${targetTeamId}.` });
+        toast.success("POWER_SURGE_SENT");
       } catch (e) {
-        toast.info("TARGET_SHIELDED", { description: (e as Error).message });
+        toast.info("TARGET_SHIELDED");
       }
     },
     [stones.blockCount, powersDisabled, team?.name, refreshTeams, addNotification]
@@ -340,9 +340,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           await syncMyState();
           return true;
         }
-      } catch {
-        // ignore
-      }
+      } catch { }
       return false;
     },
     [team?.name, syncMyState, addNotification]

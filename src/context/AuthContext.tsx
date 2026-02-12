@@ -41,29 +41,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (!api.getToken()) {
-      setLoading(false);
-      return;
-    }
-    api
-      .getMe()
-      .then((me) => {
-        setTeam(toTeam(me));
-        setIsAdmin(me.role === "admin");
-      })
-      .catch(() => {
+    const initAuth = async () => {
+      const token = api.getToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const me = await api.getMe();
+        if (me) {
+          setTeam(toTeam(me));
+          setIsAdmin(me.role === "admin");
+        }
+      } catch {
         api.clearAuth();
         setTeam(null);
         setIsAdmin(false);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   const login = useCallback(async (teamName: string, password: string): Promise<boolean> => {
     try {
       const { team: t } = await api.login(teamName, password);
-      const next = toTeam(t);
-      setTeam(next);
+      setTeam(toTeam(t));
       setIsAdmin(t.role === "admin");
       return true;
     } catch {
@@ -89,7 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider
       value={{
-        isLoggedIn: !!team || isAdmin,
+        isLoggedIn: !!team,
         isAdmin,
         team,
         loading,
@@ -98,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
       }}
     >
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
