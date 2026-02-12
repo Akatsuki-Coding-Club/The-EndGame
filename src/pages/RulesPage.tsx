@@ -1,39 +1,90 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Zap, Skull, Lock, Info, Play } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
 import { useGame } from "@/context/GameContext";
+import { useAuth } from "@/context/AuthContext";
+import * as api from "@/services/api";
+
 const RulesPage = () => {
     const navigate = useNavigate();
     const { gameStarted } = useGame();
-    const handleEnterWarzone = () => {
-  if (!gameStarted) {
-    toast.error("Round not started", {
-      description: "Wait for the round to be started",
-      // Custom styling to halve the height and add cinematic flair
-      className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
-      classNames: {
-        title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
-        description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
-        toast: "group",
-      },
-      duration: 3000,
-    });
-    return;
-  }
+    const { team } = useAuth();
+    const [registeredTeams, setRegisteredTeams] = useState<string[]>([]);
 
-  toast.success("NEURAL_SYNC_COMPLETE", {
-    description: "WARZONE_ENTRY_GRANTED",
-    className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-blue-500/30 rounded-none shadow-[0_0_15px_rgba(0,186,255,0.1)] p-0",
-    classNames: {
-      title: "text-[10px] font-bold tracking-[0.2em] text-blue-400 font-display pl-4",
-      description: "text-[8px] tracking-widest text-blue-600 font-mono pl-4",
-    },
-  });
-  
-  navigate("/dashboard");
-};
+    useEffect(() => {
+        const fetchRegisteredTeams = async () => {
+            try {
+                const teams = await api.getRegisteredTeams();
+                console.log("Fetched registered teams:", teams);
+                
+                // teams is already an array of team._id
+                if (Array.isArray(teams)) {
+                    setRegisteredTeams(teams);
+                } else {
+                    setRegisteredTeams([]);
+                }
+            } catch (error) {
+                console.error("Failed to fetch registered teams:", error);
+                setRegisteredTeams([]);
+            }
+        };
+
+        fetchRegisteredTeams();
+    }, []);
+
+    const handleEnterWarzone = () => {
+        console.log("Enter Warzone clicked");
+        console.log("Game Started:", gameStarted);
+        console.log("Current Team:", team);
+        console.log("Registered Teams:", registeredTeams);
+
+        if (!gameStarted) {
+            toast.error("Round not started", {
+            description: "Wait for the round to be started",
+            // Custom styling to halve the height and add cinematic flair
+            className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
+            classNames: {
+                title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
+                description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
+                toast: "group",
+            },
+            duration: 3000,
+            });
+            return;
+        }
+
+        // Check if current team is registered in the game
+        const teamRegistered = team && Array.isArray(registeredTeams) && registeredTeams.includes(team.id);
+        console.log("Team Registered Check:", teamRegistered, "Team ID:", team?.id);
+        
+        if (!teamRegistered) {
+            toast.error("TEAM_NOT_REGISTERED", {
+            description: "Team is not registered. Contact the administrator.",
+            className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
+            classNames: {
+                title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
+                description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
+                toast: "group",
+            },
+            duration: 3000,
+            });
+            return;
+        }
+
+        console.log("All checks passed, navigating to dashboard");
+        toast.success("NEURAL_SYNC_COMPLETE", {
+            description: "WARZONE_ENTRY_GRANTED",
+            className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-blue-500/30 rounded-none shadow-[0_0_15px_rgba(0,186,255,0.1)] p-0",
+            classNames: {
+            title: "text-[10px] font-bold tracking-[0.2em] text-blue-400 font-display pl-4",
+            description: "text-[8px] tracking-widest text-blue-600 font-mono pl-4",
+            },
+        });
+    
+        navigate("/dashboard");
+    };
     const rules = [
         {
             id: "01",

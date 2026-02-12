@@ -135,6 +135,10 @@ export async function getGameState(): Promise<GameState> {
   return request<GameState>("/api/game/state", { skipAuth: true });
 }
 
+export async function getRegisteredTeams(): Promise<string[]> {
+  return getAllTeams().then(teams => teams.map(team => team._id));
+}
+
 export async function getBlipPuzzle(): Promise<{ question: string } | null> {
   try {
     return await request<{ question: string }>("/api/game/blip-puzzle");
