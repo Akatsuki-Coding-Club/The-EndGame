@@ -27,6 +27,7 @@ export interface TeamGameState {
   score: number;
   currentLevel: number;
   isFrozen: boolean;
+  role?: string;
   isBlocked: boolean;
   isShielded?: boolean;
 }
@@ -88,6 +89,7 @@ function teamToGameState(t: {
   frozenUntil?: string | null;
   blockedUntil?: string | null;
   missionsCompleted?: number;
+  role?: string;
 }): TeamGameState {
   const now = Date.now();
   const frozenUntil = t.frozenUntil ? new Date(t.frozenUntil).getTime() : null;
@@ -99,6 +101,7 @@ function teamToGameState(t: {
     currentLevel: (t.missionsCompleted ?? 0) + 1,
     isFrozen: !!(frozenUntil && now < frozenUntil),
     isBlocked: !!(blockedUntil && now < blockedUntil),
+    role: t.role || "team"
   };
 }
 
@@ -114,6 +117,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
   const [blipPuzzleSolved, setBlipPuzzleSolved] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  // const [isBlocked, setIsBlocked] = useState(false);
+  const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
+
   const [powersDisabled, setPowersDisabled] = useState(false);
   const [gameLoading, setGameLoading] = useState(true);
   const [notifications, setNotifications] = useState<{ id: string; message: string; type: "attack" | "success" | "system"; timestamp: string }[]>([]);
@@ -162,7 +168,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       setScore(me.score ?? 0);
       const completedCount = me.missionsCompleted ?? 0;
       setCurrentLevel(completedCount + 1);
-      
+
       const alreadyCompleted = Array.from({ length: completedCount }, (_, i) => i + 1);
       setCompletedLevels(alreadyCompleted);
 
@@ -188,7 +194,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setPendingStoneCount(stoneStatus.pendingStoneCount ?? 0);
       }
     } catch (e) {
-        console.error("Sync Error", e);
+      console.error("Sync Error", e);
     }
   }, [team]);
 

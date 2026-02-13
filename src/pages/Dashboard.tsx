@@ -4,6 +4,7 @@ import { Shield, Zap, Skull, Target, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BlipOverlay from "@/components/BlipOverlay";
 import confetti from "canvas-confetti";
+import { useAuth } from "@/context/AuthContext";
 import HeroManager from "@/components/HeroManager";
 const Dashboard = () => {
   const {
@@ -17,13 +18,14 @@ const Dashboard = () => {
     triggerBlip,
     isFrozen,
     allTeamsState,
+    isBlocked,
     gameLoading,
   } = useGame();
 
   const [answer, setAnswer] = useState("");
   const [showPowerSurgeMenu, setShowPowerSurgeMenu] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState("");
-
+  const {team, isAdmin} = useAuth();
   useEffect(() => {
     const lockStack = () => {
       window.history.pushState(null, "", window.location.href);
@@ -104,9 +106,18 @@ const Dashboard = () => {
               className="w-full bg-black/60 border border-white/20 rounded px-2 py-2 text-[10px] outline-none appearance-none"
             >
               <option value="">Select Team...</option>
-              {allTeamsState?.filter(t => t.teamId !== 'current').map((team) => (
-                <option key={team.teamId} value={team.teamId}>{team.teamName}</option>
-              ))}
+              {allTeamsState
+                ?.filter((t) => {
+                  const isNotMe = t.teamId !== team?.id;
+                  const isNotAdmin = t.role !== "admin";
+
+                  return isNotMe && isNotAdmin;
+                })
+                .map((target) => (
+                  <option key={target.teamId} value={target.teamId}>
+                    {target.teamName}
+                  </option>
+                ))}
             </select>
             <ChevronDown size={12} className="absolute right-2 top-2.5 opacity-50 pointer-events-none" />
           </div>
