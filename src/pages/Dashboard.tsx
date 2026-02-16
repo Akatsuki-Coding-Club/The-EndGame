@@ -6,6 +6,8 @@ import BlipOverlay from "@/components/BlipOverlay";
 import confetti from "canvas-confetti";
 import { useAuth } from "@/context/AuthContext";
 import HeroManager from "@/components/HeroManager";
+import AttackOverlay from "@/components/AttackOverlay";
+
 const Dashboard = () => {
   const {
     puzzles,
@@ -25,7 +27,7 @@ const Dashboard = () => {
   const [answer, setAnswer] = useState("");
   const [showPowerSurgeMenu, setShowPowerSurgeMenu] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState("");
-  const {team, isAdmin} = useAuth();
+  const { team, isAdmin } = useAuth();
   useEffect(() => {
     const lockStack = () => {
       window.history.pushState(null, "", window.location.href);
@@ -131,6 +133,7 @@ const Dashboard = () => {
   );
 
   return (
+
     <div
       className="h-screen max-h-screen flex flex-col overflow-hidden bg-cover bg-center bg-no-repeat text-white font-sans relative"
       style={{ backgroundImage: `url('https://t4.ftcdn.net/jpg/07/40/54/65/360_F_740546589_eVog5QiPu5WxsTV9IsDdLL5d2B3TQ4nD.webp')` }}
@@ -138,10 +141,9 @@ const Dashboard = () => {
       <div className="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
 
       <div className="relative z-10 flex flex-col h-full">
+        <AttackOverlay />
         <Navbar />
-
         <HeroManager />
-
 
         {isFrozen && <BlipOverlay />}
 

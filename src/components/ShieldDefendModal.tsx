@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useGame } from "@/context/GameContext";
-import { useAuth } from "@/context/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -10,33 +9,24 @@ import {
 import { Shield, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export default function ShieldDefendModal() {
+  const { showShieldOffer, pendingAttackerId, respondToAttack } = useGame();
+  const [acting, setActing] = useState(false);
 
-export default function StoneSelectModal() {
-  const { isAdmin } = useAuth();
-  const { pendingStoneCount, selectStoneType } = useGame();
-  const [selecting, setSelecting] = useState(false);
+  if (!showShieldOffer) return null;
 
-  const open = !isAdmin && pendingStoneCount > 0;
-  const [visible, setVisible] = useState(open);
-
-  React.useEffect(() => {
-    if (open) setVisible(true);
-  }, [open]);
-
-  const handleSelect = async (stoneType: "block" | "shield") => {
-    if (selecting) return;
-    setSelecting(true);
+  const handle = async (action: "useShield" | "continue") => {
+    if (acting) return;
+    setActing(true);
     try {
-      await selectStoneType(stoneType);
-      // Close modal immediately after a selection to prevent multiple picks
-      setVisible(false);
+      await respondToAttack(pendingAttackerId || "", action);
     } finally {
-      setSelecting(false);
+      setActing(false);
     }
   };
 
   return (
-    <Dialog open={visible}>
+    <Dialog open={true}>
       <DialogContent
         className="border-primary/30 bg-slate-950 text-white sm:max-w-md"
         onPointerDownOutside={(e) => e.preventDefault()}
@@ -45,16 +35,16 @@ export default function StoneSelectModal() {
       >
         <DialogHeader>
           <DialogTitle className="text-center text-lg font-bold uppercase tracking-wider text-primary">
-            Infinity Stone Acquired
+            Incoming Attack
           </DialogTitle>
         </DialogHeader>
         <p className="text-center text-sm text-slate-400">
-          You&apos;ve earned an Infinity Stone! Choose one to add to your arsenal:
+          You are being attacked by another team. Use your Shield to ignore the attack or continue the attack protocol.
         </p>
         <div className="grid grid-cols-2 gap-4 pt-4">
           <button
-            onClick={() => handleSelect("shield")}
-            disabled={selecting}
+            onClick={() => handle("useShield")}
+            disabled={acting}
             className={cn(
               "flex flex-col items-center gap-3 rounded-lg border-2 border-blue-500/50 bg-blue-950/30 p-6",
               "hover:border-blue-500 hover:bg-blue-950/50 disabled:opacity-50 transition-all"
@@ -62,15 +52,15 @@ export default function StoneSelectModal() {
           >
             <Shield className="h-10 w-10 text-blue-400" />
             <span className="text-xs font-bold uppercase tracking-wider text-blue-300">
-              Shield Matrix
+              Use Shield Stone
             </span>
             <span className="text-[10px] text-slate-500">
-              Block incoming attacks
+              Consume one Shield to ignore attack
             </span>
           </button>
           <button
-            onClick={() => handleSelect("block")}
-            disabled={selecting}
+            onClick={() => handle("continue")}
+            disabled={acting}
             className={cn(
               "flex flex-col items-center gap-3 rounded-lg border-2 border-red-500/50 bg-red-950/30 p-6",
               "hover:border-red-500 hover:bg-red-950/50 disabled:opacity-50 transition-all"
@@ -78,11 +68,9 @@ export default function StoneSelectModal() {
           >
             <Zap className="h-10 w-10 text-red-400" />
             <span className="text-xs font-bold uppercase tracking-wider text-red-300">
-              Power Surge
+              Continue Attack
             </span>
-            <span className="text-[10px] text-slate-500">
-              Lock a rival team
-            </span>
+            <span className="text-[10px] text-slate-500">Proceed with block protocol</span>
           </button>
         </div>
       </DialogContent>

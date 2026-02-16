@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import ShieldDefendModal from "@/components/ShieldDefendModal";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 import * as api from "@/services/api";
-
+import { io, Socket } from "socket.io-client";
+import { API_BASE } from "../services/api"
 export interface Puzzle {
   id: number;
   title: string;
@@ -43,6 +45,7 @@ export interface GameState {
   isBlocked: boolean;
   frozenUntil: number | null;
   blipPuzzleSolved: boolean;
+  blockPuzzleQuestion?: string | null;
   powersDisabled: boolean;
   gameDuration: number;
   setGameDuration: (seconds: number) => void;
@@ -55,6 +58,7 @@ export interface GameState {
   blockTeam: (targetTeamId: string) => void;
   setIsFrozen: (frozen: boolean) => void;
   setIsBlocked: (blocked: boolean) => void;
+  setBlockPuzzleQuestion?: (q: string | null) => void;
   setFrozen: (frozen: boolean, until?: number) => void;
   submitBlipAnswer: (answer: string) => Promise<boolean>;
   solveBlipPuzzle: () => void;
@@ -66,6 +70,9 @@ export interface GameState {
   resetBlipState: () => void;
   pendingStoneCount: number;
   selectStoneType: (stoneType: "block" | "shield") => Promise<void>;
+  showShieldOffer?: boolean;
+  pendingAttackerId?: string | null;
+  respondToAttack?: (attackerId: string, action: "useShield" | "continue") => Promise<void>;
 }
 
 const GameContext = createContext<GameState | null>(null);
@@ -117,8 +124,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
   const [blipPuzzleSolved, setBlipPuzzleSolved] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
-  // const [isBlocked, setIsBlocked] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
+  const [blockPuzzleQuestion, setBlockPuzzleQuestion] = useState<string | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [showShieldOffer, setShowShieldOffer] = useState(false);
+  const [pendingAttackerId, setPendingAttackerId] = useState<string | null>(null);
+
 
   const [powersDisabled, setPowersDisabled] = useState(false);
   const [gameLoading, setGameLoading] = useState(true);
@@ -237,25 +248,118 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return () => { cancelled = true; };
   }, [team?.id, isAdmin, refreshTeams, syncMyState]);
 
-  useEffect(() => {
-    if (!team || isAdmin) return;
-    const interval = setInterval(syncMyState, 15000);
-    return () => clearInterval(interval);
-  }, [team?.id, isAdmin, syncMyState]);
 
   useEffect(() => {
-    if (isBlocked && stones.shieldActive) {
+    if (!team || isAdmin) return;
+
+    const s = io(API_BASE, { transports: ["websocket"] });
+
+    const onConnect = () => {
+      console.log("✅ Socket connected:", s.id);
+      s.emit("JOIN_TEAM", team.id);
+    };
+
+    s.on("connect", onConnect);
+
+    s.on("TEAM_BLOCKED", (data: { blockedUntil: string; puzzleQuestion?: string }) => {
+      const until = data?.blockedUntil ? new Date(data.blockedUntil).getTime() : null;
+      if (!until) return;
+      setIsBlocked(true);
+      setBlockedUntil(until);
+      setBlockPuzzleQuestion(data.puzzleQuestion || null);
+      setStones((prev) => ({ ...prev, blockedUntil: until }));
+      addNotification(`You are under Power Surge attack!`, "attack");
+      toast.error("SYSTEM_LOCKED", { description: "Solve the unlock puzzle to regain control." });
+    });
+
+    s.on("STONE_ATTACK_BLOCKED", (data?: any) => {
+      // Shield blocked the incoming Power Surge
       setIsBlocked(false);
       setStones((prev) => ({ ...prev, shieldActive: false }));
-      toast.success("SHIELD_DEFLECTED_ATTACK", {
-        description: "Incoming Power Surge negated by Shield Matrix.",
-      });
-    } else if (isBlocked) {
-      toast.error("CRITICAL_SYSTEM_BREACH", {
-        description: "Incoming Power Surge detected. System locked.",
-      });
-    }
-  }, [isBlocked, stones.shieldActive]);
+      toast.success("Shield saved you", { description: "Your Shield absorbed the incoming attack." });
+    });
+
+    s.on("ATTACK_OFFER_SHIELD", (data: { attackerId: string; attackerName?: string; message?: string }) => {
+      setPendingAttackerId(data?.attackerId || null);
+      setShowShieldOffer(true);
+      addNotification(`Incoming attack from ${data?.attackerName || "an opponent"}`, "attack");
+      toast((data?.message) || "Incoming attack - choose defend or continue");
+    });
+
+    // BLIP puzzle delivered directly to team
+    s.on("BLIP_PUZZLE", (puzzle: { question?: string; answer?: string; freezeDurationSec?: number }) => {
+      setBlipPuzzleSolved(true);
+      setIsFrozen(true);
+      if (puzzle && puzzle.question) {
+        addNotification(`Blip puzzle: ${puzzle.question}`, "system");
+      }
+    });
+
+    s.on("BLIP_ENDED", () => {
+      setIsFrozen(false);
+      setFrozenUntil(null);
+      setBlipPuzzleSolved(false);
+      toast.success("BLIP_RESOLVED", { description: "Blip ended - systems restored." });
+    });
+
+    s.on("BLOCK_RELEASED", () => {
+      setIsBlocked(false);
+      setBlockedUntil(null);
+      setBlockPuzzleQuestion(null);
+      setStones((prev) => ({ ...prev, blockedUntil: null }));
+      toast.success("SYSTEM_RESTORED", { description: "Block removed successfully." });
+    });
+
+    s.on("SHIELD_CONSUMED", () => {
+      setStones((prev) => ({ ...prev, shieldActive: false, shieldCount: 0 }));
+      toast.success("SHIELD_DEFLECTED_ATTACK", { description: "Your Shield absorbed the incoming attack." });
+    });
+
+    setSocket(s);
+
+    return () => {
+      s.off("connect", onConnect);
+      s.off("TEAM_BLOCKED");
+      s.off("ATTACK_OFFER_SHIELD");
+      s.off("STONE_ATTACK_BLOCKED");
+      s.off("BLOCK_RELEASED");
+      s.off("SHIELD_CONSUMED");
+      s.disconnect();
+      setSocket(null);
+    };
+  }, [team?.id, isAdmin, addNotification]);
+  // useEffect(() => {
+  //   if (isBlocked && stones.shieldActive) {
+  //     setIsBlocked(false);
+  //     setStones((prev) => ({ ...prev, shieldActive: false }));
+  //     toast.success("SHIELD_DEFLECTED_ATTACK", {
+  //       description: "Incoming Power Surge negated by Shield Matrix.",
+  //     });
+  //   } else if (isBlocked) {
+  //     toast.error("CRITICAL_SYSTEM_BREACH", {
+  //       description: "Incoming Power Surge detected. System locked.",
+  //     });
+  //   }
+  // }, [isBlocked, stones.shieldActive]);
+
+
+  useEffect(() => {
+    if (!blockedUntil) return;
+
+    const interval = setInterval(() => {
+      if (Date.now() > blockedUntil) {
+        setIsBlocked(false);
+        setBlockedUntil(null);
+        setStones((prev) => ({
+          ...prev,
+          blockedUntil: null,
+        }));
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [blockedUntil]);
 
   const startGame = useCallback(async () => {
     try {
@@ -269,6 +373,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const submitAnswer = useCallback(
     async (levelId: number, answer: string): Promise<boolean> => {
+      if (isBlocked) {
+        toast.error("SYSTEM_LOCKED");
+        return false;
+      }
       const puzzle = puzzles.find((p) => p.id === levelId);
       if (!puzzle?.missionId) {
         toast.error("DECRYPTION_FAILED");
@@ -292,7 +400,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       toast.error("DECRYPTION_FAILED");
       return false;
     },
-    [puzzles, team?.name, syncMyState, refreshTeams, addNotification]
+    [puzzles, team?.name, syncMyState, refreshTeams, addNotification, isBlocked]
   );
 
   const activateShield = useCallback(async () => {
@@ -315,16 +423,26 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     async (targetTeamId: string) => {
       if (powersDisabled || stones.blockCount <= 0) return;
       try {
-        await api.useBlock(targetTeamId);
-        addNotification(`${team?.name} BLOCKED ${targetTeamId}`, "attack");
-        setStones((prev) => ({ ...prev, blockCount: prev.blockCount - 1 }));
+        const result = await api.useBlock(targetTeamId);
+
+        if (result.message.includes("Shield broke")) {
+          toast.info("ATTACK DEFLECTED", {
+            description: "The rival team's Shield Stone neutralized your Power Surge."
+          });
+        } else {
+          toast.success("POWER_SURGE_SENT", {
+            description: "Rival systems have been compromised for 120 seconds."
+          });
+        }
+
+        // Sync local counts with DB immediately
+        await syncMyState();
         await refreshTeams();
-        toast.success("POWER_SURGE_SENT");
-      } catch (e) {
-        toast.info("TARGET_SHIELDED");
+      } catch (e: any) {
+        toast.error("SYSTEM ERROR", { description: e.message });
       }
     },
-    [stones.blockCount, powersDisabled, team?.name, refreshTeams, addNotification]
+    [stones.blockCount, powersDisabled, syncMyState, refreshTeams]
   );
 
   const setFrozenState = useCallback((frozen: boolean, until?: number) => {
@@ -408,6 +526,28 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     [syncMyState]
   );
 
+  const respondToAttack = useCallback(
+    async (attackerId: string, action: "useShield" | "continue") => {
+      if (!attackerId) return;
+      try {
+        const res = await api.defendAttack(attackerId, action);
+        setShowShieldOffer(false);
+        setPendingAttackerId(null);
+        if (action === "useShield") {
+          setStones((prev) => ({ ...prev, shieldCount: Math.max(0, (prev.shieldCount || 0) - 1), shieldActive: false }));
+          toast.success("SHIELD_CONSUMED_LOCAL", { description: res.message || "Shield used" });
+        } else {
+          toast.info("ATTACK_CONTINUE", { description: res.message || "Continuing attack protocol" });
+        }
+        await syncMyState();
+        await refreshTeams();
+      } catch (e: any) {
+        toast.error("DEFEND_ERROR", { description: e.message });
+      }
+    },
+    [syncMyState, refreshTeams]
+  );
+
   return (
     <GameContext.Provider
       value={{
@@ -442,10 +582,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         refreshTeams,
         gameLoading,
         resetBlipState,
+        blockPuzzleQuestion,
+        setBlockPuzzleQuestion,
+        showShieldOffer,
+        pendingAttackerId,
+        respondToAttack,
         pendingStoneCount,
         selectStoneType,
       }}
     >
+      <ShieldDefendModal />
       {children}
     </GameContext.Provider>
   );

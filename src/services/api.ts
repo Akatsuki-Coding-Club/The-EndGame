@@ -1,5 +1,5 @@
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function getToken(): string | null {
   return localStorage.getItem("blip_token");
@@ -198,6 +198,13 @@ export async function submitBlockUnlock(answer: string) {
   );
 }
 
+export async function defendAttack(attackerId: string, action: "useShield" | "continue") {
+  return request<{ success: boolean; message: string }>(
+    "/api/game/defend-attack",
+    { method: "POST", body: JSON.stringify({ attackerId, action }) }
+  );
+}
+
 //stones 
 export interface StoneStatus {
   stonesEarned: number;
@@ -227,10 +234,11 @@ export async function useStone(stoneType: "shield" | "block", targetTeamId?: str
   });
 }
 
+
 export async function useBlock(targetTeamId: string) {
   return request<{ message: string }>("/api/stones/use/block", {
     method: "POST",
-    body: JSON.stringify({ targetId: targetTeamId, targetTeamId: targetTeamId }),
+    body: JSON.stringify({ targetId: targetTeamId }),
   });
 }
 
@@ -253,3 +261,22 @@ export async function getDashboardGameState(): Promise<GameState> {
 }
 
 export { getToken, setToken };
+
+export const unlockBlock = async (answer: string) => {
+  const res = await fetch("/api/unlock", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify({ answer })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || "Unlock failed");
+  }
+
+  return data;
+};

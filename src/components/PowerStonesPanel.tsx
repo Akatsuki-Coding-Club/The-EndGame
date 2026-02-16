@@ -49,26 +49,9 @@ const PowerStonesPanel = () => {
           )} />
         </div>
 
-        {stones.shieldActive ? (
-          <button 
-            onClick={deactivateShield} 
-            className="w-full py-3 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(255,0,0,0.4)]"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <ShieldCheck size={14} /> Deactivate Matrix
-            </div>
-          </button>
-        ) : (
-          <button 
-            onClick={activateShield} 
-            disabled={stones.shieldCount <= 0 || powersDisabled}
-            className="w-full py-3 border border-primary/50 text-primary text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary/10 transition-colors disabled:opacity-20"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <ShieldOff size={14} /> Engage Shield
-            </div>
-          </button>
-        )}
+        <div className="w-full py-3 border border-primary/10 text-primary/60 text-[10px] font-bold uppercase tracking-[0.2em] text-center">
+          Shield stones are auto-used when attacked. Count shown above.
+        </div>
       </div>
 
       {/* BLOCK STONE - MARK 85 STYLE */}
