@@ -29,14 +29,13 @@ const ProtectedRoute = ({ children, admin = false }: { children: React.ReactNode
 
 const AppRoutes = () => (
   <Routes>
-     <Route path="/" element={<Landing />} />
-    <Route path="/login" element={<TeamLoginPage />} /> 
+    <Route path="/" element={<Landing />} />
+    <Route path="/login" element={<TeamLoginPage />} />
     <Route path="/admin" element={<AdminLoginPage />} />
     <Route path="/rules" element={<RulesPage />} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    {/* <Route path="/admin" element={<ProtectedRoute admin><AdminPage /></ProtectedRoute>} /> */}
     <Route path="/leaderboard" element={<LeaderboardPage />} />
-    {/* <Route path="/admin" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} /> */}
+    <Route path="/admin/dashboard" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

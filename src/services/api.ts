@@ -93,8 +93,18 @@ export async function getAllTeams() {
       missionsCompleted?: number;
       buildMissionsCompleted?: number;
       activeEffects?: string[];
+      stones?: string[];
+      completedTimelines?: string[];
+      snapActivated?: boolean;
     }>
   >("/api/auth/teams", { skipAuth: true });
+}
+
+export async function createTeam(teamName: string, password: string, role: string = "team") {
+  return request<{ success: boolean; team: any }>("/api/admin/team/create", {
+    method: "POST",
+    body: JSON.stringify({ teamName, password, role }),
+  });
 }
 
 export interface Mission {
@@ -124,15 +134,83 @@ export async function submitMission(missionId: string, answer: string) {
 
 // --- Game ---
 export interface GameState {
+  _id: string;
   phase: string;
   startedAt: string | null;
   blipPhase: number | null;
   blipActive: boolean;
   lockdown: boolean;
+  teams?: string[];
 }
 
 export async function getGameState(): Promise<GameState> {
   return request<GameState>("/api/game/state", { skipAuth: true });
+}
+
+export async function addTeamToGame(gameId: string, teamId: string) {
+  return request<{ message: string }>("/api/admin/team/add", {
+    method: "POST",
+    body: JSON.stringify({ gameId, teamId }),
+  });
+}
+
+export async function addTeamsToGame(gameId: string, teamIds: string[]) {
+  return request<{ message: string }>("/api/admin/teams/add", {
+    method: "POST",
+    body: JSON.stringify({ gameId, teamIds }),
+  });
+}
+
+export async function cleanupTeams(teamNames: string[]) {
+  return request<{ message: string }>("/api/admin/cleanup/teams", {
+    method: "POST",
+    body: JSON.stringify({ teamNames }),
+  });
+}
+
+export async function freezeTeamHandler(teamId: string) {
+  return request<{ message: string }>("/api/admin/team/freeze", {
+    method: "POST",
+    body: JSON.stringify({ teamId }),
+  });
+}
+
+export async function unfreezeTeamHandler(teamId: string) {
+  return request<{ message: string }>("/api/admin/team/unfreeze", {
+    method: "POST",
+    body: JSON.stringify({ teamId }),
+  });
+}
+
+export async function getAllQuestions() {
+  return request<{ questions: any[] }>("/api/admin/questions");
+}
+
+export async function createQuestion(data: any) {
+  return request<{ question: any }>("/api/admin/question/create", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function createQuestionsBulk(questions: any[]) {
+  return request<{ createdCount: number }>("/api/admin/questions/create-multiple", {
+    method: "POST",
+    body: JSON.stringify({ questions }),
+  });
+}
+
+export async function addQuestionToGame(gameId: string, questionId: string) {
+  return request<{ message: string }>("/api/admin/question/add", {
+    method: "POST",
+    body: JSON.stringify({ gameId, questionId }),
+  });
+}
+
+export async function cleanupQuestions() {
+  return request<{ message: string }>("/api/admin/cleanup/questions", {
+    method: "POST",
+  });
 }
 
 export async function getRegisteredTeams(): Promise<string[]> {
@@ -147,8 +225,20 @@ export async function getBlipPuzzle(): Promise<{ question: string } | null> {
   }
 }
 
-export async function startGame() {
-  return request<{ message: string }>("/api/game/start", { method: "POST" });
+
+export async function createGame(name: string) {
+  return request<{ game: { _id: string; name: string } }>("/api/game/create", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function getWaitingGames() {
+  return request<{ games: any[] }>("/api/game/waiting");
+}
+
+export async function startGame(gameId: string) {
+  return request<{ message: string }>(`/api/game/start/${gameId}`, { method: "POST" });
 }
 
 export async function triggerBlip(phase: 1 | 2) {

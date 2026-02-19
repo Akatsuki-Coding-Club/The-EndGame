@@ -32,6 +32,9 @@ export interface TeamGameState {
   role?: string;
   isBlocked: boolean;
   isShielded?: boolean;
+  stones: string[];
+  completedTimelines: string[];
+  snapActivated: boolean;
 }
 
 export interface GameState {
@@ -51,7 +54,7 @@ export interface GameState {
   setGameDuration: (seconds: number) => void;
   notifications: { id: string; message: string; type: "attack" | "success" | "system"; timestamp: string }[];
   allTeamsState: TeamGameState[];
-  startGame: () => void;
+  startGame: (gameId?: string) => void;
   submitAnswer: (levelId: number, answer: string) => Promise<boolean>;
   activateShield: () => void;
   deactivateShield: () => void;
@@ -97,6 +100,9 @@ function teamToGameState(t: {
   blockedUntil?: string | null;
   missionsCompleted?: number;
   role?: string;
+  stones?: string[];
+  completedTimelines?: string[];
+  snapActivated?: boolean;
 }): TeamGameState {
   const now = Date.now();
   const frozenUntil = t.frozenUntil ? new Date(t.frozenUntil).getTime() : null;
@@ -108,7 +114,10 @@ function teamToGameState(t: {
     currentLevel: (t.missionsCompleted ?? 0) + 1,
     isFrozen: !!(frozenUntil && now < frozenUntil),
     isBlocked: !!(blockedUntil && now < blockedUntil),
-    role: t.role || "team"
+    role: t.role || "team",
+    stones: t.stones || [],
+    completedTimelines: t.completedTimelines || [],
+    snapActivated: t.snapActivated || false,
   };
 }
 
@@ -361,9 +370,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, [blockedUntil]);
 
-  const startGame = useCallback(async () => {
+  const startGame = useCallback(async (gameId?: string) => {
     try {
-      await api.startGame();
+      if (!gameId) throw new Error("Game ID required to start");
+      await api.startGame(gameId);
       setGameStarted(true);
       toast.success("GAME_START");
     } catch (e) {
@@ -494,21 +504,33 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const freezeTeam = useCallback(
-    (teamId: string) => {
-      setAllTeamsState((prev) =>
-        prev.map((t) => (t.teamId === teamId ? { ...t, isFrozen: true } : t))
-      );
-      if (team?.id === teamId) setFrozenState(true, Date.now() + 5 * 60 * 1000);
+    async (teamId: string) => {
+      try {
+        await api.freezeTeamHandler(teamId);
+        setAllTeamsState((prev) =>
+          prev.map((t) => (t.teamId === teamId ? { ...t, isFrozen: true } : t))
+        );
+        if (team?.id === teamId) setFrozenState(true, Date.now() + 5 * 60 * 1000);
+        toast.success("UNIT FROZEN SUCCESSFULLY");
+      } catch (e: any) {
+        toast.error("FREEZE FAILED: " + e.message);
+      }
     },
     [team, setFrozenState]
   );
 
   const unfreezeTeam = useCallback(
-    (teamId: string) => {
-      setAllTeamsState((prev) =>
-        prev.map((t) => (t.teamId === teamId ? { ...t, isFrozen: false } : t))
-      );
-      if (team?.id === teamId) setFrozenState(false);
+    async (teamId: string) => {
+      try {
+        await api.unfreezeTeamHandler(teamId);
+        setAllTeamsState((prev) =>
+          prev.map((t) => (t.teamId === teamId ? { ...t, isFrozen: false } : t))
+        );
+        if (team?.id === teamId) setFrozenState(false);
+        toast.success("UNIT UNFROZEN SUCCESSFULLY");
+      } catch (e: any) {
+        toast.error("UNFREEZE FAILED: " + e.message);
+      }
     },
     [team, setFrozenState]
   );
