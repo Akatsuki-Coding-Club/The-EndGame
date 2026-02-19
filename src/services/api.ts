@@ -107,6 +107,7 @@ export async function createTeam(teamName: string, password: string, role: strin
   });
 }
 
+
 export interface Mission {
   _id: string;
   title: string;
@@ -115,21 +116,67 @@ export interface Mission {
   points: number;
   answer?: string;
   isActive?: boolean;
+  timeline?: { key: string; name: string };
+  difficulty?: string;
+  options?: string[];
+}
+
+// Deprecated or Modified: The backend no longer exposes GET /api/missions list.
+// New flow uses Timelines.
+
+export async function getTimelines() {
+  return request<{ timelines: string[] }>("/api/missions/timelines");
+}
+
+export async function enterTimeline(timeline: string) {
+  return request<{ message: string }>("/api/missions/enter", {
+    method: "POST",
+    body: JSON.stringify({ timeline }),
+  });
+}
+
+export async function getQuestionsForTimeline() {
+  return request<{ questions: Mission[] }>("/api/missions/questions");
+}
+
+export async function getCurrentQuestion() {
+  return request<{
+    question: Mission | null;
+    totalQuestions?: number;
+    answeredCount?: number;
+    remainingCount?: number;
+    completed?: boolean;
+    message?: string
+  }>("/api/missions/current-question");
+}
+
+export async function submitAnswer(questionId: string, answer: string) {
+  return request<{
+    isCorrect: boolean;
+    points: number;
+    message: string;
+    completed?: boolean;
+    earnedStone?: string;
+    timeline?: string;
+  }>(
+    "/api/missions/submit",
+    { method: "POST", body: JSON.stringify({ questionId, answer }) }
+  );
+}
+
+export async function exitTimeline() {
+  return request<{ message: string }>("/api/missions/exit", { method: "POST" });
+}
+
+// Alias for backward compatibility if needed, but updated to use questionId payload
+export async function submitMission(missionId: string, answer: string) {
+  // @ts-ignore
+  return submitAnswer(missionId, answer);
 }
 
 export async function getMissions(): Promise<Mission[]> {
-  return request<Mission[]>("/api/missions");
-}
-
-export async function getMissionById(missionId: string) {
-  return request<{ success: boolean; mission: Mission }>(`/api/missions/${missionId}`);
-}
-
-export async function submitMission(missionId: string, answer: string) {
-  return request<{ correct: boolean; points: number; readOnly?: boolean }>(
-    "/api/missions/submit",
-    { method: "POST", body: JSON.stringify({ missionId, answer }) }
-  );
+  console.warn("getMissions is deprecated. Use Timeline API.");
+  return [];
 }
 
 // --- Game ---

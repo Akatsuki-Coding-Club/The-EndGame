@@ -394,7 +394,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       }
       try {
         const result = await api.submitMission(puzzle.missionId, answer);
-        if (result.correct) {
+        // Supports legacy 'correct' and new 'isCorrect'
+        const success = (result as any).correct ?? result.isCorrect;
+
+        if (success) {
           setCompletedLevels((prev) => (prev.includes(levelId) ? prev : [...prev, levelId]));
           setScore((prev) => prev + result.points);
           if (levelId < puzzles.length) setCurrentLevel(levelId + 1);
