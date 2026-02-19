@@ -119,7 +119,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [completedLevels, setCompletedLevels] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [puzzles, setPuzzles] = useState<Puzzle[]>([]);
-  const [gameStarted, setGameStarted] = useState(false);
+  const [gameStarted, setGameStarted] = useState(true);
   const [isFrozen, setIsFrozen] = useState(false);
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
   const [blipPuzzleSolved, setBlipPuzzleSolved] = useState(false);
