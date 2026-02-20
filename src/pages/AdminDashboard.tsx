@@ -34,18 +34,11 @@ const AdminDashboard = () => {
 
     // New State for Question Management
     const [adminQuestions, setAdminQuestions] = useState<any[]>([]);
+    const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
     const [newInstanceName, setNewInstanceName] = useState("");
     const [waitingGames, setWaitingGames] = useState<any[]>([]);
     const [newQuestionTitle, setNewQuestionTitle] = useState(""); // used as 'question' in backend? or title? backend model has 'question' field
     const [newQuestionBrief, setNewQuestionBrief] = useState(""); // mapped to 'description'? backend model has 'question' which seems to be the text. 
-    // Wait, backend controller says: timeline, difficulty, question, options, answer, points, isActive.
-    // The UI has: "TITLE / CODE" (input), "ENCRYPTED DATA" (textarea), "DECRYPTION KEY" (input), "POINT VALUE" (number).
-    // I will map: 
-    // Title/Code -> timeline (or difficulty?) - I'll use it as 'question' title/header if needed, but backend schema has 'question' string.
-    // Encrypted Data -> 'question' (the main content)
-    // Decryption Key -> 'answer'
-    // Point Value -> 'points'
-    // I'll add 'timeline' and 'difficulty' defaults or inputs if needed.
     const [qTitle, setQTitle] = useState("");
     const [qContent, setQContent] = useState("");
     const [qAnswer, setQAnswer] = useState("");
@@ -230,6 +223,60 @@ const AdminDashboard = () => {
             toast.error("PURGE FAILED: " + e.message);
         }
     }
+
+    // Question selection helpers
+    const toggleQuestionSelection = (id: string) => {
+        setSelectedQuestionIds(prev =>
+            prev.includes(id) ? prev.filter(qid => qid !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAllQuestions = () => {
+        if (selectedQuestionIds.length === adminQuestions.length) {
+            setSelectedQuestionIds([]);
+        } else {
+            setSelectedQuestionIds(adminQuestions.map(q => q._id));
+        }
+    };
+
+    const handleBulkAddQuestionsToGame = async () => {
+        if (!dbGameId) { toast.error("NO ACTIVE GAME INSTANCE"); return; }
+        if (selectedQuestionIds.length === 0) return;
+        try {
+            await Promise.all(selectedQuestionIds.map(qid => addQuestionToGame(dbGameId, qid)));
+            toast.success(`LINKED ${selectedQuestionIds.length} INTEL ITEMS TO PROTOCOL`);
+            setSelectedQuestionIds([]);
+        } catch (e: any) {
+            toast.error("BULK LINK FAILED: " + e.message);
+        }
+    };
+
+    // Group questions by timeline (sorted by year) then by difficulty within each group
+    const DIFFICULTY_ORDER: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
+
+    const getGroupedQuestions = () => {
+        const groups: Record<string, { key: string; name: string; year: number; questions: any[] }> = {};
+        for (const q of adminQuestions) {
+            const tlKey = q.timeline?.key || 'unknown';
+            if (!groups[tlKey]) {
+                groups[tlKey] = {
+                    key: tlKey,
+                    name: q.timeline?.name || tlKey,
+                    year: q.timeline?.year ?? 9999,
+                    questions: []
+                };
+            }
+            groups[tlKey].questions.push(q);
+        }
+        // Sort each group's questions by difficulty
+        for (const g of Object.values(groups)) {
+            g.questions.sort((a, b) =>
+                (DIFFICULTY_ORDER[a.difficulty] ?? 99) - (DIFFICULTY_ORDER[b.difficulty] ?? 99)
+            );
+        }
+        // Sort groups by year
+        return Object.values(groups).sort((a, b) => a.year - b.year);
+    };
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -528,8 +575,22 @@ const AdminDashboard = () => {
 
                             {/* List */}
                             <div className="lg:col-span-2">
-                                <div className="flex justify-between items-center mb-6 px-2">
-                                    <h4 className="text-[10px] font-bold uppercase text-cyan-600 tracking-widest">Active Intel Database ({adminQuestions.length})</h4>
+                                {/* Toolbar */}
+                                <div className="flex justify-between items-center mb-4 px-2">
+                                    <div className="flex items-center gap-4">
+                                        <h4 className="text-[10px] font-bold uppercase text-cyan-600 tracking-widest">Active Intel Database ({adminQuestions.length})</h4>
+                                        {/* Select All */}
+                                        <button
+                                            onClick={handleSelectAllQuestions}
+                                            className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest border px-3 py-1 transition-all
+                                                       border-cyan-700/50 text-cyan-500 hover:bg-cyan-500 hover:text-black"
+                                        >
+                                            <CheckSquare size={10} />
+                                            {selectedQuestionIds.length === adminQuestions.length && adminQuestions.length > 0
+                                                ? "DESELECT ALL"
+                                                : `SELECT ALL (${adminQuestions.length})`}
+                                        </button>
+                                    </div>
                                     <div className="flex gap-2">
                                         <input
                                             type="file"
@@ -549,35 +610,127 @@ const AdminDashboard = () => {
                                         </button>
                                     </div>
                                 </div>
-                                <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin">
-                                    {adminQuestions.map((q) => (
-                                        <div key={q._id} className="bg-black/40 border border-cyan-900/30 p-4 flex justify-between items-center group hover:border-cyan-500/50 hover:bg-cyan-950/10 transition-all backdrop-blur-sm">
-                                            <div className="flex-1 mr-4">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <span className="text-[9px] bg-cyan-950/50 text-cyan-400 px-2 py-1 border border-cyan-500/30 font-bold uppercase tracking-widest">
-                                                        M-{q.timeline?.toString().padStart(2, '0') || '00'}
-                                                    </span>
-                                                    <span className="text-[12px] font-mono text-cyan-400 font-bold drop-shadow-[0_0_5px_cyan] ml-auto lg:ml-0 lg:order-last">{q.points} PTS</span>
-                                                </div>
-                                                <p className="text-[10px] text-cyan-700/80 italic max-w-md truncate font-mono">{q.question}</p>
-                                                <p className="text-[8px] text-cyan-900 mt-1 font-mono uppercase">Key: {q.answer}</p>
-                                            </div>
-                                            <div className="text-right flex items-center gap-2">
-                                                <button
-                                                    onClick={() => handleAddQuestionToGame(q._id)}
-                                                    className="text-[9px] border border-cyan-700/50 px-3 py-2 text-cyan-500 hover:bg-cyan-500 hover:text-black uppercase font-bold tracking-widest transition-all flex items-center gap-2"
-                                                >
-                                                    <Zap size={10} /> LINK TO GAME
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+
+                                {/* Grouped Question List */}
+                                <div className="space-y-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin">
                                     {adminQuestions.length === 0 && (
                                         <div className="text-center py-10 text-cyan-900 italic text-xs uppercase tracking-widest">
                                             NO INTEL FOUND IN SERVER
                                         </div>
                                     )}
+                                    {getGroupedQuestions().map((group) => (
+                                        <div key={group.key}>
+                                            {/* Timeline Header */}
+                                            <div className="flex items-center gap-4 mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-cyan-400 bg-cyan-950/60 border border-cyan-500/40 px-3 py-1">
+                                                        {group.name}
+                                                    </span>
+                                                    <span className="text-[8px] font-bold text-cyan-700 uppercase tracking-widest">• {group.year}</span>
+                                                    <span className="text-[8px] text-cyan-800 uppercase">({group.questions.length} questions)</span>
+                                                </div>
+                                                <div className="flex-1 h-[1px] bg-gradient-to-r from-cyan-500/30 to-transparent" />
+                                            </div>
+
+                                            {/* Difficulty sub-groups */}
+                                            {(['easy', 'medium', 'hard'] as const).map(diff => {
+                                                const dqs = group.questions.filter(q => q.difficulty === diff);
+                                                if (dqs.length === 0) return null;
+                                                const diffColors: Record<string, string> = {
+                                                    easy: 'text-green-400  border-green-500/30  bg-green-950/10',
+                                                    medium: 'text-yellow-400 border-yellow-500/30 bg-yellow-950/10',
+                                                    hard: 'text-red-400    border-red-500/30    bg-red-950/10',
+                                                };
+                                                const diffDot: Record<string, string> = {
+                                                    easy: 'bg-green-500',
+                                                    medium: 'bg-yellow-500',
+                                                    hard: 'bg-red-500',
+                                                };
+                                                return (
+                                                    <div key={diff} className="mb-4">
+                                                        {/* Difficulty label */}
+                                                        <div className="flex items-center gap-2 mb-2 pl-1">
+                                                            <span className={`w-[6px] h-[6px] rounded-full ${diffDot[diff]}`} />
+                                                            <span className={`text-[8px] font-bold uppercase tracking-[0.3em] ${diffColors[diff].split(' ')[0]}`}>
+                                                                {diff}
+                                                            </span>
+                                                        </div>
+                                                        <div className="space-y-2 pl-3">
+                                                            {dqs.map((q) => (
+                                                                <div
+                                                                    key={q._id}
+                                                                    onClick={() => toggleQuestionSelection(q._id)}
+                                                                    className={`bg-black/40 border p-4 flex justify-between items-center group
+                                                                        hover:bg-cyan-950/10 transition-all backdrop-blur-sm cursor-pointer
+                                                                        ${selectedQuestionIds.includes(q._id)
+                                                                            ? 'border-cyan-400 shadow-[0_0_12px_rgba(0,255,255,0.15)]'
+                                                                            : 'border-cyan-900/30 hover:border-cyan-500/50'
+                                                                        }`}
+                                                                >
+                                                                    {/* Checkbox */}
+                                                                    <div className="mr-3 flex-shrink-0">
+                                                                        <div className={`w-4 h-4 border flex items-center justify-center transition-all ${selectedQuestionIds.includes(q._id)
+                                                                                ? 'bg-cyan-500 border-cyan-500'
+                                                                                : 'border-cyan-700/50 bg-black/50'
+                                                                            }`}>
+                                                                            {selectedQuestionIds.includes(q._id) && <CheckSquare size={10} className="text-black" />}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="flex-1 mr-4 min-w-0">
+                                                                        <div className="flex items-center gap-2 mb-1">
+                                                                            <span className={`text-[8px] font-bold uppercase px-2 py-0.5 border rounded-sm ${diffColors[diff]}`}>
+                                                                                {diff}
+                                                                            </span>
+                                                                            <span className="text-[10px] font-mono text-cyan-400 font-bold drop-shadow-[0_0_5px_cyan]">
+                                                                                {q.points} PTS
+                                                                            </span>
+                                                                        </div>
+                                                                        <p className="text-[10px] text-cyan-200/80 italic max-w-md truncate font-mono">{q.question}</p>
+                                                                        <p className="text-[8px] text-cyan-900 mt-1 font-mono uppercase">
+                                                                            Key: <span className="text-cyan-700">{q.answer}</span>
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="text-right flex items-center gap-2 flex-shrink-0">
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); handleAddQuestionToGame(q._id); }}
+                                                                            className="text-[9px] border border-cyan-700/50 px-3 py-2 text-cyan-500 hover:bg-cyan-500 hover:text-black uppercase font-bold tracking-widest transition-all flex items-center gap-2"
+                                                                        >
+                                                                            <Zap size={10} /> LINK
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
                                 </div>
+
+                                {/* Floating bulk-action toolbar for questions */}
+                                {selectedQuestionIds.length > 0 && (
+                                    <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#050a10]/95 backdrop-blur-xl border border-cyan-500 p-4 shadow-[0_0_50px_rgba(0,255,255,0.3)] flex items-center gap-6 animate-fade-in-up rounded-none">
+                                        <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest border-r border-cyan-800 pr-6">
+                                            {selectedQuestionIds.length} INTEL SELECTED
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <button
+                                                onClick={handleBulkAddQuestionsToGame}
+                                                className="flex items-center gap-2 px-4 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500 hover:text-black text-[10px] uppercase font-bold tracking-wider transition-all"
+                                            >
+                                                <Zap size={14} /> Link All to Game
+                                            </button>
+                                            <button
+                                                onClick={() => setSelectedQuestionIds([])}
+                                                className="flex items-center gap-2 px-4 py-2 bg-slate-900/30 border border-slate-600/50 text-slate-400 hover:bg-slate-700 hover:text-white text-[10px] uppercase font-bold tracking-wider transition-all"
+                                            >
+                                                Clear Selection
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
