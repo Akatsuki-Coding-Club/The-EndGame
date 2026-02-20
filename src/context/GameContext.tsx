@@ -4,7 +4,8 @@ import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 import * as api from "@/services/api";
 import { io, Socket } from "socket.io-client";
-import { API_BASE } from "../services/api"
+import { API_BASE } from "../services/api";
+import { useNavigate } from "react-router-dom";
 export interface Puzzle {
   id: number;
   title: string;
@@ -21,6 +22,7 @@ export interface StoneState {
   blockCount: number;
   shieldActive: boolean;
   blockedUntil: number | null;
+  ownedStones: string[];
 }
 
 export interface TeamGameState {
@@ -76,6 +78,10 @@ export interface GameState {
   showShieldOffer?: boolean;
   pendingAttackerId?: string | null;
   respondToAttack?: (attackerId: string, action: "useShield" | "continue") => Promise<void>;
+  isSnapReady: boolean;
+  isSnapping: boolean;
+  snapWinner: TeamGameState | null;
+  initiateSupremeSnap: () => Promise<void>;
 }
 
 const GameContext = createContext<GameState | null>(null);
@@ -123,12 +129,13 @@ function teamToGameState(t: {
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const { team, isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [gameDuration, setGameDurationState] = useState(7200);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [completedLevels, setCompletedLevels] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [puzzles, setPuzzles] = useState<Puzzle[]>([]);
-  const [gameStarted, setGameStarted] = useState(true);
+  const [gameStarted, setGameStarted] = useState(false);
   const [isFrozen, setIsFrozen] = useState(false);
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
   const [blipPuzzleSolved, setBlipPuzzleSolved] = useState(false);
@@ -139,6 +146,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [showShieldOffer, setShowShieldOffer] = useState(false);
   const [pendingAttackerId, setPendingAttackerId] = useState<string | null>(null);
 
+  // Supreme Snap State
+  const [isSnapping, setIsSnapping] = useState(false);
+  const [snapWinner, setSnapWinner] = useState<TeamGameState | null>(null);
+
 
   const [powersDisabled, setPowersDisabled] = useState(false);
   const [gameLoading, setGameLoading] = useState(true);
@@ -148,6 +159,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     blockCount: 0,
     shieldActive: false,
     blockedUntil: null,
+    ownedStones: [],
   });
   const [pendingStoneCount, setPendingStoneCount] = useState(0);
   const [allTeamsState, setAllTeamsState] = useState<TeamGameState[]>([]);
@@ -176,6 +188,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const isSnapReady = stones.ownedStones.length === 6 && !isSnapping && !snapWinner;
+
   const syncMyState = useCallback(async () => {
     if (!api.getToken() || !team) return;
     try {
@@ -199,7 +213,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       setFrozenUntil(fUntil && Date.now() < fUntil ? fUntil : null);
 
       if (gameState) {
-        setGameStarted(gameState.phase === "running");
+        setGameStarted(gameState.status === "active");
         setPowersDisabled(gameState.lockdown ?? false);
       }
 
@@ -210,6 +224,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           blockCount: st.block ?? 0,
           shieldActive: stoneStatus.shieldActive ?? false,
           blockedUntil: stoneStatus.blockedUntil ? new Date(stoneStatus.blockedUntil).getTime() : null,
+          ownedStones: me.stones || [],
         });
         setPendingStoneCount(stoneStatus.pendingStoneCount ?? 0);
       }
@@ -223,6 +238,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       setGameLoading(false);
       setPuzzles([]);
       setAllTeamsState([]);
+      // Still fetch game state for unauthenticated users on /rules
+      // so the lock/unlock UI reflects reality on page load
+      api.getGameState().then((gs) => {
+        if (gs) setGameStarted(gs.status === "active");
+      }).catch(() => { });
       return;
     }
 
@@ -241,7 +261,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           setPuzzles(missionsList.map((m, i) => missionToPuzzle(m, i)));
         }
         if (gameState) {
-          setGameStarted(gameState.phase === "running");
+          setGameStarted(gameState.status === "active");
           setPowersDisabled(gameState.lockdown ?? false);
         }
 
@@ -269,6 +289,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     };
 
     s.on("connect", onConnect);
+
+    // 🚦 GAME GATEKEEPER — Auto-launch all teams when admin starts the game
+    s.on("GAME_STARTED", () => {
+      setGameStarted(true);
+      toast.success("COMMANDER_SIGNAL_RECEIVED", {
+        description: "The warzone is now open. Redirecting...",
+      });
+      navigate("/dashboard");
+    });
 
     s.on("TEAM_BLOCKED", (data: { blockedUntil: string; puzzleQuestion?: string }) => {
       const until = data?.blockedUntil ? new Date(data.blockedUntil).getTime() : null;
@@ -324,10 +353,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       toast.success("SHIELD_DEFLECTED_ATTACK", { description: "Your Shield absorbed the incoming attack." });
     });
 
+    s.on("SNAP_ACTIVATED", (data: { teamId: string; teamName: string; message: string }) => {
+      setSnapWinner({ teamId: data.teamId, teamName: data.teamName, score: 0, currentLevel: 0, isFrozen: false, isBlocked: false, stones: [], completedTimelines: [], snapActivated: true });
+      setPowersDisabled(true);
+      toast.error("SUPREME_SNAP_ACTIVATED", {
+        description: data.message || `${data.teamName} has achieved ultimate power.`,
+        duration: 10000
+      });
+      navigate("/dashboard");
+    });
+
     setSocket(s);
 
     return () => {
       s.off("connect", onConnect);
+      s.off("GAME_STARTED");
       s.off("TEAM_BLOCKED");
       s.off("ATTACK_OFFER_SHIELD");
       s.off("STONE_ATTACK_BLOCKED");
@@ -336,7 +376,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       s.disconnect();
       setSocket(null);
     };
-  }, [team?.id, isAdmin, addNotification]);
+  }, [team?.id, isAdmin, addNotification, navigate]);
   // useEffect(() => {
   //   if (isBlocked && stones.shieldActive) {
   //     setIsBlocked(false);
@@ -573,6 +613,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     [syncMyState, refreshTeams]
   );
 
+  const initiateSupremeSnap = useCallback(async () => {
+    if (!isSnapReady) return;
+    try {
+      setIsSnapping(true);
+      await api.useSnap();
+      toast.success("SUPREME_SNAP_EXECUTED", { description: "You have restored the timeline." });
+      await syncMyState();
+      await refreshTeams();
+    } catch (e: any) {
+      setIsSnapping(false);
+      toast.error("SNAP_FAILED", { description: e.message });
+    }
+  }, [isSnapReady, syncMyState, refreshTeams]);
+
   return (
     <GameContext.Provider
       value={{
@@ -614,6 +668,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         respondToAttack,
         pendingStoneCount,
         selectStoneType,
+        isSnapReady,
+        isSnapping,
+        snapWinner,
+        initiateSupremeSnap,
       }}
     >
       <ShieldDefendModal />

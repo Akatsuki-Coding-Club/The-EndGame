@@ -78,6 +78,11 @@ export async function getMe() {
     shieldActive?: boolean;
     isFrozen?: boolean;
     activeEffects?: string[];
+    stones?: string[];               // actual stone names team currently holds
+    escapedTimelines?: string[];
+    completedTimelines?: string[];
+    currentTimeline?: string | null;
+    snapActivated?: boolean;
   }>("/api/auth/me");
 }
 
@@ -180,18 +185,23 @@ export async function getMissions(): Promise<Mission[]> {
 }
 
 // --- Game ---
+// Matches the actual /api/dashboard/game-state response shape
 export interface GameState {
-  _id: string;
-  phase: string;
-  startedAt: string | null;
-  blipPhase: number | null;
-  blipActive: boolean;
-  lockdown: boolean;
+  _id?: string;
+  status: "waiting" | "active" | "ended"; // primary field from backend
+  phase?: string;   // alias kept for compatibility (not sent by this endpoint)
+  startTime?: string | null;
+  endTime?: string | null;
+  startedAt?: string | null;
+  blipPhase?: number | null;
+  blipActive?: boolean;
+  blipCount?: number;
+  lockdown?: boolean;
   teams?: string[];
 }
 
 export async function getGameState(): Promise<GameState> {
-  return request<GameState>("/api/game/state", { skipAuth: true });
+  return request<GameState>("/api/dashboard/game-state", { skipAuth: true });
 }
 
 export async function addTeamToGame(gameId: string, teamId: string) {
@@ -411,6 +421,10 @@ export async function useSoulStone(sacrificedStone: string) {
     method: "POST",
     body: JSON.stringify({ stone: sacrificedStone }),
   });
+}
+
+export async function useSnap() {
+  return request<{ message: string }>("/api/stones/snap", { method: "POST" });
 }
 
 // --- Dashboard ---

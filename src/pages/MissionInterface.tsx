@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { useGame } from "@/context/GameContext";
 import {
   getCurrentQuestion,
   submitAnswer,
   getStoneStatus,
+  getMe,
   getAllTeams,
   useTimeStone,
   useMindStone,
@@ -14,8 +17,70 @@ import {
 } from "@/services/api";
 import { toast } from "sonner";
 import {
-  Terminal, Loader2, Target, Zap, Clock, Brain, Box, Flame, Eye, Skull, ChevronUp, ChevronDown, AlertTriangle
+  Terminal, Loader2, Target, Zap, Clock, Brain, Globe, Flame, Eye, Skull,
+  ChevronUp, ChevronDown, AlertTriangle, Sparkles, Shield, X
 } from "lucide-react";
+
+/* ─── Stone config: single source of truth for colors / icons / labels ─── */
+const STONE_CONFIG: Record<string, {
+  label: string;
+  color: string;       // hex
+  glow: string;        // rgba for box-shadow
+  borderColor: string; // tailwind-compatible hex for inline style
+  icon: React.ReactNode;
+  desc: string;
+}> = {
+  time: {
+    label: "Time",
+    color: "#34d399",
+    glow: "rgba(52,211,153,0.5)",
+    borderColor: "#34d399",
+    icon: <Clock size={22} />,
+    desc: "Instantly escape this timeline. Progress is saved — re-enter later with the Space Stone.",
+  },
+  mind: {
+    label: "Mind",
+    color: "#fbbf24",
+    glow: "rgba(251,191,36,0.5)",
+    borderColor: "#fbbf24",
+    icon: <Brain size={22} />,
+    desc: "Decrypts a substantial hint for the current objective.",
+  },
+  space: {
+    label: "Space",
+    color: "#60a5fa",
+    glow: "rgba(96,165,250,0.5)",
+    borderColor: "#60a5fa",
+    icon: <Globe size={22} />,
+    desc: "Dimensional portal access — use from the Dashboard to re-enter escaped timelines.",
+  },
+  power: {
+    label: "Power",
+    color: "#c084fc",
+    glow: "rgba(192,132,252,0.5)",
+    borderColor: "#c084fc",
+    icon: <Flame size={22} />,
+    desc: "Launch an orbital strike on a rival team to impede their progress.",
+  },
+  reality: {
+    label: "Reality",
+    color: "#f87171",
+    glow: "rgba(248,113,113,0.5)",
+    borderColor: "#f87171",
+    icon: <Eye size={22} />,
+    desc: "Rewrite the laws of physics. Your next answer will be accepted as correct.",
+  },
+  soul: {
+    label: "Soul",
+    color: "#fb923c",
+    glow: "rgba(251,146,60,0.5)",
+    borderColor: "#fb923c",
+    icon: <Skull size={22} />,
+    desc: "Sacrifice one of your earned stones to gain a massive point boost.",
+  },
+};
+
+const ALL_STONES = ["time", "mind", "space", "power", "reality", "soul"];
 
 const MissionInterface = () => {
   const { timelineId } = useParams();
@@ -25,7 +90,8 @@ const MissionInterface = () => {
   const [currentTask, setCurrentTask] = useState<any>(null);
   const [answer, setAnswer] = useState("");
 
-  // Stone State
+  // Stone State — now driven by the actual team's `stones` string array
+  const [myStones, setMyStones] = useState<string[]>([]);
   const [stoneStatus, setStoneStatus] = useState<StoneStatus | null>(null);
   const [teams, setTeams] = useState<any[]>([]);
   const [showStonePanel, setShowStonePanel] = useState(false);
@@ -45,7 +111,7 @@ const MissionInterface = () => {
   // Cooldown Timer State
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
-  // Fetch Logic
+  /* ─── Fetch Logic ─── */
   const fetchProgress = async () => {
     try {
       const res = await getCurrentQuestion();
@@ -55,16 +121,23 @@ const MissionInterface = () => {
         return;
       }
       setCurrentTask(res);
-    } catch (e) {
+    } catch {
       toast.error("Signal lost. Reconnecting to timeline...");
     }
   };
 
   const fetchStones = async () => {
     try {
-      const status = await getStoneStatus();
-      setStoneStatus(status);
-    } catch (e) {
+      const [status, me] = await Promise.all([
+        getStoneStatus().catch(() => null),
+        getMe().catch(() => null),
+      ]);
+      if (status) setStoneStatus(status);
+      // ✅ Pull stone list directly from the team's actual 'stones' string array
+      if (me && Array.isArray(me.stones)) {
+        setMyStones(me.stones);
+      }
+    } catch {
       console.error("Failed to fetch stone status");
     }
   };
@@ -73,10 +146,19 @@ const MissionInterface = () => {
     try {
       const allTeams = await getAllTeams();
       setTeams(allTeams);
-    } catch (e) {
+    } catch {
       console.error("Failed to fetch teams");
     }
   };
+
+  /* ─── Snap Protection & Ending Sequence ─── */
+  const { snapWinner, isSnapping, initiateSupremeSnap } = useGame();
+  const { team } = useAuth();
+  useEffect(() => {
+    if (snapWinner || team?.snapActivated) {
+      navigate("/dashboard");
+    }
+  }, [snapWinner, team?.snapActivated, navigate]);
 
   useEffect(() => {
     const init = async () => {
@@ -87,52 +169,41 @@ const MissionInterface = () => {
     init();
   }, [timelineId]);
 
-  // Timer Effect
+  /* ─── Cooldown Timer ─── */
   useEffect(() => {
-    if (!stoneStatus?.cooldownUntil) {
-      setTimeLeft(0);
-      return;
-    }
-
+    if (!stoneStatus?.cooldownUntil) { setTimeLeft(0); return; }
     const interval = setInterval(() => {
-      const now = new Date();
-      const end = new Date(stoneStatus.cooldownUntil!);
-      const diff = Math.max(0, Math.floor((end.getTime() - now.getTime()) / 1000));
-
+      const diff = Math.max(0, Math.floor((new Date(stoneStatus.cooldownUntil!).getTime() - Date.now()) / 1000));
       setTimeLeft(diff);
-
-      if (diff <= 0) {
-        clearInterval(interval);
-        // Optionally refresher to clear state properly or just rely on local 0
-      }
+      if (diff <= 0) clearInterval(interval);
     }, 1000);
-
     return () => clearInterval(interval);
   }, [stoneStatus]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  // Handlers
+  /* ─── helpers ─── */
+  // ✅ FIXED: checks the actual stones string array, no hardcoding
+  const hasStone = (stone: string) => myStones.includes(stone);
+  const isCooldown = timeLeft > 0;
+
+  /* ─── Submit ─── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!answer.trim() || !currentTask?.question?._id) return;
-
     try {
       setSubmitting(true);
       const res = await submitAnswer(currentTask.question._id, answer);
-
       if (res.isCorrect) {
         toast.success(`KEY_ACCEPTED: +${res.points} Strategic Points`);
         setAnswer("");
-        setRealityActive(false); // Reset reality effect if it was active
-
+        setRealityActive(false);
         if (res.earnedStone) {
           setAcquiredStone(res.earnedStone);
-          // Do not navigate yet, wait for user to click button on stone screen
         } else if (res.completed) {
           navigate("/dashboard");
         } else {
@@ -142,22 +213,20 @@ const MissionInterface = () => {
         toast.error("KEY_REJECTED: Unauthorized decryption code");
         setAnswer("");
       }
-    } catch (e) {
+    } catch {
       toast.error("Transmission interruption detected.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Execution Handlers (Called after confirmation)
+  /* ─── Stone Execution Handlers ─── */
   const executeTime = async () => {
     try {
       await useTimeStone();
       toast.success("TIME STONE ACTIVATED: Temporal Shift Initiated");
       navigate("/dashboard");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to activate Time Stone");
-    }
+    } catch (e: any) { toast.error(e.message || "Failed to activate Time Stone"); }
   };
 
   const executeMind = async () => {
@@ -165,10 +234,8 @@ const MissionInterface = () => {
       const res = await useMindStone();
       setActiveHint(res.hint);
       toast.success("MIND STONE ACTIVE: Neural Pathway Illuminated");
-      fetchStones(); // Refresh cooldown
-    } catch (e: any) {
-      toast.error(e.message || "Mind Stone activation failed");
-    }
+      fetchStones();
+    } catch (e: any) { toast.error(e.message || "Mind Stone activation failed"); }
   };
 
   const executePower = async () => {
@@ -179,19 +246,23 @@ const MissionInterface = () => {
       setShowPowerModal(false);
       setTargetTeam("");
       fetchStones();
-    } catch (e: any) {
-      toast.error(e.message || "Power Stone activation failed");
-    }
+    } catch (e: any) { toast.error(e.message || "Power Stone activation failed"); }
   };
 
   const executeReality = async () => {
+    const t = toast.loading("REALITY STONE: Rewriting physics engine...");
     try {
       await useRealityStone();
+      // ✅ Only activate the visual state AFTER the backend confirms success
       setRealityActive(true);
-      toast.success("REALITY STONE ACTIVE: Physics Engine Rewritten");
-      fetchStones();
+      toast.success("REALITY STONE ACTIVE: Physics Engine Rewritten", {
+        id: t,
+        description: "Your next answer will be accepted regardless of correctness.",
+      });
+      fetchStones(); // refresh cooldown state
     } catch (e: any) {
-      toast.error(e.message || "Reality Stone activation failed");
+      toast.error(e.message || "Reality Stone activation failed", { id: t });
+      // Do NOT set realityActive — the backend rejected the activation
     }
   };
 
@@ -203,149 +274,167 @@ const MissionInterface = () => {
       setShowSoulModal(false);
       setSacrificeStone("");
       fetchStones();
-    } catch (e: any) {
-      toast.error(e.message || "Soul Stone activation failed");
-    }
+    } catch (e: any) { toast.error(e.message || "Soul Stone activation failed"); }
   };
 
   const handleConfirmAction = () => {
     if (!confirmStone) return;
-
-    // For Power and Soul, confirmation just moves to the selection modal
-    if (confirmStone === 'power') {
-      setShowPowerModal(true);
-      setConfirmStone(null);
-      return;
-    }
-    if (confirmStone === 'soul') {
-      setShowSoulModal(true);
-      setConfirmStone(null);
-      return;
-    }
-
-    // For others, execute directly
-    if (confirmStone === 'time') executeTime();
-    if (confirmStone === 'mind') executeMind();
-    if (confirmStone === 'reality') executeReality();
-
+    if (confirmStone === "power") { setShowPowerModal(true); setConfirmStone(null); return; }
+    if (confirmStone === "soul") { setShowSoulModal(true); setConfirmStone(null); return; }
+    if (confirmStone === "time") executeTime();
+    if (confirmStone === "mind") executeMind();
+    if (confirmStone === "reality") executeReality();
     setConfirmStone(null);
   };
 
+  /* ─── Loading Screen ─── */
   if (loading) return (
     <div className="h-screen bg-black flex flex-col items-center justify-center font-mono text-cyan-500">
       <Loader2 className="animate-spin mb-4" size={32} />
-      <p className="tracking-[0.4em] text-[10px]">DECRYPTING_OBJECTIVES...</p>
+      <p className="tracking-[0.4em] text-[10px] animate-pulse">DECRYPTING_OBJECTIVES...</p>
     </div>
   );
 
   const activeMission = currentTask?.question;
-  const isCooldown = timeLeft > 0;
 
-  // Helper for Stone Check
-  const hasStone = (stone: string) => {
-    if (!stoneStatus) return false;
-    return (stoneStatus.stoneType && stoneStatus.stoneType[stone] > 0) || (stone === 'time' || stone === 'mind');
-  }
+  /* ─── Premium Stone Card ─── */
+  const StoneCard = ({ stoneKey }: { stoneKey: string }) => {
+    const cfg = STONE_CONFIG[stoneKey];
+    const owned = hasStone(stoneKey);
+    const isSpace = stoneKey === "space";
+    // Space stone is always disabled in mission (dashboard only)
+    const isDisabled = isSpace || isCooldown || !owned;
+    const canActivate = owned && !isSpace && !isCooldown;
 
-  const getStoneColor = (stone: string) => {
-    const map: any = { time: "green", mind: "yellow", space: "blue", power: "purple", reality: "red", soul: "orange" };
-    return map[stone] || "gray";
-  }
-
-  const bgClasses: any = {
-    green: "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]",
-    yellow: "bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]",
-    blue: "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]",
-    purple: "bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]",
-    red: "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]",
-    orange: "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"
-  };
-
-  const stoneDescriptions: any = {
-    time: "Instantly escape this timeline. Progress is saved but the timeline will be LOCKED until re-entered with Space Stone.",
-    mind: "Decrypts a substantial hint for the current objective.",
-    space: "Dimensional portal access (Inactive in timeline).",
-    power: "Launch an orbital strike on a rival team to impede their progress.",
-    reality: "Rewrite the laws of physics. Your next answer will be accepted as correct, regardless of validity.",
-    soul: "Sacrifice one of your earned stones to gain a massive point boost."
-  };
-
-  const StoneButton = ({ icon: Icon, label, color, stoneKey, onClick, desc, disabledOverride }: any) => {
-    const active = hasStone(stoneKey);
-    const locked = isCooldown || disabledOverride;
-
-    const colorClasses: any = {
-      green: "text-green-500 shadow-green-500/50",
-      yellow: "text-yellow-400 shadow-yellow-400/50",
-      blue: "text-blue-500 shadow-blue-500/50",
-      purple: "text-purple-500 shadow-purple-500/50",
-      red: "text-red-500 shadow-red-500/50",
-      orange: "text-orange-500 shadow-orange-500/50"
+    const handleClick = () => {
+      if (!canActivate) return;
+      setConfirmStone(stoneKey);
     };
 
     return (
-      <button
-        onClick={(active && !locked) ? onClick : undefined}
-        className={`relative group flex flex-col items-center justify-center gap-2 p-3 lg:p-4 rounded-xl border transition-all duration-300 w-20 lg:w-28
-          ${active
-            ? locked
-              ? "bg-black/40 border-white/5 opacity-50 cursor-not-allowed grayscale"
-              : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 hover:-translate-y-1 cursor-pointer"
-            : "bg-transparent border-transparent opacity-20 cursor-not-allowed grayscale"
+      <div
+        onClick={handleClick}
+        className={`relative flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all duration-300 select-none
+          ${owned
+            ? isDisabled
+              ? "border-white/5 bg-black/30 opacity-40 cursor-not-allowed"
+              : "border-white/10 bg-black/40 hover:bg-white/[0.06] hover:scale-105 hover:-translate-y-1 cursor-pointer group"
+            : "border-white/[0.03] bg-transparent opacity-20 cursor-not-allowed grayscale"
           }
         `}
       >
-        <div className={`p-3 rounded-full bg-black/80 border border-white/5 shadow-lg ${active ? colorClasses[color] : "text-white"}`}>
-          <Icon size={24} />
-        </div>
-        <span className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-white/80">{label}</span>
+        {/* Glow aura for owned active stones */}
+        {owned && !isDisabled && (
+          <div
+            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{ boxShadow: `inset 0 0 20px ${cfg.glow}` }}
+          />
+        )}
 
-        {/* Cooldown Overlay */}
-        {active && isCooldown && !disabledOverride && (
-          <div className="absolute top-1 right-1 flex items-center gap-1 bg-black/60 px-1 rounded">
-            <Clock size={8} className="text-red-500 animate-pulse" />
-            <span className="text-[8px] font-mono text-red-500">{formatTime(timeLeft)}</span>
+        {/* Gem icon container */}
+        <div
+          className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${owned && !isDisabled ? "group-hover:scale-110" : ""}`}
+          style={owned ? {
+            backgroundColor: `${cfg.color}18`,
+            color: cfg.color,
+            boxShadow: isDisabled ? "none" : `0 0 16px ${cfg.glow}`,
+          } : { color: "#666" }}
+        >
+          {cfg.icon}
+
+          {/* Pulse ring for unauthenticated stones */}
+          {owned && !isDisabled && (
+            <div
+              className="absolute inset-0 rounded-xl animate-ping opacity-30"
+              style={{ border: `1px solid ${cfg.color}` }}
+            />
+          )}
+        </div>
+
+        {/* Label */}
+        <span
+          className="text-[9px] font-black uppercase tracking-[0.25em] transition-colors"
+          style={{ color: owned && !isDisabled ? cfg.color : "#555" }}
+        >
+          {cfg.label}
+        </span>
+
+        {/* Cooldown overlay badge */}
+        {owned && isCooldown && !isSpace && (
+          <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-black/80 px-1.5 py-0.5 rounded-full border border-red-500/30">
+            <Clock size={7} className="text-red-500 animate-pulse" />
+            <span className="text-[7px] font-mono text-red-400">{formatTime(timeLeft)}</span>
           </div>
         )}
 
-        {/* Tooltip */}
-        <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-black border border-white/10 px-3 py-2 rounded text-[10px] uppercase tracking-widest whitespace-nowrap pointer-events-none z-50">
-          {active ? (locked ? "Unavailable / Cooldown" : desc) : "Not Acquired"}
-        </div>
-      </button>
-    )
-  }
+        {/* Space badge */}
+        {isSpace && owned && (
+          <div className="absolute -top-1.5 -right-1.5">
+            <span className="text-[7px] bg-blue-500/20 border border-blue-500/40 text-blue-300 px-1.5 py-0.5 rounded-full font-black tracking-wider uppercase">DB</span>
+          </div>
+        )}
 
+        {/* Not acquired badge */}
+        {!owned && (
+          <div className="absolute inset-0 rounded-2xl flex items-end justify-center pb-2">
+            <span className="text-[7px] text-white/20 uppercase tracking-widest font-bold">Locked</span>
+          </div>
+        )}
+
+        {/* Hover tooltip */}
+        {owned && (
+          <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 w-44">
+            <div className="bg-black/95 border border-white/10 rounded-xl px-3 py-2 text-center shadow-2xl">
+              <p className="text-[8px] text-white/60 uppercase tracking-widest leading-relaxed">
+                {isDisabled ? (isSpace ? "Use from Dashboard" : "Cooldown active") : cfg.desc.substring(0, 60) + "..."}
+              </p>
+            </div>
+            <div className="w-2 h-2 bg-black/95 border-b border-r border-white/10 rotate-45 mx-auto -mt-1" />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /* ─── Render ─── */
   return (
     <div className={`h-screen bg-[#05050c] flex flex-col font-mono text-slate-300 overflow-hidden transition-all duration-1000 ${realityActive ? "hue-rotate-90 saturate-200 contrast-125 box-border border-[20px] border-red-500/10" : ""}`}>
-      {/* Header */}
+
+      {/* ─── HEADER ─── */}
       <header className="px-8 py-4 border-b border-white/10 bg-black/60 flex justify-between items-center shrink-0 z-10 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <Terminal size={20} className="text-cyan-500" />
           <h2 className="text-xs font-bold uppercase tracking-widest text-white">Neural Interface // {timelineId?.toUpperCase()}</h2>
         </div>
-        <div className="flex items-center gap-6 text-right">
-          <div className="flex gap-1.5">
-            {/* Stones Indicator (Mini) */}
-            {stoneStatus && ["time", "mind", "space", "power", "reality", "soul"].map(stone => {
-              const color = getStoneColor(stone);
+        <div className="flex items-center gap-6">
+          {/* Mini stone dots — one per owned stone */}
+          <div className="flex items-center gap-1.5">
+            {ALL_STONES.map(s => {
+              const has = hasStone(s);
+              const cfg = STONE_CONFIG[s];
               return (
-                <div key={stone} className={`w-1.5 h-1.5 rounded-full transition-all ${hasStone(stone) ? bgClasses[color] : "bg-white/5"}`} />
-              )
+                <div
+                  key={s}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${has ? "scale-100" : "scale-75 opacity-20"}`}
+                  style={has ? { backgroundColor: cfg.color, boxShadow: `0 0 6px ${cfg.glow}` } : { backgroundColor: "#333" }}
+                  title={cfg.label}
+                />
+              );
             })}
           </div>
-          <div>
-            <span className="text-[8px] text-white/40 block uppercase tracking-widest">Stability Status</span>
+          <div className="text-right">
+            <span className="text-[8px] text-white/40 block uppercase tracking-widest">Stability</span>
             <span className="text-sm font-bold text-cyan-400">
-              Progress: {currentTask?.answeredCount !== undefined ? currentTask.answeredCount + 1 : 0} / {currentTask?.totalQuestions || "?"}
+              {currentTask?.answeredCount !== undefined ? currentTask.answeredCount + 1 : 0} / {currentTask?.totalQuestions || "?"}
             </span>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-20">
+      {/* ─── MAIN CONTENT ─── */}
+      <main className="flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-28">
         <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-sm shadow-2xl">
+
           {/* Question Header */}
           <div className="p-4 border-b border-white/5 flex justify-between bg-black/20">
             <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest flex items-center gap-2">
@@ -390,7 +479,10 @@ const MissionInterface = () => {
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   placeholder={realityActive ? "REALITY REWRITE ACTIVE..." : "Enter Access Key..."}
-                  className={`w-full bg-black border ${realityActive ? "border-red-500/50 text-red-100 placeholder:text-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]" : "border-white/20 text-white placeholder:text-white/10"} rounded-lg px-6 py-5 focus:border-cyan-500/50 outline-none font-mono transition-all`}
+                  className={`w-full bg-black border ${realityActive
+                    ? "border-red-500/50 text-red-100 placeholder:text-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]"
+                    : "border-white/20 text-white placeholder:text-white/10"
+                    } rounded-lg px-6 py-5 focus:border-cyan-500/50 outline-none font-mono transition-all`}
                   autoFocus
                 />
                 <Target className={`absolute right-4 top-1/2 -translate-y-1/2 ${realityActive ? "text-red-500/50" : "text-white/5"} group-focus-within:text-cyan-500/50 transition-colors`} size={20} />
@@ -404,267 +496,289 @@ const MissionInterface = () => {
               </button>
             </form>
           </div>
+
           <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[size:32px_32px]" />
         </div>
       </main>
 
-      {/* INFINITY STONES PANEL */}
+      {/* ─── INFINITY STONES PANEL ─── */}
       <div
         className={`fixed left-0 right-0 border-t border-white/10 backdrop-blur-xl transition-all duration-500 z-50 ease-in-out
-          ${showStonePanel ? "bottom-0 bg-black/95 py-6 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]" : "-bottom-24 hover:-bottom-22 bg-black/80 py-2"}
-        `}
+          ${showStonePanel
+            ? "bottom-0 bg-[#05050c]/98 shadow-[0_-20px_60px_rgba(0,0,0,0.9)]"
+            : "-bottom-32 bg-black/80"
+          }`}
       >
-
         {/* Toggle Handle */}
         <div
-          className="absolute -top-6 left-1/2 -translate-x-1/2 w-48 h-6 bg-[#05050c] border-t border-x border-white/10 rounded-t-xl flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors group z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]"
+          className="absolute -top-7 left-1/2 -translate-x-1/2 h-7 px-6 bg-[#05050c] border-t border-x border-white/10 rounded-t-xl flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors group z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]"
           onClick={() => setShowStonePanel(!showStonePanel)}
         >
-          <div className="flex items-center gap-2 text-[8px] uppercase tracking-[0.2em] text-cyan-500/60 group-hover:text-cyan-400">
+          <div className="flex items-center gap-2 text-[8px] uppercase tracking-[0.2em] text-cyan-500/60 group-hover:text-cyan-400 whitespace-nowrap">
             {showStonePanel ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
             {showStonePanel ? "Close Gauntlet" : "Access Infinity Stones"}
+            {/* Owned stones count badge */}
+            {myStones.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-[7px] font-black">
+                {myStones.length} / {ALL_STONES.length}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Stones Grid */}
-        <div className={`max-w-6xl mx-auto px-8 flex justify-center gap-3 lg:gap-6 items-center transition-all duration-300 ${showStonePanel ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-          {isCooldown ? (
-            <div className="flex flex-col items-center justify-center py-2 animate-in fade-in zoom-in duration-500">
-              <div className="flex items-center gap-4 text-red-500 mb-2">
-                <AlertTriangle size={24} className="animate-pulse" />
-                <span className="text-xl font-black tracking-[0.2em] uppercase">System Overload</span>
-                <AlertTriangle size={24} className="animate-pulse" />
-              </div>
-              <div className="text-4xl lg:text-6xl font-mono font-bold text-white tabular-nums tracking-widest bg-black/50 px-8 py-2 rounded-xl border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
-                {formatTime(timeLeft)}
-              </div>
-              <span className="text-[10px] text-white/40 uppercase tracking-widest mt-3 animate-pulse">Recharging Infinity Stones...</span>
+        {/* Stones Content */}
+        <div className={`transition-all duration-300 ${showStonePanel ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+
+          {/* Panel Header */}
+          <div className="flex items-center justify-between px-8 pt-5 pb-4 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <Sparkles size={14} className="text-cyan-500" />
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/50">Infinity Gauntlet</span>
             </div>
-          ) : (
-            <>
-              {/* TIME */}
-              <StoneButton
-                icon={Clock} label="Time" color="green" stoneKey="time"
-                onClick={() => setConfirmStone('time')}
-                desc="Escape Timeline"
-              />
+            {isCooldown && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-red-500/30 bg-red-500/10">
+                <AlertTriangle size={10} className="text-red-500 animate-pulse" />
+                <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Cooldown: {formatTime(timeLeft)}</span>
+              </div>
+            )}
+          </div>
 
-              {/* MIND */}
-              <StoneButton
-                icon={Brain} label="Mind" color="yellow" stoneKey="mind"
-                onClick={() => setConfirmStone('mind')}
-                desc="Reveal Hint"
-              />
+          {/* Stone Cards Grid */}
+          <div className="px-8 py-5">
+            <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto">
+              {ALL_STONES.map(s => <StoneCard key={s} stoneKey={s} />)}
+            </div>
+            {/* Legend */}
+            <div className="flex items-center justify-center gap-6 mt-4">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <span className="text-[7px] text-white/30 uppercase tracking-widest">Acquired</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+                <span className="text-[7px] text-white/30 uppercase tracking-widest">Not Acquired</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                <span className="text-[7px] text-white/30 uppercase tracking-widest">DB = Dashboard Only</span>
+              </div>
+            </div>
+          </div>
 
-              {/* SPACE */}
-              <StoneButton
-                icon={Box} label="Space" color="blue" stoneKey="space"
-                onClick={() => { }}
-                disabledOverride={true}
-                desc="Dashboard Only"
-              />
-
-              {/* POWER */}
-              <StoneButton
-                icon={Flame} label="Power" color="purple" stoneKey="power"
-                onClick={() => setConfirmStone('power')}
-                desc="Attack Team"
-              />
-
-              {/* REALITY */}
-              <StoneButton
-                icon={Eye} label="Reality" color="red" stoneKey="reality"
-                onClick={() => setConfirmStone('reality')}
-                desc="Rewrite Answer"
-              />
-
-              {/* SOUL */}
-              <StoneButton
-                icon={Skull} label="Soul" color="orange" stoneKey="soul"
-                onClick={() => setConfirmStone('soul')}
-                desc="Sacrifice Stone"
-              />
-            </>
+          {/* ⚡ SUPREME SNAP ACTIVATOR ⚡ */}
+          {myStones.length === 6 && !isSnapping && !snapWinner && (
+            <div className="px-8 pb-8 flex justify-center animate-in slide-in-from-bottom-5 duration-700">
+              <div className="relative group">
+                <div className="absolute -inset-1 gold-arc-gradient rounded-full blur-sm opacity-70 animate-pulse" />
+                <button
+                  onClick={initiateSupremeSnap}
+                  className="relative px-10 py-4 bg-black border border-yellow-500/50 rounded-full flex items-center gap-3 transition-all active:scale-95 snap-button-pulse"
+                >
+                  <Flame size={16} className="text-yellow-500 fill-current" />
+                  <span className="text-xs font-black italic tracking-[0.2em] text-yellow-500 uppercase">
+                    EXECUTE SUPREME SNAP
+                  </span>
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
 
-      {/* CONFIRMATION DIALOG (New) */}
-      {confirmStone && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className={`bg-[#0a0a12] border w-full max-w-sm p-6 rounded-xl shadow-2xl relative overflow-hidden transition-all ${confirmStone === 'time' ? 'border-green-500/30' :
-            confirmStone === 'mind' ? 'border-yellow-500/30' :
-              confirmStone === 'power' ? 'border-purple-500/30' :
-                confirmStone === 'reality' ? 'border-red-500/30' :
-                  'border-orange-500/30'
-            }`}>
-            <div className="flex flex-col items-center text-center gap-4">
-              <div className="p-4 rounded-full bg-white/5 border border-white/10 mb-2">
-                {confirmStone === 'time' && <Clock size={32} className="text-green-500" />}
-                {confirmStone === 'mind' && <Brain size={32} className="text-yellow-500" />}
-                {confirmStone === 'power' && <Flame size={32} className="text-purple-500" />}
-                {confirmStone === 'reality' && <Eye size={32} className="text-red-500" />}
-                {confirmStone === 'soul' && <Skull size={32} className="text-orange-500" />}
-              </div>
+      {/* ─── CONFIRMATION DIALOG ─── */}
+      {
+        confirmStone && (() => {
+          const cfg = STONE_CONFIG[confirmStone];
+          return (
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div
+                className="bg-[#08080f] w-full max-w-sm p-7 rounded-2xl shadow-2xl relative overflow-hidden border"
+                style={{ borderColor: `${cfg.color}30` }}
+              >
+                {/* Top accent line */}
+                <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${cfg.color}, transparent)` }} />
 
-              <h3 className="text-xl font-bold uppercase tracking-widest text-white">
-                Activate {confirmStone} Stone?
+                <button onClick={() => setConfirmStone(null)} className="absolute top-4 right-4 text-white/20 hover:text-white/60 transition-colors">
+                  <X size={16} />
+                </button>
+
+                <div className="flex flex-col items-center text-center gap-5">
+                  {/* Stone icon */}
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                    style={{ backgroundColor: `${cfg.color}15`, color: cfg.color, boxShadow: `0 0 30px ${cfg.glow}` }}
+                  >
+                    {cfg.icon}
+                  </div>
+
+                  <div>
+                    <p className="text-[8px] font-mono tracking-[0.4em] mb-1" style={{ color: `${cfg.color}80` }}>INFINITY STONE</p>
+                    <h3 className="text-xl font-black uppercase tracking-widest text-white">{cfg.label} Stone</h3>
+                  </div>
+
+                  <p className="text-xs text-white/50 leading-relaxed font-mono">{cfg.desc}</p>
+
+                  <div className="flex items-center gap-2 text-[9px] bg-red-500/10 text-red-400 px-3 py-2 rounded-xl border border-red-500/20 w-full justify-center">
+                    <AlertTriangle size={10} />
+                    <span>Triggers a 20-minute global cooldown on all stones.</span>
+                  </div>
+
+                  <div className="flex gap-3 w-full">
+                    <button
+                      onClick={() => setConfirmStone(null)}
+                      className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60 transition-colors"
+                    >
+                      Abort
+                    </button>
+                    <button
+                      onClick={handleConfirmAction}
+                      className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 text-black shadow-lg"
+                      style={{ backgroundColor: cfg.color, boxShadow: `0 0 20px ${cfg.glow}` }}
+                    >
+                      Activate
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()
+      }
+
+      {/* ─── POWER STONE MODAL ─── */}
+      {
+        showPowerModal && (
+          <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-[#0a0a12] border border-purple-500/30 w-full max-w-lg p-8 rounded-2xl shadow-[0_0_100px_rgba(192,132,252,0.15)] relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+              <button onClick={() => setShowPowerModal(false)} className="absolute top-4 right-4 text-white/20 hover:text-white/60 transition-colors"><X size={16} /></button>
+
+              <h3 className="text-purple-400 font-black uppercase tracking-widest mb-6 flex items-center gap-3 text-base">
+                <Flame size={18} /> Select Target For Destruction
               </h3>
 
-              <p className="text-sm text-cyan-100/70 leading-relaxed font-mono">
-                {stoneDescriptions[confirmStone]}
+              <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar mb-8 pr-2">
+                {teams.length === 0 && <p className="text-white/30 text-center py-4 text-xs">Scanning for targets...</p>}
+                {teams.map(team => (
+                  <button
+                    key={team._id}
+                    onClick={() => setTargetTeam(team._id)}
+                    className={`w-full text-left px-5 py-4 rounded-xl border transition-all flex justify-between items-center group ${targetTeam === team._id
+                      ? "bg-purple-900/20 border-purple-500/50 text-white shadow-[0_0_20px_rgba(192,132,252,0.1)]"
+                      : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                      }`}
+                  >
+                    <span className="font-bold tracking-wider text-sm">{team.teamName}</span>
+                    {targetTeam === team._id && <Target size={16} className="text-purple-400" />}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-4">
+                <button onClick={() => setShowPowerModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 hover:bg-white/10 font-black uppercase tracking-widest text-xs transition-colors">Abort</button>
+                <button disabled={!targetTeam} onClick={executePower} className="flex-1 py-4 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(192,132,252,0.4)] transition-all">
+                  Launch Strike
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* ─── SOUL STONE MODAL ─── */}
+      {
+        showSoulModal && (
+          <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-[#0a0a12] border border-orange-500/30 w-full max-w-lg p-8 rounded-2xl shadow-[0_0_100px_rgba(251,146,60,0.15)] relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
+              <button onClick={() => setShowSoulModal(false)} className="absolute top-4 right-4 text-white/20 hover:text-white/60 transition-colors"><X size={16} /></button>
+
+              <h3 className="text-orange-400 font-black uppercase tracking-widest mb-3 flex items-center gap-3 text-base">
+                <Skull size={18} /> Select Sacrifice
+              </h3>
+              <p className="text-white/40 text-[10px] mb-6 font-mono border-l-2 border-orange-500/50 pl-3 uppercase tracking-wider leading-relaxed">
+                Warning: Sacrificed stones are permanently lost. You will receive bonus points immediately.
               </p>
 
-              <div className="flex items-center gap-2 text-[10px] bg-red-500/10 text-red-400 px-3 py-1 rounded border border-red-500/20">
-                <AlertTriangle size={10} />
-                <span>Initiating this action triggers a 20m Global Cooldown.</span>
+              <div className="grid grid-cols-3 gap-3 mb-8">
+                {["space", "power", "reality"].map(stone => {
+                  if (!hasStone(stone)) return null;
+                  const cfg = STONE_CONFIG[stone];
+                  return (
+                    <button
+                      key={stone}
+                      onClick={() => setSacrificeStone(stone)}
+                      className={`p-5 rounded-xl border flex flex-col items-center gap-3 transition-all ${sacrificeStone === stone
+                        ? "border-orange-500/50 bg-orange-900/20"
+                        : "border-white/5 bg-white/[0.03] opacity-60 hover:opacity-100 hover:bg-white/[0.06]"
+                        }`}
+                    >
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${cfg.color}15`, color: cfg.color }}>
+                        {cfg.icon}
+                      </div>
+                      <span className="uppercase text-[10px] font-black tracking-widest text-white/80">{cfg.label}</span>
+                    </button>
+                  );
+                })}
+                {!hasStone("space") && !hasStone("power") && !hasStone("reality") && (
+                  <div className="col-span-3 text-center py-6 text-white/30 text-xs italic font-mono">
+                    No sacrificial stones available.
+                  </div>
+                )}
               </div>
 
-              <div className="flex gap-3 w-full mt-4">
-                <button
-                  onClick={() => setConfirmStone(null)}
-                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold uppercase tracking-widest text-white/60 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmAction}
-                  className={`flex-1 py-3 border rounded-lg text-xs font-bold uppercase tracking-widest text-black transition-all shadow-[0_0_20px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-95 ${confirmStone === 'time' ? 'bg-green-500 hover:bg-green-400 border-green-500' :
-                    confirmStone === 'mind' ? 'bg-yellow-500 hover:bg-yellow-400 border-yellow-500' :
-                      confirmStone === 'power' ? 'bg-purple-600 hover:bg-purple-500 border-purple-600 text-white' :
-                        confirmStone === 'reality' ? 'bg-red-600 hover:bg-red-500 border-red-600 text-white' :
-                          'bg-orange-500 hover:bg-orange-400 border-orange-500'
-                    }`}
-                >
-                  Confirm
+              <div className="flex gap-4">
+                <button onClick={() => setShowSoulModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 hover:bg-white/10 font-black uppercase tracking-widest text-xs transition-colors">Cancel</button>
+                <button disabled={!sacrificeStone} onClick={executeSoul} className="flex-1 py-4 bg-orange-500 hover:bg-orange-400 text-black font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(251,146,60,0.4)] transition-all">
+                  Sacrifice
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {/* MODALS */}
-      {/* Power Stone Modal */}
-      {showPowerModal && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#0a0a12] border border-purple-500/30 w-full max-w-lg p-8 rounded-2xl shadow-[0_0_100px_rgba(168,85,247,0.15)] relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
-
-            <h3 className="text-purple-400 font-bold uppercase tracking-widest mb-6 flex items-center gap-3 text-lg">
-              <Flame size={20} /> Select Target For Destruction
-            </h3>
-
-            <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar mb-8 pr-2">
-              {teams.filter(t => t.teamName).length === 0 && <p className="text-white/30 text-center py-4">Scanning for targets...</p>}
-              {teams.map(team => (
-                <button
-                  key={team._id}
-                  onClick={() => setTargetTeam(team._id)}
-                  className={`w-full text-left px-5 py-4 rounded-xl border transition-all flex justify-between items-center group ${targetTeam === team._id ? "bg-purple-900/20 border-purple-500/50 text-white shadow-[0_0_20px_rgba(168,85,247,0.1)]" : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white"}`}
+      {/* ─── STONE ACQUIRED SCREEN ─── */}
+      {
+        acquiredStone && (() => {
+          const cfg = STONE_CONFIG[acquiredStone] || { color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={80} />, label: acquiredStone };
+          return (
+            <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-8 animate-in zoom-in duration-700">
+              <div className="relative">
+                <div className="absolute inset-0 blur-[120px] opacity-40 rounded-full" style={{ backgroundColor: cfg.color }} />
+                <div
+                  className="relative z-10 p-16 rounded-full bg-black/50 mb-8 shadow-2xl"
+                  style={{ border: `1px solid ${cfg.color}30`, boxShadow: `0 0 60px ${cfg.glow}` }}
                 >
-                  <span className="font-bold tracking-wider">{team.teamName}</span>
-                  {targetTeam === team._id && <Target size={16} className="text-purple-400" />}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-4">
-              <button onClick={() => setShowPowerModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 hover:bg-white/10 hover:text-white font-bold uppercase tracking-widest text-xs transition-colors">Abort</button>
-              <button disabled={!targetTeam} onClick={executePower} className="flex-1 py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all">Launch Strike</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Soul Stone Modal */}
-      {showSoulModal && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#0a0a12] border border-orange-500/30 w-full max-w-lg p-8 rounded-2xl shadow-[0_0_100px_rgba(249,115,22,0.15)] relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
-
-            <h3 className="text-orange-400 font-bold uppercase tracking-widest mb-6 flex items-center gap-3 text-lg">
-              <Skull size={20} /> Select Sacrifice
-            </h3>
-
-            <p className="text-white/40 text-xs mb-6 font-mono border-l-2 border-orange-500/50 pl-3">
-              WARNING: Sacrificed stones are permanently lost. You will receive bonus points immediately.
-            </p>
-
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {["space", "power", "reality"].map(stone => { // Rules: Can sacrifice Space, Power, Reality (Time/Mind can't be sacrificed?)
-                // "Sacrifice one earned stone (except Time & Mind)." logic from prompt.
-                const has = hasStone(stone);
-                if (!has) return null;
-                return (
-                  <button
-                    key={stone}
-                    onClick={() => setSacrificeStone(stone)}
-                    className={`p-6 rounded-xl border flex flex-col items-center gap-3 transition-all ${sacrificeStone === stone ? `bg-orange-900/20 border-orange-500/50` : "bg-white/5 border-white/5 opacity-60 hover:opacity-100 hover:bg-white/10"}`}
-                  >
-                    <div className={`w-4 h-4 rounded-full ${bgClasses[getStoneColor(stone)]}`} />
-                    <span className="uppercase text-xs font-bold tracking-widest">{stone}</span>
-                  </button>
-                );
-              })}
-              {!hasStone("space") && !hasStone("power") && !hasStone("reality") && (
-                <div className="col-span-2 text-center py-4 text-white/30 text-xs italic">
-                  No sacrificial stones available.
+                  <div style={{ color: cfg.color, filter: `drop-shadow(0 0 30px ${cfg.color})` }}>
+                    {React.cloneElement(cfg.icon as React.ReactElement, { size: 80 })}
+                  </div>
                 </div>
-              )}
+              </div>
+
+              <h1 className="text-4xl lg:text-6xl font-black uppercase tracking-[0.2em] text-white mb-3 text-center animate-in slide-in-from-bottom-5 duration-700 delay-100"
+                style={{ textShadow: `0 0 40px ${cfg.color}` }}>
+                {cfg.label} Stone
+              </h1>
+              <h2 className="text-lg text-white/40 uppercase tracking-[0.5em] mb-12 animate-in slide-in-from-bottom-5 duration-700 delay-200">
+                Acquired
+              </h2>
+
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-14 py-4 font-black text-sm uppercase tracking-[0.3em] rounded-xl transition-all shadow-2xl animate-in slide-in-from-bottom-5 duration-700 delay-300 hover:scale-105 active:scale-95 text-black"
+                style={{ backgroundColor: cfg.color, boxShadow: `0 0 40px ${cfg.glow}` }}
+              >
+                Proceed to Dashboard
+              </button>
+
+              <div className="absolute inset-0 pointer-events-none opacity-[0.06] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[size:40px_40px]" />
             </div>
+          );
+        })()
+      }
 
-            <div className="flex gap-4">
-              <button onClick={() => setShowSoulModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 hover:bg-white/10 hover:text-white font-bold uppercase tracking-widest text-xs transition-colors">Cancel</button>
-              <button disabled={!sacrificeStone} onClick={executeSoul} className="flex-1 py-4 bg-orange-600 hover:bg-orange-500 text-black font-bold rounded-xl disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(249,115,22,0.4)] transition-all">Sacrifice</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STONE ACQUIRED SCREEN */}
-      {acquiredStone && (
-        <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-8 animate-in zoom-in duration-700">
-          <div className="relative group">
-            <div className={`absolute inset-0 blur-[100px] opacity-50 ${acquiredStone === 'time' ? 'bg-green-500' :
-                acquiredStone === 'mind' ? 'bg-yellow-500' :
-                  acquiredStone === 'space' ? 'bg-blue-500' :
-                    acquiredStone === 'power' ? 'bg-purple-500' :
-                      acquiredStone === 'reality' ? 'bg-red-500' :
-                        'bg-orange-500'
-              }`} />
-
-            <div className="relative z-10 p-12 rounded-full bg-black/50 border border-white/10 shadow-2xl mb-8 animate-bounce-slow">
-              {(() => {
-                const icons: any = { time: Clock, mind: Brain, space: Box, power: Flame, reality: Eye, soul: Skull };
-                const Icon = icons[acquiredStone] || Box;
-                // Dynamic color class application needs safe list, usually passed as prop or style. 
-                // Using inline color style for guaranteed render
-                const colors: any = { time: "#22c55e", mind: "#eab308", space: "#3b82f6", power: "#a855f7", reality: "#ef4444", soul: "#f97316" };
-                return <Icon size={80} color={colors[acquiredStone]} style={{ filter: `drop-shadow(0 0 20px ${colors[acquiredStone]})` }} />;
-              })()}
-            </div>
-          </div>
-
-          <h1 className="text-4xl lg:text-6xl font-black uppercase tracking-[0.2em] text-white mb-4 text-center animate-in slide-in-from-bottom-5 duration-700 delay-100">
-            {acquiredStone} Stone
-          </h1>
-
-          <h2 className="text-xl text-white/50 uppercase tracking-widest mb-12 animate-in slide-in-from-bottom-5 duration-700 delay-200">
-            Acquired
-          </h2>
-
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-12 py-4 bg-white text-black font-black text-sm uppercase tracking-[0.2em] hover:bg-cyan-400 hover:scale-105 transition-all shadow-[0_0_50px_rgba(255,255,255,0.2)] animate-in slide-in-from-bottom-5 duration-700 delay-300 rounded-lg"
-          >
-            Proceed to Dashboard
-          </button>
-
-          <div className="absolute inset-0 pointer-events-none opacity-[0.1] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[size:40px_40px]" />
-        </div>
-      )}
-    </div>
+    </div >
   );
 };
 

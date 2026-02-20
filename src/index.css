@@ -652,3 +652,90 @@ body {
     box-shadow: 0 0 35px hsl(51 100% 50% / 0.35), 0 0 60px hsl(180 100% 50% / 0.2);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Supreme Snap — Cinematic Ending Sequence
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes gold-arc-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.gold-arc-gradient {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    hsl(var(--neon-gold)) 15%,
+    transparent 30%,
+    hsl(var(--neon-gold) / 0.8) 45%,
+    transparent 60%,
+    hsl(var(--neon-gold)) 75%,
+    transparent 90%,
+    transparent 100%
+  );
+  animation: gold-arc-spin 2s linear infinite;
+}
+
+@keyframes white-out {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-white-out {
+  animation: white-out 1.5s ease-in-out forwards;
+}
+
+@keyframes particle-dissolve {
+  0% { transform: translateY(0) scale(1); opacity: 0.8; }
+  100% { transform: translateY(-300px) scale(0); opacity: 0; }
+}
+
+.animate-particle-dissolve {
+  animation: particle-dissolve linear forwards;
+}
+
+.disintegrate-ash {
+  background: hsl(0 0% 40% / 0.8) !important;
+  box-shadow: 0 0 8px hsl(0 0% 20% / 0.6) !important;
+}
+
+@keyframes repulsor-hover {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--neon-gold) / 0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 50px hsl(var(--neon-gold) / 0.8); transform: scale(1.05); }
+}
+
+.snap-button-pulse:hover {
+  animation: repulsor-hover 0.5s ease-in-out infinite;
+}
+
+@keyframes lens-flare {
+  0%, 100% { transform: scale(1); opacity: 0.8; filter: brightness(1); }
+  50% { transform: scale(1.5); opacity: 1; filter: brightness(2); }
+}
+
+.animate-lens-flare {
+  animation: lens-flare 0.5s ease-out forwards;
+}
+
+@keyframes victory-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.victory-text-gold {
+  @apply neon-text-gold;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--neon-gold) / 0.8) 0%,
+    hsl(var(--neon-gold)) 50%,
+    hsl(var(--neon-gold) / 0.8) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: victory-shimmer 4s linear infinite;
+}

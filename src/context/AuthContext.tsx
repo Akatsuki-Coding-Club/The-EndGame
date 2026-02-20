@@ -3,9 +3,11 @@ import * as api from "@/services/api";
 
 export interface Team {
   id: string;
+  _id: string; // alias for id
   name: string;
   role?: string;
   score?: number;
+  snapActivated?: boolean;
 }
 
 interface AuthState {
@@ -20,12 +22,14 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-function toTeam(t: { _id: string; teamName: string; role?: string; score?: number }): Team {
+function toTeam(t: any): Team {
   return {
     id: t._id,
+    _id: t._id,
     name: t.teamName,
     role: t.role,
     score: t.score,
+    snapActivated: t.snapActivated,
   };
 }
 

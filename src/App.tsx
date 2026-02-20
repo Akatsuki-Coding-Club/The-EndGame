@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { GameProvider } from "@/context/GameContext";
+import { GameProvider, useGame } from "@/context/GameContext";
 import { TimerProvider } from "@/context/TimerContext";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -23,9 +23,15 @@ const queryClient = new QueryClient();
 /* Protected route wrapper */
 const ProtectedRoute = ({ children, admin = false }: { children: React.ReactNode; admin?: boolean }) => {
   const { isLoggedIn, isAdmin } = useAuth();
+  const { gameStarted } = useGame();
+
   if (!isLoggedIn) return <Navigate to="/" replace />;
   if (admin && !isAdmin) return <Navigate to="/dashboard" replace />;
   if (!admin && isAdmin) return <Navigate to="/admin" replace />;
+
+  // 🔒 Game Gatekeeper: block non-admin teams from warzone until Commander starts the game
+  if (!admin && !isAdmin && !gameStarted) return <Navigate to="/rules" replace />;
+
   return <>{children}</>;
 };
 

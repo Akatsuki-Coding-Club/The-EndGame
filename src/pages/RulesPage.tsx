@@ -18,7 +18,7 @@ const RulesPage = () => {
             try {
                 const teams = await api.getRegisteredTeams();
                 console.log("Fetched registered teams:", teams);
-                
+
                 // teams is already an array of team._id
                 if (Array.isArray(teams)) {
                     setRegisteredTeams(teams);
@@ -41,16 +41,15 @@ const RulesPage = () => {
         console.log("Registered Teams:", registeredTeams);
 
         if (!gameStarted) {
-            toast.error("Round not started", {
-            description: "Wait for the round to be started",
-            // Custom styling to halve the height and add cinematic flair
-            className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
-            classNames: {
-                title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
-                description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
-                toast: "group",
-            },
-            duration: 3000,
+            toast.error("SYSTEM OFFLINE", {
+                description: "All entry vectors locked. Awaiting Commander's signal.",
+                className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
+                classNames: {
+                    title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
+                    description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
+                    toast: "group",
+                },
+                duration: 3000,
             });
             return;
         }
@@ -58,17 +57,17 @@ const RulesPage = () => {
         // Check if current team is registered in the game
         const teamRegistered = team && Array.isArray(registeredTeams) && registeredTeams.includes(team.id);
         console.log("Team Registered Check:", teamRegistered, "Team ID:", team?.id);
-        
+
         if (!teamRegistered) {
             toast.error("TEAM_NOT_REGISTERED", {
-            description: "Team is not registered. Contact the administrator.",
-            className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
-            classNames: {
-                title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
-                description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
-                toast: "group",
-            },
-            duration: 3000,
+                description: "Team is not registered. Contact the administrator.",
+                className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
+                classNames: {
+                    title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
+                    description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
+                    toast: "group",
+                },
+                duration: 3000,
             });
             return;
         }
@@ -78,11 +77,11 @@ const RulesPage = () => {
             description: "WARZONE_ENTRY_GRANTED",
             className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-blue-500/30 rounded-none shadow-[0_0_15px_rgba(0,186,255,0.1)] p-0",
             classNames: {
-            title: "text-[10px] font-bold tracking-[0.2em] text-blue-400 font-display pl-4",
-            description: "text-[8px] tracking-widest text-blue-600 font-mono pl-4",
+                title: "text-[10px] font-bold tracking-[0.2em] text-blue-400 font-display pl-4",
+                description: "text-[8px] tracking-widest text-blue-600 font-mono pl-4",
             },
         });
-    
+
         navigate("/dashboard");
     };
     const rules = [
@@ -163,13 +162,41 @@ const RulesPage = () => {
 
                 {/* Action Footer */}
                 <div className="mt-12 text-center space-y-6">
-                    
+
+                    {/* Waiting Signal Indicator */}
+                    {!gameStarted && (
+                        <div className="flex flex-col items-center gap-2 mb-2">
+                            <div className="flex items-center gap-2">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
+                                </span>
+                                <span className="text-[9px] font-mono tracking-[0.35em] text-red-500/80 uppercase animate-pulse">
+                                    WAITING FOR COMMANDER'S SIGNAL
+                                </span>
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
+                                </span>
+                            </div>
+                            <p className="text-[8px] tracking-widest text-slate-600 font-mono uppercase">All entry vectors locked</p>
+                        </div>
+                    )}
+
                     <button
                         onClick={handleEnterWarzone}
-                        className="group relative px-12 py-4 bg-[#a34231] text-white font-bold text-sm uppercase tracking-[0.4em] overflow-hidden transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,0,0,0.3)]"
+                        disabled={!gameStarted}
+                        className={`group relative px-12 py-4 font-bold text-sm uppercase tracking-[0.4em] overflow-hidden transition-all shadow-[0_0_20px_rgba(255,0,0,0.3)] ${gameStarted
+                                ? "bg-[#a34231] text-white hover:scale-105 cursor-pointer"
+                                : "bg-slate-800/60 text-slate-600 cursor-not-allowed opacity-50"
+                            }`}
                     >
-                        <span className="relative z-10">Enter Warzone</span>
-                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        <span className="relative z-10">
+                            {gameStarted ? "Enter Warzone" : "Entry Locked"}
+                        </span>
+                        {gameStarted && (
+                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        )}
                     </button>
                 </div>
 
