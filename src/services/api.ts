@@ -361,7 +361,7 @@ export interface StoneStatus {
 }
 
 export async function getStoneStatus(): Promise<StoneStatus> {
-  return request<StoneStatus>("/api/stones/stoneStatus");
+  return request<StoneStatus>("/api/stones/status");
 }
 
 export async function useStone(stoneType: "shield" | "block", targetTeamId?: string) {
@@ -376,6 +376,40 @@ export async function useBlock(targetTeamId: string) {
   return request<{ message: string }>("/api/stones/use/block", {
     method: "POST",
     body: JSON.stringify({ targetId: targetTeamId }),
+  });
+}
+
+// New Stone Usage Routes
+export async function useTimeStone() {
+  return request<{ message: string }>("/api/stones/use/time", { method: "POST" });
+}
+
+export async function useMindStone() {
+  return request<{ message: string; hint: string }>("/api/stones/use/mind", { method: "POST" });
+}
+
+export async function useSpaceStone(timeline: string) {
+  return request<{ message: string }>("/api/stones/use/space", {
+    method: "POST",
+    body: JSON.stringify({ timeline }),
+  });
+}
+
+export async function usePowerStone(targetTeamId: string) {
+  return request<{ message: string }>("/api/stones/use/power", {
+    method: "POST",
+    body: JSON.stringify({ targetTeamId }),
+  });
+}
+
+export async function useRealityStone() {
+  return request<{ message: string }>("/api/stones/use/reality", { method: "POST" });
+}
+
+export async function useSoulStone(sacrificedStone: string) {
+  return request<{ message: string }>("/api/stones/use/soul", {
+    method: "POST",
+    body: JSON.stringify({ stone: sacrificedStone }),
   });
 }
 
@@ -476,10 +510,10 @@ export async function getDashboardData(): Promise<DashboardData> {
     gameStarted: (rawMe as any).gameStarted || false,
   };
 
-  return { 
-    leaderboard, 
-    gameState, 
-    me, 
-    timelines: (timelinesRes.timelines as TimelineName[]) || [] 
+  return {
+    leaderboard,
+    gameState,
+    me,
+    timelines: (timelinesRes.timelines as TimelineName[]) || []
   };
 }
