@@ -417,3 +417,69 @@ export const unlockBlock = async (answer: string) => {
 
   return data;
 };
+
+// --- Dashboard & Combined Data ---
+
+export type TimelineName = "newyork" | "morag" | "asgard" | "vormir";
+
+/**
+ * Standardized interface for the current team's state.
+ * This aligns with the Mongoose teamSchema and your component requirements.
+ */
+export interface UserMe {
+  _id: string;
+  teamName: string;
+  role: string;
+  score: number;
+  stones: string[];
+  currentTimeline: string | null;
+  escapedTimelines: string[];
+  completedTimelines: string[];
+  isFrozen: boolean;
+  frozenUntil?: string | null;
+  blockedUntil?: string | null;
+  activeEffects: string[];
+  snapActivated: boolean;
+  gameStarted: boolean;
+}
+
+export interface DashboardData {
+  leaderboard: LeaderboardEntry[];
+  gameState: GameState;
+  me: UserMe;
+  timelines: TimelineName[];
+}
+
+export async function getDashboardData(): Promise<DashboardData> {
+  const [leaderboard, gameState, rawMe, timelinesRes] = await Promise.all([
+    getLeaderboard(),
+    getDashboardGameState(),
+    getMe(),
+    getTimelines(),
+  ]);
+
+  // Transform rawMe to ensure all required fields from UserMe exist for the UI
+  const me: UserMe = {
+    _id: rawMe._id,
+    teamName: rawMe.teamName,
+    role: rawMe.role,
+    score: rawMe.score,
+    completedTimelines: (rawMe as any).completedTimelines || [],
+    escapedTimelines: (rawMe as any).escapedTimelines || [],
+    currentTimeline: (rawMe as any).currentTimeline || null,
+    stones: (rawMe as any).stones || [],
+    isFrozen: !!rawMe.isFrozen,
+    frozenUntil: rawMe.frozenUntil,
+    blockedUntil: rawMe.blockedUntil,
+    activeEffects: rawMe.activeEffects || [],
+    snapActivated: (rawMe as any).snapActivated || false,
+    gameStarted: (rawMe as any).gameStarted || false,
+  };
+
+  return { 
+    leaderboard, 
+    gameState, 
+    me, 
+    timelines: (timelinesRes.timelines as TimelineName[]) || [] 
+  };
+}

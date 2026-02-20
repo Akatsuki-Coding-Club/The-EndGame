@@ -15,6 +15,8 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import ThemeDecorations from "./components/ThemeDecorations";
 import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
+import TimelinePortal from "./pages/TimelinePortal";
+import MissionInterface from "./pages/MissionInterface";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const AppRoutes = () => (
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/leaderboard" element={<LeaderboardPage />} />
     <Route path="/admin/dashboard" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} />
+    <Route path="/mission/:timelineId" element={<ProtectedRoute><MissionInterface /></ProtectedRoute>} />
+    <Route path="/mission/:timelineId" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
