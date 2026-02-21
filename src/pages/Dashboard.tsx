@@ -12,6 +12,14 @@ import { useGame } from "@/context/GameContext";
 import { SnapSequence } from "@/components/SnapSequence";
 import { Flame } from "lucide-react";
 
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'model-viewer': any;
+    }
+  }
+}
+
 const STONE_META: Record<string, { label: string; color: string; glow: string; icon: React.ReactNode }> = {
   space: { label: "Space", color: "#60a5fa", glow: "rgba(96,165,250,0.4)", icon: <Globe size={16} /> },
   power: { label: "Power", color: "#c084fc", glow: "rgba(192,132,252,0.4)", icon: <Zap size={16} /> },
@@ -222,6 +230,26 @@ const Dashboard = () => {
             <h3 className="text-[9px] font-bold uppercase tracking-widest text-cyan-500 mb-4 flex items-center gap-2">
               <Swords size={14} /> Collected Artifacts
             </h3>
+
+            {/* 3D Infinity Gauntlet Model */}
+            <div className="w-full h-48 mb-6 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center relative shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] group">
+              <model-viewer
+                src="/model/QWERT.glb"
+                auto-rotate
+                camera-controls
+                disable-zoom
+                environment-image="neutral"
+                exposure="1"
+                auto-rotate-delay="0"
+                rotation-per-second="25deg"
+                style={{ width: '100%', height: '100%', outline: 'none' }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-transparent to-yellow-500/10 pointer-events-none rounded-xl" />
+              <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 rounded bg-black/60 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                <span className="text-[7px] text-white/50 font-mono uppercase tracking-widest">3D Preview</span>
+              </div>
+            </div>
 
             {/* Dynamic stone list — only shows stones team actually owns */}
             {(me?.stones?.length ?? 0) === 0 ? (
