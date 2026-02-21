@@ -37,6 +37,7 @@ export interface TeamGameState {
   stones: string[];
   completedTimelines: string[];
   snapActivated: boolean;
+  currentTimeline?: string | null;
 }
 
 export interface GameState {
@@ -109,6 +110,7 @@ function teamToGameState(t: {
   stones?: string[];
   completedTimelines?: string[];
   snapActivated?: boolean;
+  currentTimeline?: string | null;
 }): TeamGameState {
   const now = Date.now();
   const frozenUntil = t.frozenUntil ? new Date(t.frozenUntil).getTime() : null;
@@ -124,6 +126,7 @@ function teamToGameState(t: {
     stones: t.stones || [],
     completedTimelines: t.completedTimelines || [],
     snapActivated: t.snapActivated || false,
+    currentTimeline: t.currentTimeline || null,
   };
 }
 
@@ -279,104 +282,141 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 
   useEffect(() => {
-    if (!team || isAdmin) return;
-
+    // Always connect, but join different rooms based on role
     const s = io(API_BASE, { transports: ["websocket"] });
 
     const onConnect = () => {
       console.log("✅ Socket connected:", s.id);
-      s.emit("JOIN_TEAM", team.id);
+
+      // Everybody joins dashboard to listen for global events (SCORE_UPDATE, etc)
+      s.emit("JOIN_DASHBOARD");
+
+      if (team && !isAdmin) {
+        s.emit("JOIN_TEAM", team.id);
+      }
+      if (isAdmin) {
+        s.emit("JOIN_ADMIN");
+      }
     };
 
     s.on("connect", onConnect);
 
+    // Dashboard Events (Admin & Leaderboard)
+    s.on("SCORE_UPDATE", () => refreshTeams());
+    s.on("STONE_USAGE_UPDATE", () => refreshTeams());
+    s.on("STONE_SELECTION_UPDATE", () => refreshTeams());
+    s.on("BLIP_PUZZLE_LEADERBOARD", () => refreshTeams());
+    s.on("BLOCK_RELEASED_EARLY", () => refreshTeams());
+    s.on("GAME_ENDED", () => {
+      setGameStarted(false);
+    });
+
     // 🚦 GAME GATEKEEPER — Auto-launch all teams when admin starts the game
     s.on("GAME_STARTED", () => {
       setGameStarted(true);
-      toast.success("COMMANDER_SIGNAL_RECEIVED", {
-        description: "The warzone is now open. Redirecting...",
-      });
-      navigate("/dashboard");
-    });
-
-    s.on("TEAM_BLOCKED", (data: { blockedUntil: string; puzzleQuestion?: string }) => {
-      const until = data?.blockedUntil ? new Date(data.blockedUntil).getTime() : null;
-      if (!until) return;
-      setIsBlocked(true);
-      setBlockedUntil(until);
-      setBlockPuzzleQuestion(data.puzzleQuestion || null);
-      setStones((prev) => ({ ...prev, blockedUntil: until }));
-      addNotification(`You are under Power Surge attack!`, "attack");
-      toast.error("SYSTEM_LOCKED", { description: "Solve the unlock puzzle to regain control." });
-    });
-
-    s.on("STONE_ATTACK_BLOCKED", (data?: any) => {
-      // Shield blocked the incoming Power Surge
-      setIsBlocked(false);
-      setStones((prev) => ({ ...prev, shieldActive: false }));
-      toast.success("Shield saved you", { description: "Your Shield absorbed the incoming attack." });
-    });
-
-    s.on("ATTACK_OFFER_SHIELD", (data: { attackerId: string; attackerName?: string; message?: string }) => {
-      setPendingAttackerId(data?.attackerId || null);
-      setShowShieldOffer(true);
-      addNotification(`Incoming attack from ${data?.attackerName || "an opponent"}`, "attack");
-      toast((data?.message) || "Incoming attack - choose defend or continue");
-    });
-
-    // BLIP puzzle delivered directly to team
-    s.on("BLIP_PUZZLE", (puzzle: { question?: string; answer?: string; freezeDurationSec?: number }) => {
-      setBlipPuzzleSolved(true);
-      setIsFrozen(true);
-      if (puzzle && puzzle.question) {
-        addNotification(`Blip puzzle: ${puzzle.question}`, "system");
+      if (team && !isAdmin) {
+        toast.success("COMMANDER_SIGNAL_RECEIVED", {
+          description: "The warzone is now open. Redirecting...",
+        });
+        navigate("/dashboard");
+      } else {
+        toast.success("GAME STARTED", { description: "The warzone is now open." });
       }
     });
 
-    s.on("BLIP_ENDED", () => {
-      setIsFrozen(false);
-      setFrozenUntil(null);
-      setBlipPuzzleSolved(false);
-      toast.success("BLIP_RESOLVED", { description: "Blip ended - systems restored." });
-    });
-
-    s.on("BLOCK_RELEASED", () => {
-      setIsBlocked(false);
-      setBlockedUntil(null);
-      setBlockPuzzleQuestion(null);
-      setStones((prev) => ({ ...prev, blockedUntil: null }));
-      toast.success("SYSTEM_RESTORED", { description: "Block removed successfully." });
-    });
-
-    s.on("SHIELD_CONSUMED", () => {
-      setStones((prev) => ({ ...prev, shieldActive: false, shieldCount: 0 }));
-      toast.success("SHIELD_DEFLECTED_ATTACK", { description: "Your Shield absorbed the incoming attack." });
-    });
-
-    s.on("SNAP_ACTIVATED", (data: { teamId: string; teamName: string; message: string }) => {
-      setSnapWinner({ teamId: data.teamId, teamName: data.teamName, score: 0, currentLevel: 0, isFrozen: false, isBlocked: false, stones: [], completedTimelines: [], snapActivated: true });
-      setPowersDisabled(true);
-      toast.error("SUPREME_SNAP_ACTIVATED", {
-        description: data.message || `${data.teamName} has achieved ultimate power.`,
-        duration: 10000
+    if (team && !isAdmin) {
+      s.on("TEAM_BLOCKED", (data: { blockedUntil: string; puzzleQuestion?: string }) => {
+        const until = data?.blockedUntil ? new Date(data.blockedUntil).getTime() : null;
+        if (!until) return;
+        setIsBlocked(true);
+        setBlockedUntil(until);
+        setBlockPuzzleQuestion(data.puzzleQuestion || null);
+        setStones((prev) => ({ ...prev, blockedUntil: until }));
+        addNotification(`You are under Power Surge attack!`, "attack");
+        toast.error("SYSTEM_LOCKED", { description: "Solve the unlock puzzle to regain control." });
       });
-      navigate("/dashboard");
-    });
+
+      s.on("STONE_ATTACK_BLOCKED", (data?: any) => {
+        // Shield blocked the incoming Power Surge
+        setIsBlocked(false);
+        setStones((prev) => ({ ...prev, shieldActive: false }));
+        toast.success("Shield saved you", { description: "Your Shield absorbed the incoming attack." });
+      });
+
+      s.on("ATTACK_OFFER_SHIELD", (data: { attackerId: string; attackerName?: string; message?: string }) => {
+        setPendingAttackerId(data?.attackerId || null);
+        setShowShieldOffer(true);
+        addNotification(`Incoming attack from ${data?.attackerName || "an opponent"}`, "attack");
+        toast((data?.message) || "Incoming attack - choose defend or continue");
+      });
+
+      // BLIP puzzle delivered directly to team
+      s.on("BLIP_PUZZLE", (puzzle: { question?: string; answer?: string; freezeDurationSec?: number }) => {
+        setBlipPuzzleSolved(true);
+        setIsFrozen(true);
+        if (puzzle && puzzle.question) {
+          addNotification(`Blip puzzle: ${puzzle.question}`, "system");
+        }
+      });
+
+      s.on("BLIP_ENDED", () => {
+        setIsFrozen(false);
+        setFrozenUntil(null);
+        setBlipPuzzleSolved(false);
+        toast.success("BLIP_RESOLVED", { description: "Blip ended - systems restored." });
+      });
+
+      s.on("BLOCK_RELEASED", () => {
+        setIsBlocked(false);
+        setBlockedUntil(null);
+        setBlockPuzzleQuestion(null);
+        setStones((prev) => ({ ...prev, blockedUntil: null }));
+        toast.success("SYSTEM_RESTORED", { description: "Block removed successfully." });
+      });
+
+      s.on("SHIELD_CONSUMED", () => {
+        setStones((prev) => ({ ...prev, shieldActive: false, shieldCount: 0 }));
+        toast.success("SHIELD_DEFLECTED_ATTACK", { description: "Your Shield absorbed the incoming attack." });
+      });
+
+      s.on("SNAP_ACTIVATED", (data: { teamId: string; teamName: string; message: string }) => {
+        setSnapWinner({ teamId: data.teamId, teamName: data.teamName, score: 0, currentLevel: 0, isFrozen: false, isBlocked: false, stones: [], completedTimelines: [], snapActivated: true });
+        setPowersDisabled(true);
+        toast.error("SUPREME_SNAP_ACTIVATED", {
+          description: data.message || `${data.teamName} has achieved ultimate power.`,
+          duration: 10000
+        });
+        navigate("/dashboard");
+      });
+    }
 
     setSocket(s);
 
     return () => {
       s.off("connect", onConnect);
       s.off("GAME_STARTED");
-      s.off("TEAM_BLOCKED");
-      s.off("ATTACK_OFFER_SHIELD");
-      s.off("STONE_ATTACK_BLOCKED");
-      s.off("BLOCK_RELEASED");
-      s.off("SHIELD_CONSUMED");
+      s.off("SCORE_UPDATE");
+      s.off("STONE_USAGE_UPDATE");
+      s.off("STONE_SELECTION_UPDATE");
+      s.off("BLIP_PUZZLE_LEADERBOARD");
+      s.off("BLOCK_RELEASED_EARLY");
+      s.off("GAME_ENDED");
+
+      if (team && !isAdmin) {
+        s.off("TEAM_BLOCKED");
+        s.off("ATTACK_OFFER_SHIELD");
+        s.off("STONE_ATTACK_BLOCKED");
+        s.off("BLOCK_RELEASED");
+        s.off("SHIELD_CONSUMED");
+        s.off("BLIP_PUZZLE");
+        s.off("BLIP_ENDED");
+        s.off("SNAP_ACTIVATED");
+      }
+
       s.disconnect();
       setSocket(null);
     };
-  }, [team?.id, isAdmin, addNotification, navigate]);
+  }, [team, isAdmin, addNotification, navigate, refreshTeams]);
   // useEffect(() => {
   //   if (isBlocked && stones.shieldActive) {
   //     setIsBlocked(false);

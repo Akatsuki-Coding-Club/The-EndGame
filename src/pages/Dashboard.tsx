@@ -23,12 +23,32 @@ const STONE_META: Record<string, { label: string; color: string; glow: string; i
 
 const Dashboard = () => {
   const { logout } = useAuth();
-  const { isSnapReady, initiateSupremeSnap, isSnapping } = useGame();
+  const { isSnapReady, initiateSupremeSnap, isSnapping, allTeamsState } = useGame();
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [spaceStoneTarget, setSpaceStoneTarget] = useState<string | null>(null);
   const [spaceStoneLoading, setSpaceStoneLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
+
+  useEffect(() => {
+    if (!data?.gameState?.endTime) return;
+    const interval = setInterval(() => {
+      const end = new Date(data.gameState.endTime!).getTime();
+      const now = Date.now();
+      const diff = end - now;
+      if (diff <= 0) {
+        setTimeLeft("00:00:00");
+        clearInterval(interval);
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [data?.gameState?.endTime]);
 
   const handleSidebarSpaceStone = async () => {
     // Collect eligible escaped timelines
@@ -82,8 +102,10 @@ const Dashboard = () => {
 
   // Defensive assignments
   const me = data.me;
-  const leaderboard = Array.isArray(data.leaderboard) ? data.leaderboard : [];
   const timelines = Array.isArray(data.timelines) ? data.timelines : [];
+
+  // Use real-time state for ranking
+  const leaderboard = [...allTeamsState].sort((a, b) => b.score - a.score);
 
   // Safely calculate rank to prevent crashes
   const myRankIndex = leaderboard.findIndex(t => t.teamId === me?._id);
@@ -111,6 +133,10 @@ const Dashboard = () => {
         </div>
 
         <div className="flex gap-10 items-center">
+          <div className="text-right">
+            <span className="text-[8px] uppercase text-white/30 block tracking-widest">Remaining Time</span>
+            <span className="text-lg font-bold text-red-500 italic font-mono">{timeLeft}</span>
+          </div>
           <div className="text-right">
             <span className="text-[8px] uppercase text-white/30 block tracking-widest">Global Rank</span>
             <span className="text-lg font-bold text-yellow-500 italic">#{displayRank}</span>

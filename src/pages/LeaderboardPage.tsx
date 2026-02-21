@@ -22,7 +22,7 @@ const LeaderboardPage = () => {
 
         <div className="space-y-3 overflow-y-auto pr-4 scrollbar-none">
           {sortedTeams.map((team, index) => (
-            <div 
+            <div
               key={team.teamId}
               className={cn(
                 "flex items-center bg-slate-900/40 border border-slate-800/50 p-5 transition-all duration-500 hover:border-blue-500/50 group",
@@ -35,15 +35,36 @@ const LeaderboardPage = () => {
               )}>
                 {String(index + 1).padStart(2, '0')}
               </div>
-              
+
               <div className="flex-1">
                 <div className="text-xl font-bold tracking-tight group-hover:text-blue-400 transition-colors uppercase">
                   {team.teamName}
                 </div>
                 <div className="flex gap-4 mt-1">
                   <span className="text-[10px] text-slate-500 uppercase">LVL: {team.currentLevel} / {maxLevel}</span>
+                  {team.currentTimeline && <span className="text-[10px] text-cyan-500 uppercase">TIMELINE: {team.currentTimeline}</span>}
                   {team.isFrozen && <span className="text-[10px] text-blue-500 animate-pulse font-bold">[FROZEN]</span>}
                   {team.isBlocked && <span className="text-[10px] text-red-500 animate-pulse font-bold">[BLOCKED]</span>}
+                </div>
+                <div className="flex gap-1 mt-2 items-center">
+                  <span className="text-[10px] text-slate-500 uppercase mr-2">STONES:</span>
+                  {team.stones && team.stones.length > 0 ? (
+                    team.stones.map(stone => {
+                      const colors: Record<string, string> = {
+                        space: "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]",
+                        mind: "bg-yellow-500 shadow-[0_0_5px_rgba(234,179,8,0.8)]",
+                        reality: "bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.8)]",
+                        power: "bg-purple-500 shadow-[0_0_5px_rgba(168,85,247,0.8)]",
+                        time: "bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]",
+                        soul: "bg-orange-500 shadow-[0_0_5px_rgba(249,115,22,0.8)]",
+                      };
+                      return (
+                        <div key={stone} className={`w-3 h-3 rounded-full ${colors[stone] || "bg-white"}`} title={stone} />
+                      );
+                    })
+                  ) : (
+                    <span className="text-[10px] text-slate-600">NONE</span>
+                  )}
                 </div>
               </div>
 
@@ -68,13 +89,13 @@ const LeaderboardPage = () => {
               <p className="text-[10px] text-slate-600 uppercase italic">Awaiting neural link signals...</p>
             ) : (
               notifications.map((notif) => (
-                <div 
+                <div
                   key={notif.id}
                   className={cn(
                     "p-3 border-l-2 text-[10px] animate-in slide-in-from-right duration-500",
-                    notif.type === 'attack' ? "bg-red-500/5 border-red-500" : 
-                    notif.type === 'success' ? "bg-blue-500/5 border-blue-500" : 
-                    "bg-slate-500/5 border-slate-500"
+                    notif.type === 'attack' ? "bg-red-500/5 border-red-500" :
+                      notif.type === 'success' ? "bg-blue-500/5 border-blue-500" :
+                        "bg-slate-500/5 border-slate-500"
                   )}
                 >
                   <div className="flex justify-between items-start mb-1">
@@ -86,7 +107,7 @@ const LeaderboardPage = () => {
               ))
             )}
           </div>
-          
+
           <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
         </div>
       </div>
