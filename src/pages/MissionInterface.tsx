@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
+import RulesSidebar from "@/components/RulesSidebar";
 import {
   getCurrentQuestion,
   submitAnswer,
@@ -18,7 +19,8 @@ import {
 import { toast } from "sonner";
 import {
   Terminal, Loader2, Target, Zap, Clock, Brain, Globe, Flame, Eye, Skull,
-  ChevronUp, ChevronDown, AlertTriangle, Sparkles, Shield, X
+  ChevronUp, ChevronDown, AlertTriangle, Sparkles, Shield, X,
+  Info
 } from "lucide-react";
 
 /* ─── Stone config: single source of truth for colors / icons / labels ─── */
@@ -90,14 +92,13 @@ const MissionInterface = () => {
   const [currentTask, setCurrentTask] = useState<any>(null);
   const [answer, setAnswer] = useState("");
 
-  // Stone State — now driven by the actual team's `stones` string array
   const [myStones, setMyStones] = useState<string[]>([]);
   const [stoneStatus, setStoneStatus] = useState<StoneStatus | null>(null);
   const [teams, setTeams] = useState<any[]>([]);
   const [showStonePanel, setShowStonePanel] = useState(false);
   const [activeHint, setActiveHint] = useState<string | null>(null);
   const [realityActive, setRealityActive] = useState(false);
-
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
   // Power/Soul Selection State
   const [targetTeam, setTargetTeam] = useState("");
   const [sacrificeStone, setSacrificeStone] = useState("");
@@ -403,6 +404,7 @@ const MissionInterface = () => {
       {/* ─── HEADER ─── */}
       <header className="px-8 py-4 border-b border-white/10 bg-black/60 flex justify-between items-center shrink-0 z-10 backdrop-blur-md">
         <div className="flex items-center gap-4">
+
           <Terminal size={20} className="text-cyan-500" />
           <h2 className="text-xs font-bold uppercase tracking-widest text-white">Neural Interface // {timelineId?.toUpperCase()}</h2>
         </div>
@@ -432,156 +434,148 @@ const MissionInterface = () => {
       </header>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main className="flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-28">
-        <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-sm shadow-2xl">
+      <div className="flex-1 flex flex-col overflow-hidden pb-14 relative z-10">
+        <main className="flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-28">
+          <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-sm shadow-2xl">
 
-          {/* Question Header */}
-          <div className="p-4 border-b border-white/5 flex justify-between bg-black/20">
-            <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest flex items-center gap-2">
-              <Zap size={12} /> {activeMission?.difficulty || "UNKNOWN"} // Objective_{currentTask?.answeredCount !== undefined ? currentTask.answeredCount + 1 : 1}
-            </span>
-            <span className="text-[10px] text-white/40 uppercase animate-pulse">
-              Priority: <span className="text-cyan-400">{activeMission?.points || 0} PTS</span>
+            {/* Question Header */}
+            <div className="p-4 border-b border-white/5 flex justify-between bg-black/20">
+              <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest flex items-center gap-2">
+                <Zap size={12} /> {activeMission?.difficulty || "UNKNOWN"} // Objective_{currentTask?.answeredCount !== undefined ? currentTask.answeredCount + 1 : 1}
+              </span>
+              <span className="text-[10px] text-white/40 uppercase animate-pulse">
+                Priority: <span className="text-cyan-400">{activeMission?.points || 0} PTS</span>
+              </span>
+            </div>
+
+            {/* Question Body */}
+            <div className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar relative">
+              <h3 className="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white mb-8 border-l-4 border-cyan-500 pl-6 animate-in slide-in-from-left-4 duration-500">
+                {activeMission?.title || "Classified Intel"}
+              </h3>
+
+              <div className="bg-black/60 border border-white/10 p-8 rounded-xl relative shadow-2xl group hover:border-cyan-500/30 transition-colors">
+                <p className="text-lg lg:text-xl leading-relaxed text-cyan-100/90 whitespace-pre-wrap">
+                  {activeMission?.question}
+                </p>
+                <div className="absolute top-2 right-4 text-[7px] text-white/10 uppercase tracking-widest group-hover:text-cyan-500/50 transition-colors">S.H.I.E.L.D. Secure Intel</div>
+
+                {/* Hint Display */}
+                {activeHint && (
+                  <div className="mt-6 pt-4 border-t border-yellow-500/20 animate-in fade-in zoom-in duration-300">
+                    <p className="text-yellow-400/80 text-sm font-mono flex items-start gap-2">
+                      <Brain size={14} className="mt-1 shrink-0" />
+                      <span className="uppercase tracking-widest text-[10px] text-yellow-500/50 mr-2">Hint Decrypted:</span>
+                      {activeHint}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Input Area */}
+            <div className="p-6 bg-black/80 border-t border-white/10 relative z-10">
+              <form onSubmit={handleSubmit} className="flex gap-4 max-w-3xl mx-auto">
+                <div className="flex-1 relative group">
+                  <input
+                    type="text"
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    placeholder={realityActive ? "REALITY REWRITE ACTIVE..." : "Enter Access Key..."}
+                    className={`w-full bg-black/50 border ${realityActive
+                      ? "border-red-500/50 text-red-100 placeholder:text-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]"
+                      : "border-white/10 text-white placeholder:text-white/20"
+                      } rounded-lg px-5 py-4 focus:border-cyan-500/50 outline-none font-mono transition-all text-sm`}
+                    autoFocus
+                  />
+                  <Target className={`absolute right-4 top-1/2 -translate-y-1/2 ${realityActive ? "text-red-500/50" : "text-white/5"} group-focus-within:text-cyan-500/50 transition-colors`} size={18} />
+                </div>
+                <button
+                  type="submit"
+                  disabled={submitting || !answer.trim()}
+                  className={`px-8 ${realityActive ? "bg-red-600 hover:bg-red-500" : "bg-cyan-600 hover:bg-cyan-500"} text-black font-black uppercase text-[10px] tracking-widest rounded-lg transition-all active:scale-95`}
+                >
+                  {submitting ? <Loader2 className="animate-spin" size={16} /> : "Execute"}
+                </button>
+              </form>
+            </div>
+
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[size:32px_32px]" />
+          </div>
+        </main>
+      </div>
+
+      {/* ─── INFINITY STONES PANEL ─── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        {/* The Handle - Always visible, pointer-events enabled */}
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 w-72 bg-[#0a0a1a] border-t border-x border-cyan-500/40 rounded-t-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-cyan-500/10 transition-all group shadow-[0_-10px_25px_rgba(0,0,0,0.8)] pointer-events-auto
+            ${showStonePanel ? "bottom-[calc(100%-1px)] h-12" : "bottom-0 h-14"} 
+          `}
+          onClick={() => setShowStonePanel(!showStonePanel)}
+        >
+          <div className="flex flex-col items-center -space-y-1">
+            <ChevronUp
+              size={20}
+              className={`text-cyan-400 transition-transform duration-500 ${showStonePanel ? "rotate-180" : "animate-bounce"}`}
+            />
+            <span className="text-[12px] font-black uppercase tracking-[0.3em] text-cyan-400 group-hover:text-white transition-colors">
+              Infinity Stones
             </span>
           </div>
 
-          {/* Question Body */}
-          <div className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar relative">
-            <h3 className="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white mb-8 border-l-4 border-cyan-500 pl-6 animate-in slide-in-from-left-4 duration-500">
-              {activeMission?.title || "Classified Intel"}
-            </h3>
+          {/* Status Indicator Bar */}
+          <div className="absolute bottom-1.5 w-16 h-0.5 bg-cyan-950 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-cyan-500 transition-all duration-1000"
+              style={{ width: `${(myStones.length / 6) * 100}%` }}
+            />
+          </div>
+        </div>
 
-            <div className="bg-black/60 border border-white/10 p-8 rounded-xl relative shadow-2xl group hover:border-cyan-500/30 transition-colors">
-              <p className="text-lg lg:text-xl leading-relaxed text-cyan-100/90 whitespace-pre-wrap">
-                {activeMission?.question}
-              </p>
-              <div className="absolute top-2 right-4 text-[7px] text-white/10 uppercase tracking-widest group-hover:text-cyan-500/50 transition-colors">S.H.I.E.L.D. Secure Intel</div>
-
-              {/* Hint Display */}
-              {activeHint && (
-                <div className="mt-6 pt-4 border-t border-yellow-500/20 animate-in fade-in zoom-in duration-300">
-                  <p className="text-yellow-400/80 text-sm font-mono flex items-start gap-2">
-                    <Brain size={14} className="mt-1 shrink-0" />
-                    <span className="uppercase tracking-widest text-[10px] text-yellow-500/50 mr-2">Hint Decrypted:</span>
-                    {activeHint}
-                  </p>
+        {/* The Content Drawer */}
+        <div
+          className={`w-full border-t border-cyan-500/20 backdrop-blur-xl transition-all duration-500 ease-in-out pointer-events-auto
+            ${showStonePanel
+              ? "h-[320px] bg-[#05050c]/98 opacity-100 translate-y-0 shadow-[0_-20px_60px_rgba(0,0,0,0.9)]"
+              : "h-0 opacity-0 translate-y-10"
+            }`}
+        >
+          {/* Internal Content (Only visible when height > 0) */}
+          <div className={`${showStonePanel ? "block" : "hidden"} p-8`}>
+            {/* Panel Header */}
+            <div className="flex items-center justify-between px-4 pb-4 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <Sparkles size={14} className="text-cyan-500" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/50">Infinity Gauntlet</span>
+              </div>
+              {isCooldown && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-red-500/30 bg-red-500/10">
+                  <AlertTriangle size={10} className="text-red-500 animate-pulse" />
+                  <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Cooldown: {formatTime(timeLeft)}</span>
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Input Area */}
-          <div className="p-8 bg-black/80 border-t border-white/10 relative z-10">
-            <form onSubmit={handleSubmit} className="flex gap-4 max-w-4xl mx-auto">
-              <div className="flex-1 relative group">
-                <input
-                  type="text"
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder={realityActive ? "REALITY REWRITE ACTIVE..." : "Enter Access Key..."}
-                  className={`w-full bg-black border ${realityActive
-                    ? "border-red-500/50 text-red-100 placeholder:text-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]"
-                    : "border-white/20 text-white placeholder:text-white/10"
-                    } rounded-lg px-6 py-5 focus:border-cyan-500/50 outline-none font-mono transition-all`}
-                  autoFocus
-                />
-                <Target className={`absolute right-4 top-1/2 -translate-y-1/2 ${realityActive ? "text-red-500/50" : "text-white/5"} group-focus-within:text-cyan-500/50 transition-colors`} size={20} />
-              </div>
-              <button
-                type="submit"
-                disabled={submitting || !answer.trim()}
-                className={`px-10 ${realityActive ? "bg-red-600 hover:bg-red-500 shadow-red-500/20" : "bg-cyan-600 hover:bg-cyan-500 shadow-cyan-500/20"} disabled:opacity-20 text-black font-black uppercase text-xs tracking-widest rounded-lg transition-all shadow-lg active:scale-95`}
-              >
-                {submitting ? <Loader2 className="animate-spin" /> : "Execute"}
-              </button>
-            </form>
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[size:32px_32px]" />
-        </div>
-      </main>
-
-      {/* ─── INFINITY STONES PANEL ─── */}
-      <div
-        className={`fixed left-0 right-0 border-t border-white/10 backdrop-blur-xl transition-all duration-500 z-50 ease-in-out
-          ${showStonePanel
-            ? "bottom-0 bg-[#05050c]/98 shadow-[0_-20px_60px_rgba(0,0,0,0.9)]"
-            : "-bottom-32 bg-black/80"
-          }`}
-      >
-        {/* Toggle Handle */}
-        <div
-          className="absolute -top-7 left-1/2 -translate-x-1/2 h-7 px-6 bg-[#05050c] border-t border-x border-white/10 rounded-t-xl flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors group z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]"
-          onClick={() => setShowStonePanel(!showStonePanel)}
-        >
-          <div className="flex items-center gap-2 text-[8px] uppercase tracking-[0.2em] text-cyan-500/60 group-hover:text-cyan-400 whitespace-nowrap">
-            {showStonePanel ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
-            {showStonePanel ? "Close Gauntlet" : "Access Infinity Stones"}
-            {/* Owned stones count badge */}
-            {myStones.length > 0 && (
-              <span className="ml-1 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-[7px] font-black">
-                {myStones.length} / {ALL_STONES.length}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Stones Content */}
-        <div className={`transition-all duration-300 ${showStonePanel ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-
-          {/* Panel Header */}
-          <div className="flex items-center justify-between px-8 pt-5 pb-4 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <Sparkles size={14} className="text-cyan-500" />
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/50">Infinity Gauntlet</span>
-            </div>
-            {isCooldown && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-red-500/30 bg-red-500/10">
-                <AlertTriangle size={10} className="text-red-500 animate-pulse" />
-                <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Cooldown: {formatTime(timeLeft)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Stone Cards Grid */}
-          <div className="px-8 py-5">
-            <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto">
-              {ALL_STONES.map(s => <StoneCard key={s} stoneKey={s} />)}
-            </div>
-            {/* Legend */}
-            <div className="flex items-center justify-center gap-6 mt-4">
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                <span className="text-[7px] text-white/30 uppercase tracking-widest">Acquired</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
-                <span className="text-[7px] text-white/30 uppercase tracking-widest">Not Acquired</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                <span className="text-[7px] text-white/30 uppercase tracking-widest">DB = Dashboard Only</span>
+            {/* Stone Cards Grid */}
+            <div className="py-6">
+              <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto">
+                {ALL_STONES.map(s => <StoneCard key={s} stoneKey={s} />)}
               </div>
             </div>
-          </div>
 
-          {/* ⚡ SUPREME SNAP ACTIVATOR ⚡ */}
-          {myStones.length === 6 && !isSnapping && !snapWinner && (
-            <div className="px-8 pb-8 flex justify-center animate-in slide-in-from-bottom-5 duration-700">
-              <div className="relative group">
-                <div className="absolute -inset-1 gold-arc-gradient rounded-full blur-sm opacity-70 animate-pulse" />
+            {/* Supreme Snap Logic */}
+            {myStones.length === 6 && !isSnapping && !snapWinner && (
+              <div className="pb-4 flex justify-center">
                 <button
                   onClick={initiateSupremeSnap}
-                  className="relative px-10 py-4 bg-black border border-yellow-500/50 rounded-full flex items-center gap-3 transition-all active:scale-95 snap-button-pulse"
+                  className="px-10 py-3 bg-black border border-yellow-500/50 rounded-full flex items-center gap-3 hover:scale-105 transition-all text-yellow-500 font-black text-[10px] tracking-widest"
                 >
-                  <Flame size={16} className="text-yellow-500 fill-current" />
-                  <span className="text-xs font-black italic tracking-[0.2em] text-yellow-500 uppercase">
-                    EXECUTE SUPREME SNAP
-                  </span>
+                  <Flame size={14} /> EXECUTE SUPREME SNAP
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -777,6 +771,10 @@ const MissionInterface = () => {
           );
         })()
       }
+      <RulesSidebar
+        isOpen={isRulesOpen}
+        setIsOpen={setIsRulesOpen}
+      />
 
     </div >
   );

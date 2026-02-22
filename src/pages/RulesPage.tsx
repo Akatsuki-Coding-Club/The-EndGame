@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Zap, Skull, Lock, Info, Play } from "lucide-react";
+import { Shield, Zap, Skull, Lock, Info, Target, ChevronRight, Activity } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
 import { useGame } from "@/context/GameContext";
@@ -17,194 +17,141 @@ const RulesPage = () => {
         const fetchRegisteredTeams = async () => {
             try {
                 const teams = await api.getRegisteredTeams();
-                console.log("Fetched registered teams:", teams);
-
-                // teams is already an array of team._id
-                if (Array.isArray(teams)) {
-                    setRegisteredTeams(teams);
-                } else {
-                    setRegisteredTeams([]);
-                }
+                if (Array.isArray(teams)) setRegisteredTeams(teams);
             } catch (error) {
                 console.error("Failed to fetch registered teams:", error);
-                setRegisteredTeams([]);
             }
         };
-
         fetchRegisteredTeams();
     }, []);
 
     const handleEnterWarzone = () => {
-        console.log("Enter Warzone clicked");
-        console.log("Game Started:", gameStarted);
-        console.log("Current Team:", team);
-        console.log("Registered Teams:", registeredTeams);
-
         if (!gameStarted) {
-            toast.error("SYSTEM OFFLINE", {
-                description: "All entry vectors locked. Awaiting Commander's signal.",
-                className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
-                classNames: {
-                    title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
-                    description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
-                    toast: "group",
-                },
-                duration: 3000,
+            toast.error("SYSTEM ENCRYPTION ACTIVE", {
+                description: "The Quantum Tunnel is not yet powered. Await Steve's signal.",
             });
             return;
         }
 
-        // Check if current team is registered in the game
         const teamRegistered = team && Array.isArray(registeredTeams) && registeredTeams.includes(team.id);
-        console.log("Team Registered Check:", teamRegistered, "Team ID:", team?.id);
-
+        
         if (!teamRegistered) {
-            toast.error("TEAM_NOT_REGISTERED", {
-                description: "Team is not registered. Contact the administrator.",
-                className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-red-500/30 rounded-none shadow-[0_0_15px_rgba(255,0,0,0.1)] p-0",
-                classNames: {
-                    title: "text-[10px] font-bold tracking-[0.2em] text-red-500 font-display pl-4",
-                    description: "text-[8px] tracking-widest text-red-700 font-mono pl-4",
-                    toast: "group",
-                },
-                duration: 3000,
+            toast.error("ACCESS DENIED", {
+                description: "Your biometric signature isn't in the Avengers database.",
             });
             return;
         }
 
-        console.log("All checks passed, navigating to dashboard");
-        toast.success("NEURAL_SYNC_COMPLETE", {
-            description: "WARZONE_ENTRY_GRANTED",
-            className: "h-12 min-h-0 flex items-center bg-slate-950/90 border border-blue-500/30 rounded-none shadow-[0_0_15px_rgba(0,186,255,0.1)] p-0",
-            classNames: {
-                title: "text-[10px] font-bold tracking-[0.2em] text-blue-400 font-display pl-4",
-                description: "text-[8px] tracking-widest text-blue-600 font-mono pl-4",
-            },
+        toast.success("BIOMETRICS VERIFIED", {
+            description: "Initiating Time Heist sequence...",
         });
-
         navigate("/dashboard");
     };
+
     const rules = [
-        {
-            id: "01",
-            title: "Mission First Always",
-            desc: "Solve missions to earn points — each mission can be submitted only once.",
-            icon: <Info className="text-red-500" size={20} />,
-        },
-        {
-            id: "02",
-            title: "Stones Are Limited",
-            desc: "Unlock at 300 and 600 points; maximum two Infinity Stones per team.",
-            icon: <Zap className="text-red-500" size={20} />,
-        },
-        {
-            id: "03",
-            title: "Power Stone Blocks",
-            desc: "Enemies can block your editor for 120 seconds unless you solve the unlock puzzle.",
-            icon: <Lock className="text-red-500" size={20} />,
-        },
-        {
-            id: "04",
-            title: "Shield Saves Once",
-            desc: "Shield blocks one stone attack automatically, then gets consumed.",
-            icon: <Shield className="text-red-500" size={20} />,
-        },
-        {
-            id: "05",
-            title: "Blip Freezes Teams",
-            desc: "The Blip freezes teams in two phases; frozen teams can only solve the Blip puzzle.",
-            icon: <Skull className="text-red-500" size={20} />,
-        },
-        {
-            id: "06",
-            title: "Final Lockdown Phase",
-            desc: "Last 15 minutes disable all stones — only mission solving counts.",
-            icon: <Play className="text-red-500" size={20} />,
-        },
+        { id: "01", title: "Mission Critical", desc: "Solve missions to earn points. Each objective is a unique timeline—one submission only.", icon: <Target className="text-cyan-400" size={22} /> },
+        { id: "02", title: "Infinity Stones", desc: "Unlock at 300/600 points. Maximum 2 stones per team. Use them wisely, Thanos won't wait.", icon: <Zap className="text-amber-400" size={22} /> },
+        { id: "03", title: "Power Stone Interference", desc: "Hostile teams can lock your terminal for 120s. Solve the bypass puzzle to regain control.", icon: <Lock className="text-purple-500" size={22} /> },
+        { id: "04", title: "Vibranium Shield", desc: "One-time protection against stone-based attacks. Consumed upon impact.", icon: <Shield className="text-slate-300" size={22} /> },
+        { id: "05", title: "The Blip", desc: "Two-phase global freeze. Only the 'Nano Gauntlet' puzzle can restore your timeline.", icon: <Skull className="text-emerald-400" size={22} /> },
+        { id: "06", title: "Endgame Phase", desc: "Final 15 mins: Stones are disabled. Pure mission execution determines the fate of the universe.", icon: <Activity className="text-red-500" size={22} /> },
     ];
 
     return (
-        <>
+        <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-cyan-500/30">
             <Navbar />
-            <div className="min-h-screen  bg-[#1e293b] text-foreground  p-6 flex flex-col items-center justify-center">
+            
+            {/* Background Narrative Layer */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(15,23,42,0)_0%,rgba(2,6,23,1)_100%)]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-900/10 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/10 blur-[120px] rounded-full" />
+            </div>
 
-                {/* HUD Header */}
-                <div className="w-full max-w-4xl mb-10 flex items-end justify-between border-b border-primary/30 pb-4">
-                    <div>
-                        <h2 className="text-[10px] tracking-[0.5em] text-red-500 font-bold uppercase opacity-60">System Ready</h2>
-                        <h1 className="text-4xl font-bold tracking-tighter neon-text">ENGAGEMENT RULES</h1>
-                    </div>
+            <main className="relative z-10 max-w-6xl mx-auto px-6 pt-24 pb-20">
+                {/* Briefing Header */}
+                <div className="mb-16 space-y-2 border-l-4 border-cyan-500 pl-6">
+                    <p className="text-xs font-mono tracking-[0.5em] text-cyan-500 uppercase animate-pulse">
+                        Briefing Room // Sector 7G
+                    </p>
+                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white uppercase italic">
+                        Whatever it <span className="text-cyan-500">Takes</span>
+                    </h1>
+                    <p className="text-slate-400 max-w-xl text-sm font-medium tracking-wide">
+                        The stones are scattered through time. Follow the protocols below to secure the timeline and complete the heist.
+                    </p>
                 </div>
 
-                {/* Rules Grid */}
-                <div className="grid grid-cols-1 bg-[#1e293b] md:grid-cols-2 gap-4 w-full max-w-4xl">
-                    {rules.map((rule, index) => (
-                        <div
+                {/* Tactical Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
+                    {rules.map((rule, idx) => (
+                        <div 
                             key={rule.id}
-                            className="group glass-card p-6 bg-[#1e293b] border-l-2 border-primary/20 hover:border-primary transition-all duration-300 animate-fade-in"
-                            style={{ animationDelay: `${index * 100}ms` }}
+                            className="group relative bg-slate-900/40 border border-slate-800 p-8 hover:bg-slate-800/60 transition-all duration-500 overflow-hidden"
                         >
-                            <div className="flex items-start gap-4">
-                                <span className="text-[10px] font-mono text-red-500/40 font-bold">{rule.id}</span>
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
+                            {/* Scanning Line Effect */}
+                            <div className="absolute inset-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent -translate-y-full group-hover:animate-scan" />
+                            
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="p-3 bg-slate-950 border border-slate-700 rounded-sm">
                                         {rule.icon}
-                                        <h3 className="text-sm font-bold tracking-widest uppercase text-red-500/90">{rule.title}</h3>
                                     </div>
-                                    <p className="text-xs font-body text-muted-foreground leading-relaxed">
-                                        {rule.desc}
-                                    </p>
+                                    <span className="font-mono text-[10px] text-slate-500 tracking-tighter italic">
+                                        PROTOCOL_{rule.id}
+                                    </span>
                                 </div>
+                                <h3 className="text-lg font-bold text-white mb-3 tracking-tight uppercase group-hover:text-cyan-400 transition-colors">
+                                    {rule.title}
+                                </h3>
+                                <p className="text-sm text-slate-400 leading-relaxed font-light">
+                                    {rule.desc}
+                                </p>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Action Footer */}
-                <div className="mt-12 text-center space-y-6">
-
-                    {/* Waiting Signal Indicator */}
+                {/* Footer Engagement */}
+                <div className="mt-20 flex flex-col items-center">
                     {!gameStarted && (
-                        <div className="flex flex-col items-center gap-2 mb-2">
-                            <div className="flex items-center gap-2">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
-                                </span>
-                                <span className="text-[9px] font-mono tracking-[0.35em] text-red-500/80 uppercase animate-pulse">
-                                    WAITING FOR COMMANDER'S SIGNAL
-                                </span>
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
-                                </span>
-                            </div>
-                            <p className="text-[8px] tracking-widest text-slate-600 font-mono uppercase">All entry vectors locked</p>
+                        <div className="mb-8 px-6 py-2 bg-red-950/20 border border-red-900/50 rounded-full flex items-center gap-3">
+                            <div className="w-2 h-2 bg-red-600 rounded-full animate-ping" />
+                            <span className="text-[10px] font-mono tracking-widest text-red-500 uppercase">
+                                Quantum Tunnel: Disconnected - Awaiting Power-Up
+                            </span>
                         </div>
                     )}
 
                     <button
                         onClick={handleEnterWarzone}
                         disabled={!gameStarted}
-                        className={`group relative px-12 py-4 font-bold text-sm uppercase tracking-[0.4em] overflow-hidden transition-all shadow-[0_0_20px_rgba(255,0,0,0.3)] ${gameStarted
-                                ? "bg-[#a34231] text-white hover:scale-105 cursor-pointer"
-                                : "bg-slate-800/60 text-slate-600 cursor-not-allowed opacity-50"
-                            }`}
+                        className={`
+                            relative px-16 py-5 overflow-hidden transition-all duration-300
+                            ${gameStarted 
+                                ? "bg-cyan-600 text-white hover:bg-cyan-500 shadow-[0_0_30px_rgba(8,145,178,0.3)]" 
+                                : "bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed"}
+                        `}
                     >
-                        <span className="relative z-10">
-                            {gameStarted ? "Enter Warzone" : "Entry Locked"}
-                        </span>
+                        <div className="relative z-10 flex items-center gap-4 font-black uppercase tracking-[0.3em] text-sm">
+                            {gameStarted ? "Initiate Heist" : "System Locked"}
+                            {gameStarted && <ChevronRight size={18} className="animate-bounce-x" />}
+                        </div>
+                        
+                        {/* Button Glow Effect */}
                         {gameStarted && (
-                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full hover:animate-shimmer" />
                         )}
                     </button>
                 </div>
+            </main>
 
-                {/* Background HUD Decor */}
-                <div className="fixed top-10 left-10 w-32 h-32 border-l border-t border-primary/20 pointer-events-none" />
-                <div className="fixed bottom-10 right-10 w-32 h-32 border-r border-b border-primary/20 pointer-events-none" />
+            {/* Corner Decorative HUD */}
+            <div className="fixed bottom-6 left-6 flex items-center gap-4 text-[10px] font-mono text-slate-600">
+                <div className="h-px w-12 bg-slate-800" />
+                AVNG_OPERATIONS_MANUAL
             </div>
-        </>
+        </div>
     );
 };
 
