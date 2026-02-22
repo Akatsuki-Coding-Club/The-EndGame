@@ -22,6 +22,7 @@ import {
   ChevronUp, ChevronDown, AlertTriangle, Sparkles, Shield, X,
   Info
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 /* ─── Stone config: single source of truth for colors / icons / labels ─── */
 const STONE_CONFIG: Record<string, {
@@ -401,45 +402,15 @@ const MissionInterface = () => {
   return (
     <div className={`h-screen bg-[#05050c] flex flex-col font-mono text-slate-300 overflow-hidden transition-all duration-1000 ${realityActive ? "hue-rotate-90 saturate-200 contrast-125 box-border border-[20px] border-red-500/10" : ""}`}>
 
-      {/* ─── HEADER ─── */}
-      <header className="px-8 py-4 border-b border-white/10 bg-black/60 flex justify-between items-center shrink-0 z-10 backdrop-blur-md">
-        <div className="flex items-center gap-4">
-
-          <Terminal size={20} className="text-cyan-500" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-white">Neural Interface // {timelineId?.toUpperCase()}</h2>
-        </div>
-        <div className="flex items-center gap-6">
-          {/* Mini stone dots — one per owned stone */}
-          <div className="flex items-center gap-1.5">
-            {ALL_STONES.map(s => {
-              const has = hasStone(s);
-              const cfg = STONE_CONFIG[s];
-              return (
-                <div
-                  key={s}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${has ? "scale-100" : "scale-75 opacity-20"}`}
-                  style={has ? { backgroundColor: cfg.color, boxShadow: `0 0 6px ${cfg.glow}` } : { backgroundColor: "#333" }}
-                  title={cfg.label}
-                />
-              );
-            })}
-          </div>
-          <div className="text-right">
-            <span className="text-[8px] text-white/40 block uppercase tracking-widest">Stability</span>
-            <span className="text-sm font-bold text-cyan-400">
-              {currentTask?.answeredCount !== undefined ? currentTask.answeredCount + 1 : 0} / {currentTask?.totalQuestions || "?"}
-            </span>
-          </div>
-        </div>
-      </header>
+      <Navbar/>
 
       {/* ─── MAIN CONTENT ─── */}
-      <div className="flex-1 flex flex-col overflow-hidden pb-14 relative z-10">
-        <main className="flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-28">
+      <div className="flex-1 flex flex-col overflow-hidden pb-2 relative z-10">
+        <main className="flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-12">
           <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-sm shadow-2xl">
 
             {/* Question Header */}
-            <div className="p-4 border-b border-white/5 flex justify-between bg-black/20">
+            <div className="p-3 border-b border-white/5 flex justify-between bg-black/20">
               <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest flex items-center gap-2">
                 <Zap size={12} /> {activeMission?.difficulty || "UNKNOWN"} // Objective_{currentTask?.answeredCount !== undefined ? currentTask.answeredCount + 1 : 1}
               </span>
@@ -449,17 +420,11 @@ const MissionInterface = () => {
             </div>
 
             {/* Question Body */}
-            <div className="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar relative">
-              <h3 className="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white mb-8 border-l-4 border-cyan-500 pl-6 animate-in slide-in-from-left-4 duration-500">
-                {activeMission?.title || "Classified Intel"}
-              </h3>
-
-              <div className="bg-black/60 border border-white/10 p-8 rounded-xl relative shadow-2xl group hover:border-cyan-500/30 transition-colors">
-                <p className="text-lg lg:text-xl leading-relaxed text-cyan-100/90 whitespace-pre-wrap">
+            <div className="flex-1 p-2 lg:p-3 overflow-y-auto custom-scrollbar relative">
+              <div className="bg-black/60 border border-white/10 p-3 rounded-xl relative shadow-2xl group hover:border-cyan-500/30 transition-colors">
+                <p className="text-md lg:text-md leading-relaxed text-cyan-100/90 whitespace-pre-wrap">
                   {activeMission?.question}
                 </p>
-                <div className="absolute top-2 right-4 text-[7px] text-white/10 uppercase tracking-widest group-hover:text-cyan-500/50 transition-colors">S.H.I.E.L.D. Secure Intel</div>
-
                 {/* Hint Display */}
                 {activeHint && (
                   <div className="mt-6 pt-4 border-t border-yellow-500/20 animate-in fade-in zoom-in duration-300">
@@ -474,7 +439,7 @@ const MissionInterface = () => {
             </div>
 
             {/* Input Area */}
-            <div className="p-6 bg-black/80 border-t border-white/10 relative z-10">
+            <div className="p-3 bg-black/80 border-t border-white/10 relative z-10">
               <form onSubmit={handleSubmit} className="flex gap-4 max-w-3xl mx-auto">
                 <div className="flex-1 relative group">
                   <input
@@ -485,7 +450,7 @@ const MissionInterface = () => {
                     className={`w-full bg-black/50 border ${realityActive
                       ? "border-red-500/50 text-red-100 placeholder:text-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]"
                       : "border-white/10 text-white placeholder:text-white/20"
-                      } rounded-lg px-5 py-4 focus:border-cyan-500/50 outline-none font-mono transition-all text-sm`}
+                      } rounded-lg px-5 py-3 focus:border-cyan-500/50 outline-none font-mono transition-all text-sm`}
                     autoFocus
                   />
                   <Target className={`absolute right-4 top-1/2 -translate-y-1/2 ${realityActive ? "text-red-500/50" : "text-white/5"} group-focus-within:text-cyan-500/50 transition-colors`} size={18} />
@@ -510,26 +475,18 @@ const MissionInterface = () => {
         {/* The Handle - Always visible, pointer-events enabled */}
         <div
           className={`absolute left-1/2 -translate-x-1/2 w-72 bg-[#0a0a1a] border-t border-x border-cyan-500/40 rounded-t-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-cyan-500/10 transition-all group shadow-[0_-10px_25px_rgba(0,0,0,0.8)] pointer-events-auto
-            ${showStonePanel ? "bottom-[calc(100%-1px)] h-12" : "bottom-0 h-14"} 
+            ${showStonePanel ? "bottom-[calc(100%-1px)] h-12" : "bottom-0 h-8"} 
           `}
           onClick={() => setShowStonePanel(!showStonePanel)}
         >
           <div className="flex flex-col items-center -space-y-1">
             <ChevronUp
-              size={20}
+              size={14}
               className={`text-cyan-400 transition-transform duration-500 ${showStonePanel ? "rotate-180" : "animate-bounce"}`}
             />
             <span className="text-[12px] font-black uppercase tracking-[0.3em] text-cyan-400 group-hover:text-white transition-colors">
               Infinity Stones
             </span>
-          </div>
-
-          {/* Status Indicator Bar */}
-          <div className="absolute bottom-1.5 w-16 h-0.5 bg-cyan-950 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-cyan-500 transition-all duration-1000"
-              style={{ width: `${(myStones.length / 6) * 100}%` }}
-            />
           </div>
         </div>
 
@@ -537,15 +494,15 @@ const MissionInterface = () => {
         <div
           className={`w-full border-t border-cyan-500/20 backdrop-blur-xl transition-all duration-500 ease-in-out pointer-events-auto
             ${showStonePanel
-              ? "h-[320px] bg-[#05050c]/98 opacity-100 translate-y-0 shadow-[0_-20px_60px_rgba(0,0,0,0.9)]"
+              ? "h-[12rem] bg-[#05050c]/98 opacity-100 translate-y-0 shadow-[0_-20px_60px_rgba(0,0,0,0.9)]"
               : "h-0 opacity-0 translate-y-10"
             }`}
         >
           {/* Internal Content (Only visible when height > 0) */}
-          <div className={`${showStonePanel ? "block" : "hidden"} p-8`}>
+          <div className={`${showStonePanel ? "block" : "hidden"} p-3`}>
             {/* Panel Header */}
-            <div className="flex items-center justify-between px-4 pb-4 border-b border-white/5">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between px-2 pb-2 border-b border-white/5">
+              <div className="flex items-center gap-2">
                 <Sparkles size={14} className="text-cyan-500" />
                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/50">Infinity Gauntlet</span>
               </div>

@@ -22,7 +22,7 @@ const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed left-0 top-32 z-[55] flex items-center gap-2 px-2 py-8 bg-[#0a0a1a] border-y border-r border-cyan-500/30 rounded-r-xl group hover:bg-cyan-500/10 transition-all duration-300 shadow-[5px_0_15px_rgba(0,0,0,0.5)]"
+          className="fixed left-0 top-32 z-[55] flex items-center gap-2 px-1 py-4 bg-[#0a0a1a] border-y border-r border-cyan-500/30 rounded-r-xl group hover:bg-cyan-500/10 transition-all duration-300 shadow-[5px_0_15px_rgba(0,0,0,0.5)]"
         >
           <span className="[writing-mode:vertical-lr] rotate-180 text-[10px] font-black uppercase tracking-[0.4em] text-cyan-500/70 group-hover:text-cyan-400">
             Rules_Protocol
