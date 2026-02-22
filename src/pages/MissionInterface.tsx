@@ -123,7 +123,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-orange-700 hover:bg-orange-500 text-white shadow-[0_0_20px_rgba(194,65,12,0.5)] transition-all duration-300", 
     font: "font-serif italic tracking-[0.4em]",
     glow: "shadow-[0_0_80px_rgba(234,88,12,0.15)] border border-orange-900/40", 
-    videoBg: "/vormir-video.mp4",
+    videoBg: "/vormir.mp4",
     shadow: "shadow-[0_0_40px_rgba(234,88,12,0.1)]", // Added missing property
     animation: "animate-in fade-in duration-700" // Custom animation for Vormir
   },
@@ -133,7 +133,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-cyan-600 hover:bg-cyan-500",
     font: "font-sans font-bold tracking-normal",
     glow: "shadow-[0_0_50px_rgba(6,182,212,0.15)]",
-    videoBg: "/nyc.mp4",
+    videoBg: "",
     shadow: "shadow-[0_0_30px_rgba(6,182,212,0.1)]", // Added missing property
     animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   }
