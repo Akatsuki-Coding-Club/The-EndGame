@@ -15,7 +15,6 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 // import ThemeDecorations from "./components/ThemeDecorations";
 import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
-import TimelinePortal from "./pages/TimelinePortal";
 import MissionInterface from "./pages/MissionInterface";
 
 const queryClient = new QueryClient();

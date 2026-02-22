@@ -83,6 +83,54 @@ const STONE_CONFIG: Record<string, {
   },
 };
 
+const TIMELINE_THEMES: Record<string, {
+  name: string;
+  primary: string;
+  secondary: string;
+  font: string;
+  bgGradient: string;
+  glow: string;
+  videoBg: string; // URL for the live wallpaper
+}> = {
+  morag: {
+    name: "MORAG",
+    primary: "text-blue-400",
+    secondary: "bg-blue-600 hover:bg-blue-500",
+    font: "font-mono tracking-tight",
+    bgGradient: "radial-gradient(circle, rgba(15, 23, 42, 0.8) 0%, #05050c 100%)",
+    glow: "shadow-[0_0_50px_rgba(29,78,216,0.15)]",
+    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-abstract-blue-and-purple-ink-in-water-21501-large.mp4" // Dark, watery/stormy
+  },
+  asgard: {
+    name: "ASGARD",
+    primary: "text-amber-400",
+    secondary: "bg-amber-500 hover:bg-amber-400",
+    font: "font-serif tracking-wide uppercase",
+    bgGradient: "radial-gradient(circle, rgba(69, 26, 3, 0.7) 0%, #05050c 100%)",
+    glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
+    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-golden-particles-in-the-air-2342-large.mp4" // Golden, royal dust
+  },
+  vormir: {
+    name: "VORMIR",
+    primary: "text-red-500",
+    secondary: "bg-red-600 hover:bg-red-500",
+    font: "font-light tracking-[0.3em]",
+    bgGradient: "radial-gradient(circle, rgba(69, 10, 10, 0.8) 0%, #05050c 100%)",
+    glow: "shadow-[0_0_50px_rgba(220,38,38,0.2)]",
+    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-slow-motion-of-red-smoke-on-a-black-background-21504-large.mp4" // Eerie red smoke/void
+  },
+  nyc: {
+    name: "NEW YORK CITY",
+    primary: "text-cyan-400",
+    secondary: "bg-cyan-600 hover:bg-cyan-500",
+    font: "font-sans font-bold tracking-normal",
+    bgGradient: "radial-gradient(circle, rgba(8, 51, 68, 0.7) 0%, #05050c 100%)",
+    glow: "shadow-[0_0_50px_rgba(6,182,212,0.15)]",
+    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-night-sky-with-stars-and-clouds-background-9858-large.mp4" // Night sky / Stark tower vibes
+  }
+};
+
+
 const ALL_STONES = ["time", "mind", "space", "power", "reality", "soul"];
 
 const MissionInterface = () => {
@@ -112,6 +160,9 @@ const MissionInterface = () => {
 
   // Cooldown Timer State
   const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  // Fallback to NYC if the ID doesn't match
+  const theme = TIMELINE_THEMES[timelineId as string] || TIMELINE_THEMES.nyc;
 
   /* ─── Fetch Logic ─── */
   const fetchProgress = async () => {
@@ -293,7 +344,7 @@ const MissionInterface = () => {
   if (loading) return (
     <div className="h-screen bg-black flex flex-col items-center justify-center font-mono text-cyan-500">
       <Loader2 className="animate-spin mb-4" size={32} />
-      <p className="tracking-[0.4em] text-[10px] animate-pulse">DECRYPTING_OBJECTIVES...</p>
+      <p className="tracking-[0.4em] text-[10px] animate-in fade-in">DECRYPTING_OBJECTIVES...</p>
     </div>
   );
 
@@ -364,7 +415,7 @@ const MissionInterface = () => {
         {/* Cooldown overlay badge */}
         {owned && isCooldown && !isSpace && (
           <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-black/80 px-1.5 py-0.5 rounded-full border border-red-500/30">
-            <Clock size={7} className="text-red-500 animate-pulse" />
+            <Clock size={7} className="text-red-500 animate-in fade-in" />
             <span className="text-[7px] font-mono text-red-400">{formatTime(timeLeft)}</span>
           </div>
         )}
@@ -400,29 +451,46 @@ const MissionInterface = () => {
 
   /* ─── Render ─── */
   return (
-    <div className={`h-screen bg-[#05050c] flex flex-col font-mono text-slate-300 overflow-hidden transition-all duration-1000 ${realityActive ? "hue-rotate-90 saturate-200 contrast-125 box-border border-[20px] border-red-500/10" : ""}`}>
+    <div className="h-screen bg-[#05050c] flex flex-col font-mono text-slate-300 overflow-hidden relative">
 
-      <Navbar/>
+      {/* --- LIVE WALLPAPER LAYER --- */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <video
+          key={theme.videoBg} // Key force-reloads video when timeline changes
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover opacity-30 grayscale-[0.3] scale-110" // Low opacity so UI pops
+        >
+          <source src={theme.videoBg} type="video/mp4" />
+        </video>
+        {/* Darkening Overlay for readability */}
+        <div
+          className="absolute inset-0 transition-colors duration-1000"
+          style={{ background: theme.bgGradient }}
+        />
+      </div>
+      <Navbar />
 
       {/* ─── MAIN CONTENT ─── */}
       <div className="flex-1 flex flex-col overflow-hidden pb-2 relative z-10">
-        <main className="flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-12">
-          <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-sm shadow-2xl">
-
+        <main className={`flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-12 ${theme.animation}`}>
+          <div className={`flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-sm shadow-2xl ${theme.shadow}`}>
             {/* Question Header */}
             <div className="p-3 border-b border-white/5 flex justify-between bg-black/20">
-              <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest flex items-center gap-2">
-                <Zap size={12} /> {activeMission?.difficulty || "UNKNOWN"} // Objective_{currentTask?.answeredCount !== undefined ? currentTask.answeredCount + 1 : 1}
+              <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme.primary}`}>
+                <Zap size={12} /> {activeMission?.difficulty || "UNKNOWN"} // {theme.name}_PROTOCOL
               </span>
-              <span className="text-[10px] text-white/40 uppercase animate-pulse">
-                Priority: <span className="text-cyan-400">{activeMission?.points || 0} PTS</span>
+              <span className="text-[10px] text-white/40 uppercase animate-in fade-in">
+                Priority: <span className={theme.primary}>{activeMission?.points || 0} PTS</span>
               </span>
             </div>
 
             {/* Question Body */}
             <div className="flex-1 p-2 lg:p-3 overflow-y-auto custom-scrollbar relative">
-              <div className="bg-black/60 border border-white/10 p-3 rounded-xl relative shadow-2xl group hover:border-cyan-500/30 transition-colors">
-                <p className="text-md lg:text-md leading-relaxed text-cyan-100/90 whitespace-pre-wrap">
+              <div className={`bg-black/60 border border-white/10 p-5 rounded-xl relative shadow-2xl group transition-colors hover:border-white/20`}>
+                <p className={`text-lg lg:text-xl leading-relaxed whitespace-pre-wrap ${theme.font} ${theme.primary.replace('text-', 'text-opacity-90 ')}`}>
                   {activeMission?.question}
                 </p>
                 {/* Hint Display */}
@@ -447,10 +515,7 @@ const MissionInterface = () => {
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
                     placeholder={realityActive ? "REALITY REWRITE ACTIVE..." : "Enter Access Key..."}
-                    className={`w-full bg-black/50 border ${realityActive
-                      ? "border-red-500/50 text-red-100 placeholder:text-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]"
-                      : "border-white/10 text-white placeholder:text-white/20"
-                      } rounded-lg px-5 py-3 focus:border-cyan-500/50 outline-none font-mono transition-all text-sm`}
+                    className={`w-full bg-black/50 border border-white/10 rounded-lg px-5 py-3 outline-none focus:ring-1 ${realityActive ? "border-red-500 shadow-red-500/20" : `focus:border-white/30`}`}
                     autoFocus
                   />
                   <Target className={`absolute right-4 top-1/2 -translate-y-1/2 ${realityActive ? "text-red-500/50" : "text-white/5"} group-focus-within:text-cyan-500/50 transition-colors`} size={18} />
@@ -458,7 +523,7 @@ const MissionInterface = () => {
                 <button
                   type="submit"
                   disabled={submitting || !answer.trim()}
-                  className={`px-8 ${realityActive ? "bg-red-600 hover:bg-red-500" : "bg-cyan-600 hover:bg-cyan-500"} text-black font-black uppercase text-[10px] tracking-widest rounded-lg transition-all active:scale-95`}
+                  className={`px-8 ${realityActive ? "bg-red-600" : theme.secondary} text-black font-black uppercase text-[10px] tracking-widest rounded-lg transition-all active:scale-95`}
                 >
                   {submitting ? <Loader2 className="animate-spin" size={16} /> : "Execute"}
                 </button>
@@ -508,7 +573,7 @@ const MissionInterface = () => {
               </div>
               {isCooldown && (
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-red-500/30 bg-red-500/10">
-                  <AlertTriangle size={10} className="text-red-500 animate-pulse" />
+                  <AlertTriangle size={10} className="text-red-500 animate-in fade-in" />
                   <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Cooldown: {formatTime(timeLeft)}</span>
                 </div>
               )}

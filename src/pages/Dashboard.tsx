@@ -205,11 +205,11 @@ const Dashboard = () => {
 
             {/* Dynamic stone list — only shows stones team actually owns */}
             {(me?.stones?.length ?? 0) === 0 ? (
-              <p className="text-[9px] text-white/20 font-mono uppercase tracking-widest text-center py-4">
+              <p className="text-[9px] text-white/20 custom-scrollbar font-mono uppercase tracking-widest text-center py-4">
                 No artifacts acquired yet
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
                 {(me?.stones ?? []).map((s: string) => {
                   const meta = STONE_META[s] ?? { label: s, color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={16} /> };
                   const isSpace = s === "space";
