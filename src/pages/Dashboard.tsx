@@ -176,7 +176,7 @@ const Dashboard = () => {
         </main>
 
         {/* ─── TACTICAL SIDEBAR ─── */}
-        <aside className="w-80 border-l border-white/5 bg-black/40 backdrop-blur-md p-6 flex flex-col gap-8 shadow-[-10px_0_30_px_rgba(0,0,0,0.5)]">
+        <aside className="w-80 border-l border-white/5 bg-black/40 custom-scrollbar backdrop-blur-md p-6 flex flex-col gap-8 shadow-[-10px_0_30_px_rgba(0,0,0,0.5)]">
           <section className="p-5 bg-white/[0.03] border border-white/5 rounded-2xl relative overflow-hidden">
             <h3 className="text-[9px] font-bold uppercase tracking-widest text-cyan-500 mb-4 flex items-center gap-2">
               <Swords size={14} /> Collected Artifacts

@@ -93,11 +93,11 @@ const TIMELINE_THEMES: Record<string, {
 }> = {
   morag: {
     name: "MORAG",
-    primary: "text-blue-400",
-    secondary: "bg-blue-600 hover:bg-blue-500",
+    primary: "text-fuchsia-400", 
+    secondary: "bg-fuchsia-600 hover:bg-fuchsia-500", 
     font: "font-mono tracking-tight",
-    glow: "shadow-[0_0_50px_rgba(29,78,216,0.15)]",
-    videoBg: "../public/morag.mp4" // Dark, watery/stormy
+    glow: "shadow-[0_0_50px_rgba(192,38,211,0.2)]", 
+    videoBg: "../public/morag.mp4" 
   },
   asgard: {
     name: "ASGARD",
@@ -105,7 +105,7 @@ const TIMELINE_THEMES: Record<string, {
     secondary: "bg-amber-500 hover:bg-amber-400",
     font: "font-serif tracking-wide",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
-    videoBg: "../public/asgard.mp4" // Golden, royal dust
+    videoBg: "../public/asgard.mp4" 
   },
   vormir: {
     name: "VORMIR",
