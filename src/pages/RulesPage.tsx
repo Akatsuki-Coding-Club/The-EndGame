@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Zap, Skull, Lock, Info, Target, ChevronRight, Activity } from "lucide-react";
+import { Shield, Zap, Skull, Lock, Info, Play, Terminal, ShieldAlert } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
 import { useGame } from "@/context/GameContext";
@@ -11,95 +11,123 @@ const RulesPage = () => {
     const navigate = useNavigate();
     const { gameStarted } = useGame();
     const { team } = useAuth();
-    const [registeredTeams, setRegisteredTeams] = useState<string[]>([]);
+    const [registeredTeams, setRegisteredTeams] = useState([]);
+    const [bgImageUrl, setBgImageUrl] = useState("");
+    const [showSecurityAlert, setShowSecurityAlert] = useState(false);
+    const audioRef = useRef(null);
 
+    // Persist the background from Login
     useEffect(() => {
-        const fetchRegisteredTeams = async () => {
-            try {
-                const teams = await api.getRegisteredTeams();
-                if (Array.isArray(teams)) setRegisteredTeams(teams);
-            } catch (error) {
-                console.error("Failed to fetch registered teams:", error);
+        const savedBg = localStorage.getItem("team_session_bg");
+        if (savedBg) {
+            setBgImageUrl(savedBg);
+        } else {
+            // Fallback if they navigated directly
+            setBgImageUrl("https://i.ibb.co/0p6SgpVW/44aa5903-5c27-4602-ad23-0ec051b8276a.jpg");
+        }
+
+        // Fullscreen & Audio Security logic (Same as Login)
+        audioRef.current = new Audio("/alert.mp3");
+        audioRef.current.volume = 1.0;
+
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement) {
+                setShowSecurityAlert(true);
+                audioRef.current?.play().catch(() => {});
+            } else {
+                setShowSecurityAlert(false);
             }
         };
+
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
         fetchRegisteredTeams();
+
+        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
     }, []);
+
+    const fetchRegisteredTeams = async () => {
+        try {
+            const teams = await api.getRegisteredTeams();
+            if (Array.isArray(teams)) setRegisteredTeams(teams);
+        } catch (error) {
+            console.error("Failed to fetch teams:", error);
+        }
+    };
 
     const handleEnterWarzone = () => {
         if (!gameStarted) {
-            toast.error("SYSTEM ENCRYPTION ACTIVE", {
-                description: "The Quantum Tunnel is not yet powered. Await Steve's signal.",
-            });
+            toast.error("SYSTEM OFFLINE", { description: "Awaiting Commander's signal." });
             return;
         }
 
-        const teamRegistered = team && Array.isArray(registeredTeams) && registeredTeams.includes(team.id);
-        
+        const teamRegistered = team && registeredTeams.includes(team.id);
         if (!teamRegistered) {
-            toast.error("ACCESS DENIED", {
-                description: "Your biometric signature isn't in the Avengers database.",
-            });
+            toast.error("TEAM_NOT_REGISTERED", { description: "Contact the administrator." });
             return;
         }
 
-        toast.success("BIOMETRICS VERIFIED", {
-            description: "Initiating Time Heist sequence...",
-        });
         navigate("/dashboard");
     };
 
     const rules = [
-        { id: "01", title: "Mission Critical", desc: "Solve missions to earn points. Each objective is a unique timeline—one submission only.", icon: <Target className="text-cyan-400" size={22} /> },
-        { id: "02", title: "Infinity Stones", desc: "Unlock at 300/600 points. Maximum 2 stones per team. Use them wisely, Thanos won't wait.", icon: <Zap className="text-amber-400" size={22} /> },
-        { id: "03", title: "Power Stone Interference", desc: "Hostile teams can lock your terminal for 120s. Solve the bypass puzzle to regain control.", icon: <Lock className="text-purple-500" size={22} /> },
-        { id: "04", title: "Vibranium Shield", desc: "One-time protection against stone-based attacks. Consumed upon impact.", icon: <Shield className="text-slate-300" size={22} /> },
-        { id: "05", title: "The Blip", desc: "Two-phase global freeze. Only the 'Nano Gauntlet' puzzle can restore your timeline.", icon: <Skull className="text-emerald-400" size={22} /> },
-        { id: "06", title: "Endgame Phase", desc: "Final 15 mins: Stones are disabled. Pure mission execution determines the fate of the universe.", icon: <Activity className="text-red-500" size={22} /> },
+        { id: "01", title: "Mission First", desc: "Solve missions to earn points — each submission is final.", icon: <Info className="text-red-500" /> },
+        { id: "02", title: "Infinity Stones", desc: "Unlock at 300/600 points; max two stones per team.", icon: <Zap className="text-red-500" /> },
+        { id: "03", title: "Power Block", desc: "Enemies can freeze your editor for 120s via puzzles.", icon: <Lock className="text-red-500" /> },
+        { id: "04", title: "Shield Protocol", desc: "Blocks one stone attack automatically, then dissolves.", icon: <Shield className="text-red-500" /> },
+        { id: "05", title: "The Blip", desc: "Global freeze phase; only Blip puzzles can be solved.", icon: <Skull className="text-red-500" /> },
+        { id: "06", title: "Endgame Phase", desc: "Last 15m disable all stones — pure skill remains.", icon: <Play className="text-red-500" /> },
     ];
 
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-cyan-500/30">
+        <div className="relative min-h-screen w-full flex flex-col items-center bg-[#050505] font-sans overflow-x-hidden">
             <Navbar />
             
-            {/* Background Narrative Layer */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(15,23,42,0)_0%,rgba(2,6,23,1)_100%)]" />
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-900/10 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/10 blur-[120px] rounded-full" />
+            {/* Persistent Background Layer */}
+            <div className="absolute inset-0 z-0">
+                <div 
+                    className="h-full w-full bg-cover bg-center opacity-30 blur-[2px] scale-105 transition-all duration-1000"
+                    style={{ backgroundImage: `url('${bgImageUrl}')` }}
+                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle,transparent_20%,rgba(0,0,0,0.95)_100%)]" />
+                <div className="absolute inset-0 bg-red-950/10 mix-blend-color" />
             </div>
 
-            <main className="relative z-10 max-w-6xl mx-auto px-6 pt-24 pb-20">
-                {/* Briefing Header */}
-                <div className="mb-16 space-y-2 border-l-4 border-cyan-500 pl-6">
-                    <p className="text-xs font-mono tracking-[0.5em] text-cyan-500 uppercase animate-pulse">
-                        Briefing Room // Sector 7G
-                    </p>
-                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white uppercase italic">
-                        Whatever it <span className="text-cyan-500">Takes</span>
+            {/* Security Alert */}
+            <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${showSecurityAlert ? "translate-y-0 opacity-100" : "-translate-y-40 opacity-0"}`}>
+                <div className="bg-[#e62429] border border-white/20 text-white px-8 py-4 rounded-xl shadow-[0_0_50px_rgba(230,36,41,0.6)] flex items-center gap-6 animate-pulse">
+                    <ShieldAlert size={30} />
+                    <p className="text-xs font-black uppercase tracking-widest">Security Protocol Breached: Restore Fullscreen</p>
+                </div>
+            </div>
+
+            {/* Content Container */}
+            <div className="relative z-10 w-full max-w-5xl px-6 py-20 flex flex-col items-center">
+                <div className="w-full mb-12 flex flex-col items-center text-center">
+                    <h2 className="text-[10px] tracking-[0.6em] text-red-600 font-black uppercase mb-2">Neural Link Established</h2>
+                    <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white italic uppercase">
+                        Engagement <span className="text-[#e62429]">Rules</span>
                     </h1>
-                    <p className="text-slate-400 max-w-xl text-sm font-medium tracking-wide">
-                        The stones are scattered through time. Follow the protocols below to secure the timeline and complete the heist.
-                    </p>
+                    <div className="h-[2px] w-48 bg-gradient-to-r from-transparent via-red-600 to-transparent mt-4 opacity-50" />
                 </div>
 
-                {/* Tactical Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
-                    {rules.map((rule, idx) => (
-                        <div 
+                {/* Rules Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-16">
+                    {rules.map((rule, index) => (
+                        <div
                             key={rule.id}
-                            className="group relative bg-slate-900/40 border border-slate-800 p-8 hover:bg-slate-800/60 transition-all duration-500 overflow-hidden"
+                            className="group backdrop-blur-xl bg-white/[0.03] border border-white/10 p-8 rounded-3xl hover:border-red-600/50 transition-all duration-500 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 shadow-2xl"
+                            style={{ animationDelay: `${index * 100}ms` }}
                         >
-                            {/* Scanning Line Effect */}
-                            <div className="absolute inset-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent -translate-y-full group-hover:animate-scan" />
-                            
-                            <div className="relative z-10">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="p-3 bg-slate-950 border border-slate-700 rounded-sm">
-                                        {rule.icon}
+                            <div className="flex flex-col gap-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="p-3 bg-red-600/10 rounded-2xl border border-red-600/20 group-hover:bg-red-600 transition-colors duration-500">
+                                        {React.cloneElement(rule.icon as React.ReactElement, { size: 24, className: "group-hover:text-white transition-colors" })}
                                     </div>
-                                    <span className="font-mono text-[10px] text-slate-500 tracking-tighter italic">
-                                        PROTOCOL_{rule.id}
-                                    </span>
+                                    <span className="text-[10px] font-black text-white/20 tracking-widest">{rule.id}</span>
+                                </div>
+                                <div className="space-y-2">
+                                    <h3 className="text-lg font-black tracking-tight text-white uppercase italic">{rule.title}</h3>
+                                    <p className="text-xs text-white/50 leading-relaxed font-medium uppercase tracking-wider">{rule.desc}</p>
                                 </div>
                                 <h3 className="text-lg font-bold text-white mb-3 tracking-tight uppercase group-hover:text-cyan-400 transition-colors">
                                     {rule.title}
@@ -112,45 +140,42 @@ const RulesPage = () => {
                     ))}
                 </div>
 
-                {/* Footer Engagement */}
-                <div className="mt-20 flex flex-col items-center">
+                {/* Footer Action */}
+                <div className="flex flex-col items-center gap-8">
                     {!gameStarted && (
-                        <div className="mb-8 px-6 py-2 bg-red-950/20 border border-red-900/50 rounded-full flex items-center gap-3">
-                            <div className="w-2 h-2 bg-red-600 rounded-full animate-ping" />
-                            <span className="text-[10px] font-mono tracking-widest text-red-500 uppercase">
-                                Quantum Tunnel: Disconnected - Awaiting Power-Up
-                            </span>
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="flex items-center gap-4">
+                                <span className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
+                                <span className="text-[10px] font-black tracking-[0.4em] text-red-500 uppercase animate-pulse">Waiting for Commander's Signal</span>
+                                <span className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
+                            </div>
                         </div>
                     )}
 
                     <button
                         onClick={handleEnterWarzone}
                         disabled={!gameStarted}
-                        className={`
-                            relative px-16 py-5 overflow-hidden transition-all duration-300
-                            ${gameStarted 
-                                ? "bg-cyan-600 text-white hover:bg-cyan-500 shadow-[0_0_30px_rgba(8,145,178,0.3)]" 
-                                : "bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed"}
-                        `}
+                        className={`group relative px-16 py-5 font-black text-xs uppercase tracking-[0.5em] overflow-hidden transition-all rounded-xl shadow-2xl ${
+                            gameStarted 
+                            ? "bg-[#e62429] text-white hover:shadow-[0_0_30px_rgba(230,36,41,0.5)] active:scale-95" 
+                            : "bg-white/5 text-white/20 cursor-not-allowed"
+                        }`}
                     >
-                        <div className="relative z-10 flex items-center gap-4 font-black uppercase tracking-[0.3em] text-sm">
-                            {gameStarted ? "Initiate Heist" : "System Locked"}
-                            {gameStarted && <ChevronRight size={18} className="animate-bounce-x" />}
-                        </div>
-                        
-                        {/* Button Glow Effect */}
-                        {gameStarted && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full hover:animate-shimmer" />
-                        )}
+                        <span className="relative z-10">{gameStarted ? "Enter Warzone" : "System Offline"}</span>
+                        {gameStarted && <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />}
                     </button>
-                </div>
-            </main>
 
-            {/* Corner Decorative HUD */}
-            <div className="fixed bottom-6 left-6 flex items-center gap-4 text-[10px] font-mono text-slate-600">
-                <div className="h-px w-12 bg-slate-800" />
-                AVNG_OPERATIONS_MANUAL
+                    <div className="flex flex-col items-center gap-2 opacity-30 mt-4">
+                        <div className="flex items-center gap-2">
+                            <Terminal size={14} className="text-[#e62429]" />
+                            <p className="text-[9px] text-white uppercase tracking-[0.3em]">Protocol 14.0.6.0.5 ACTIVE</p>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {/* Cinematic Scanlines */}
+            <div className="pointer-events-none fixed inset-0 z-20 opacity-[0.06] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
         </div>
     );
 };

@@ -96,6 +96,20 @@
     font-family: sans-serif;
   }
 }
+@font-face {
+  font-family: 'AvengersCustom';
+  /* Ensure the name matches the file exactly (case-sensitive) */
+  src: url('/Avengers.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Optional: Add a class to force the look if Tailwind is being stubborn */
+.avengers-text {
+  font-family: 'AvengersCustom', sans-serif !important;
+  text-transform: uppercase;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Nebula Background + Hexagon Mesh

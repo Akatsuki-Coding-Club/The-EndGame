@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         display: ["Orbitron", "sans-serif"],
         body: ["Rajdhani", "sans-serif"],
+       avengers: ["AvengersCustom", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

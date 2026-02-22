@@ -1,92 +1,181 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { ShieldAlert, Lock, User } from "lucide-react";
+// Added Loader2 to the imports
+import { ShieldAlert, Lock, User, Terminal, Loader2 } from "lucide-react";
 
 const TeamLoginPage = () => {
   const [teamId, setTeamId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth(); 
-  const navigate = useNavigate(); 
+  const [showSecurityAlert, setShowSecurityAlert] = useState(false);
+  const [bgImageUrl, setBgImageUrl] = useState("");
+  
+  // 1. Defined the missing isLoading state
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const audioRef = useRef(null);
+
+  const CUSTOM_SOUND_PATH = "/alert.mp3";
+
+  const backgroundOptions = [
+    "https://i.ibb.co/0p6SgpVW/44aa5903-5c27-4602-ad23-0ec051b8276a.jpg",
+    "https://wallpapercave.com/wp/wp4892697.jpg",
+    "https://wallpapercave.com/wp/wp5498157.jpg",
+    "https://i.ibb.co/ZRfNDzrp/0b879b21-1833-41ef-b4d6-19729f5697a3.jpg",
+  ];
+
+useEffect(() => {
+    const randomIdx = Math.floor(Math.random() * backgroundOptions.length);
+    const selectedBg = backgroundOptions[randomIdx];
+    setBgImageUrl(selectedBg);
+    
+    // SAVE TO LOCALSTORAGE HERE
+    localStorage.setItem("team_session_bg", selectedBg);
+
+    audioRef.current = new Audio(CUSTOM_SOUND_PATH);
+    audioRef.current.volume = 1.0;
+    audioRef.current.preload = "auto";
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setShowSecurityAlert(true);
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(() => {});
+        }
+      } else {
+        setShowSecurityAlert(false);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const enterFullscreen = () => {
+    if (audioRef.current) {
+      audioRef.current
+        .play()
+        .then(() => {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        })
+        .catch(() => {});
+    }
+
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  };
+
+  // 2. Updated handleSubmit to manage isLoading state
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const ok = await login(teamId, password);
-    if (ok) {
-      navigate("/rules", { replace: true });
-    } else {
-      setError("ACCESS DENIED: INVALID CREDENTIALS");
+    setError(""); // Clear previous errors
+    setIsLoading(true); // Start "Verifying..." state
+
+    try {
+      const ok = await login(teamId, password);
+      if (ok) {
+        navigate("/rules", { replace: true });
+      } else {
+        setError("ACCESS DENIED: INVALID CREDENTIALS");
+      }
+    } catch (err) {
+      setError("SYSTEM ERROR: UNABLE TO CONNECT");
+    } finally {
+      setIsLoading(false); // Stop "Verifying..." state regardless of result
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1e293b] p-4 relative overflow-hidden font-sans">
+    <div
+      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#050505] font-sans"
+      onClick={enterFullscreen}
+    >
+      {/* Optimized Background Layer */}
+      <div className="absolute inset-0 z-0">
+        <div
+          className="h-full w-full bg-cover bg-center transition-all duration-1000 scale-105 opacity-40 blur-[0.5px]"
+          style={{ backgroundImage: `url('${bgImageUrl}')` }}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle,transparent_20%,rgba(0,0,0,0.9)_100%)]" />
+        <div className="absolute inset-0 bg-red-950/10 mix-blend-color" />
+      </div>
 
-      <div className="absolute inset-0 z-0 bg-[#272227]">
-                <video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="h-full w-full object-cover opacity-50"
-                >
-                    <source
-                        src="https://motionbgs.com/media/2871/avengers-heroes-united.960x540.mp4"
-                        type="video/mp4"
-                    />
-                </video>
-                {/* Subtle gradient to blend video edges and ensure text clarity */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#272227]/60 via-transparent to-[#272227]/80" />
-            </div>
-      
-      {/* Animated Border Container */}
-      <div className="relative w-full max-w-md p-[2px] overflow-hidden rounded-xl bg-transparent group">
-        {/* The Rotating Animation Layer */}
-        <div className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2E8F0_0%,#EF4444_50%,#E2E8F0_100%)] opacity-10 group-hover:opacity-0 transition-opacity duration-500" />
-
-        {/* The Card Body */}
-        <div className="relative z-10 w-full h-full bg-[#26242a]/80 rounded-[10px] p-10">
-          
-          {/* Header Section */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-red-600 mb-6 bg-red-600/5 shadow-[0_0_15px_rgba(220,38,38,0.2)]">
-              <Lock className="w-8 h-8 text-red-600" />
-            </div>
-            <h1 className="text-3xl font-black text-white tracking-[0.2em] uppercase mb-2 italic">
-              TEAM <span className="text-red-600">LOGIN</span>
-            </h1>
+      {/* Security Alert Pop-up */}
+      <div
+        className={`fixed top-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${showSecurityAlert ? "translate-y-0 opacity-100" : "-translate-y-40 opacity-0"}`}
+      >
+        <div className="bg-[#e62429] border border-white/20 text-white px-8 py-4 rounded-xl shadow-[0_0_50px_rgba(230,36,41,0.6)] flex items-center gap-6 animate-pulse">
+          <ShieldAlert size={36} />
+          <div>
+            <h2 className="text-xl font-black uppercase tracking-[0.1em]">
+              Security Protocol Breached
+            </h2>
+            <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">
+              Restore Fullscreen to re-enable access
+            </p>
           </div>
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] text-red-500 uppercase tracking-widest block font-bold ml-1">
-                Team Identifier
+      {/* Login Card Container */}
+      <div className="relative z-10 w-full max-w-md px-6 animate-in fade-in zoom-in duration-700">
+        <div className="flex flex-col items-center mb-15 text-center ">
+          <img
+            src="https://i.ibb.co/LXwJLXBp/akatsukilogo-removebg-preview.png"
+            alt="Akatsuki Logo"
+            className="w-32 h-auto mb-6 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]"
+          />
+        </div>
+
+        {/* Card Body with Glassmorphism */}
+        <div className="backdrop-blur-2xl bg-white/[0.04] border border-white/10 rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#e62429]/40 rounded-tl-3xl" />
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#e62429]/40 rounded-br-3xl" />
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-3">
+              <label className="text-[11px] text-[#e62429] uppercase tracking-[0.2em] block font-black">
+                Team Name
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+              <div className="relative group">
+                <User
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#e62429] transition-colors"
+                  size={20}
+                />
                 <input
                   type="text"
                   value={teamId}
-                  onChange={e => setTeamId(e.target.value)}
-                  className="w-full bg-black/40 border border-white/20 rounded-md py-3 pl-10 pr-4 text-white placeholder:text-white/20 outline-none focus:border-red-600 transition-all text-sm"
-                  placeholder="ENTER ID"
+                  disabled={isLoading}
+                  onChange={(e) => setTeamId(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/10 outline-none focus:border-[#e62429] focus:bg-black/60 transition-all text-sm font-bold disabled:opacity-50"
+                  placeholder="ENTER NAME"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] text-red-500 uppercase tracking-widest block font-bold ml-1">
-                Access Key
+            <div className="space-y-3">
+              <label className="text-[11px] text-[#e62429] uppercase tracking-[0.2em] block font-black">
+                Password
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+              <div className="relative group">
+                <Lock
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#e62429] transition-colors"
+                  size={20}
+                />
                 <input
                   type="password"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-black/40 border border-white/20 rounded-md py-3 pl-10 pr-4 text-white placeholder:text-white/10 outline-none focus:border-red-600 transition-all text-sm"
+                  disabled={isLoading}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/10 outline-none focus:border-[#e62429] focus:bg-black/60 transition-all text-sm font-bold disabled:opacity-50"
                   placeholder="••••••••"
                   required
                 />
@@ -94,20 +183,48 @@ const TeamLoginPage = () => {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 text-red-500 text-[10px] font-bold justify-center animate-pulse border border-red-500/20 py-2 rounded bg-red-500/5">
-                <ShieldAlert size={14} /> {error}
+              <div className="text-[#e62429] text-[10px] font-black text-center animate-pulse uppercase tracking-[0.15em] py-3 border-y border-[#e62429]/20 bg-[#e62429]/5 rounded-lg">
+                &gt;&gt; {error} &lt;&lt;
               </div>
             )}
 
             <button
               type="submit"
-              className="w-full py-4 bg-red-600 text-white font-black text-xs uppercase tracking-[0.3em] hover:bg-red-700 transition-all duration-300 rounded-md shadow-[0_0_20px_rgba(220,38,38,0.2)] active:scale-95"
+              disabled={isLoading}
+              className="w-full group relative overflow-hidden py-5 rounded-xl bg-[#e62429] text-white font-black text-xs uppercase tracking-[0.4em] transition-all hover:shadow-[0_0_30px_rgba(230,36,41,0.4)] active:scale-95 shadow-lg disabled:opacity-80 disabled:cursor-not-allowed"
             >
-              Login
+              <span className="relative z-10 flex items-center justify-center gap-3">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  "Login"
+                )}
+              </span>
+
+              {!isLoading && (
+                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              )}
             </button>
           </form>
         </div>
+
+        {/* Footer Security Badge */}
+        <div className="mt-10 flex flex-col items-center gap-3 opacity-30">
+          <div className="flex items-center gap-2">
+            <Terminal size={14} className="text-[#e62429]" />
+            <p className="text-[10px] text-white uppercase tracking-[0.3em]">
+              Protocol 14.0.6.0.5
+            </p>
+          </div>
+          <div className="h-[2px] w-20 bg-gradient-to-r from-transparent via-[#e62429] to-transparent" />
+        </div>
       </div>
+
+      {/* Cinematic CRT/Scanline Effect */}
+      <div className="pointer-events-none absolute inset-0 z-20 opacity-[0.06] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
     </div>
   );
 };
