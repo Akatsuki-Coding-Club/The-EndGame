@@ -392,7 +392,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           description: data.message || `${data.teamName} has achieved ultimate power.`,
           duration: 10000
         });
-        navigate("/dashboard");
+        if (team && team.id === data.teamId) {
+          navigate("/dashboard");
+        }
       });
     }
 

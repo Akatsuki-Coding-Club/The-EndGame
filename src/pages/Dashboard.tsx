@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Shield, Zap, Skull, Globe, Trophy, Swords, Sparkles } from "lucide-react";
-import { getDashboardData, DashboardData, useSpaceStone } from "@/services/api";
+import { Shield, Zap, Skull, Globe, Trophy, Swords, Sparkles, Flame } from "lucide-react";
+import { getDashboardData, DashboardData, useSpaceStone, useSnap } from "@/services/api";
 import { toast } from "sonner";
 import TimelinePortal from "./TimelinePortal";
 import HeroManager from "@/components/HeroManager";
 import AttackOverlay from "@/components/AttackOverlay";
 import BlipOverlay from "@/components/BlipOverlay";
 import { useGame } from "@/context/GameContext";
-import { SnapSequence } from "@/components/SnapSequence";
-import { Flame } from "lucide-react";
 
 declare global {
   namespace JSX {
@@ -31,12 +29,13 @@ const STONE_META: Record<string, { label: string; color: string; glow: string; i
 
 const Dashboard = () => {
   const { logout } = useAuth();
-  const { isSnapReady, initiateSupremeSnap, isSnapping, allTeamsState } = useGame();
+  const { allTeamsState } = useGame();
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [spaceStoneTarget, setSpaceStoneTarget] = useState<string | null>(null);
   const [spaceStoneLoading, setSpaceStoneLoading] = useState(false);
+  const [isSnapping, setIsSnapping] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
 
   useEffect(() => {
@@ -82,6 +81,20 @@ const Dashboard = () => {
     }
   };
 
+  const handleActivateSnap = async () => {
+    try {
+      setIsSnapping(true);
+      const toastId = toast.loading("Executing Supreme Snap...");
+      await useSnap();
+      toast.success("Reality rewritten!", { id: toastId });
+      loadTacticalData();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to activate snap");
+    } finally {
+      setIsSnapping(false);
+    }
+  };
+
   const loadTacticalData = async () => {
     try {
       const res = await getDashboardData();
@@ -118,6 +131,11 @@ const Dashboard = () => {
   // Safely calculate rank to prevent crashes
   const myRankIndex = leaderboard.findIndex(t => t.teamId === me?._id);
   const displayRank = myRankIndex !== -1 ? myRankIndex + 1 : "—";
+
+  const requiredStones = ["space", "power", "reality", "soul", "time", "mind"];
+  const hasAllStones = requiredStones.every((s) => (me?.stones || []).includes(s));
+  const isSnapActive = me?.snapActivated || isSnapping;
+  const showSnapCenter = hasAllStones && !me?.currentTimeline;
 
   return (
     <div className="h-screen flex flex-col bg-[#05050c] text-slate-200 font-sans overflow-hidden select-none">
@@ -162,7 +180,52 @@ const Dashboard = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* ─── DYNAMIC MISSION AREA ─── */}
         <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]">
-          {!me?.currentTimeline ? (
+          {showSnapCenter ? (
+            <div className="h-full flex flex-col items-center justify-center p-12 relative">
+              {/* 3D Visualizer */}
+              <div className="w-full max-w-2xl h-96 relative mb-12 animate-in zoom-in duration-1000">
+                <model-viewer
+                  src={isSnapActive ? "/model/QWERT.glb" : "/model/G.glb"}
+                  auto-rotate
+                  camera-controls
+                  disable-zoom
+                  environment-image="neutral"
+                  exposure="1.2"
+                  auto-rotate-delay="0"
+                  rotation-per-second="25deg"
+                  style={{ width: '100%', height: '100%', outline: 'none' }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-transparent to-yellow-500/20 pointer-events-none rounded-xl" />
+                {isSnapActive && (
+                  <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-yellow-500/20 to-transparent pointer-events-none animate-pulse" />
+                )}
+              </div>
+
+              {/* Interaction / Status */}
+              {!isSnapActive ? (
+                <button
+                  onClick={handleActivateSnap}
+                  disabled={isSnapping}
+                  className="relative px-12 py-6 bg-black border-2 border-yellow-500 rounded-full flex items-center gap-4 transition-all active:scale-90 shadow-[0_0_40px_rgba(234,179,8,0.4)] hover:shadow-[0_0_60px_rgba(234,179,8,0.6)] group disabled:opacity-50 z-10"
+                >
+                  <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center border border-yellow-500/50 group-hover:bg-yellow-500/20">
+                    <Flame size={20} className="text-yellow-500 fill-current animate-pulse group-hover:scale-125 transition-transform" />
+                  </div>
+                  <span className="text-xl font-black italic tracking-[0.2em] text-yellow-500 uppercase font-[Orbitron]">
+                    {isSnapping ? "REWRITING REALITY..." : "EXECUTE SUPREME SNAP"}
+                  </span>
+                </button>
+              ) : (
+                <div className="text-center space-y-4 animate-in slide-in-from-bottom-5 duration-1000 z-10 relative">
+                  <div className="absolute -inset-10 bg-yellow-500/10 blur-3xl rounded-full pointer-events-none animate-pulse" />
+                  <h2 className="text-5xl font-black italic tracking-tighter text-yellow-500 [text-shadow:0_0_20px_rgba(234,179,8,0.5)] relative">REALITY REWRITTEN</h2>
+                  <p className="inline-block text-yellow-400 font-mono tracking-[0.3em] font-bold uppercase opacity-90 animate-pulse bg-yellow-500/10 px-8 py-3 rounded-full border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                    SUPREME SNAP IS ACTIVE - ALL STONES RESONATING
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : !me?.currentTimeline ? (
             <TimelinePortal data={{ ...data, timelines, leaderboard }} onRefresh={loadTacticalData} />
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-12">
@@ -185,27 +248,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* ⚡ SUPREME SNAP ACTIVATOR ⚡ */}
-          {isSnapReady && !me.currentTimeline && (
-            <div className="absolute inset-x-0 bottom-12 flex justify-center animate-in slide-in-from-bottom-12 duration-1000">
-              <div className="relative group">
-                {/* Golden Arc Border */}
-                <div className="absolute -inset-1 gold-arc-gradient rounded-full blur-sm opacity-75 animate-pulse" />
-                <button
-                  onClick={initiateSupremeSnap}
-                  disabled={isSnapping}
-                  className="relative px-12 py-6 bg-black border-2 border-yellow-500 rounded-full flex items-center gap-4 transition-all active:scale-90 snap-button-pulse group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center border border-yellow-500/50">
-                    <Flame size={20} className="text-yellow-500 fill-current animate-pulse" />
-                  </div>
-                  <span className="text-xl font-black italic tracking-[0.2em] text-yellow-500 uppercase font-[Orbitron]">
-                    {isSnapping ? "REWRITING REALITY..." : "EXECUTE SUPREME SNAP"}
-                  </span>
-                </button>
-              </div>
-            </div>
-          )}
+
         </main>
 
         {/* ─── TACTICAL SIDEBAR ─── */}
@@ -314,7 +357,6 @@ const Dashboard = () => {
           </section>
         </aside>
       </div>
-      <SnapSequence />
     </div>
   );
 };

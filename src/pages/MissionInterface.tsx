@@ -155,10 +155,11 @@ const MissionInterface = () => {
   const { snapWinner, isSnapping, initiateSupremeSnap } = useGame();
   const { team } = useAuth();
   useEffect(() => {
-    if (snapWinner || team?.snapActivated) {
+    // Only force return to dashboard if WE are the ones who snapped
+    if (team?.snapActivated) {
       navigate("/dashboard");
     }
-  }, [snapWinner, team?.snapActivated, navigate]);
+  }, [team?.snapActivated, navigate]);
 
   useEffect(() => {
     const init = async () => {
