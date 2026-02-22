@@ -129,6 +129,32 @@ body {
   background-attachment: fixed;
   position: relative;
 }
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px; /* Very slim */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(34, 211, 238, 0.2); /* Subtle cyan tint */
+    border-radius: 10px;
+    transition: background 0.3s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 211, 238, 0.5); /* Brightens on hover */
+  }
+
+  /* Firefox support */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.2) rgba(0, 0, 0, 0.2);
+  }
+}
 
 /* body::before {
   content: '';

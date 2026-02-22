@@ -122,6 +122,12 @@ const RulesPage = () => {
                                     <h3 className="text-lg font-black tracking-tight text-white uppercase italic">{rule.title}</h3>
                                     <p className="text-xs text-white/50 leading-relaxed font-medium uppercase tracking-wider">{rule.desc}</p>
                                 </div>
+                                <h3 className="text-lg font-bold text-white mb-3 tracking-tight uppercase group-hover:text-cyan-400 transition-colors">
+                                    {rule.title}
+                                </h3>
+                                <p className="text-sm text-slate-400 leading-relaxed font-light">
+                                    {rule.desc}
+                                </p>
                             </div>
                         </div>
                     ))}

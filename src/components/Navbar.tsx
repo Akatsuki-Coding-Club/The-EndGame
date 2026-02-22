@@ -58,7 +58,7 @@ const Navbar = () => {
             
             {/* 1. LEFT: AKATSUKI LOGO & TEAM STATUS */}
             <div className="flex items-center gap-4 w-1/3">
-                <div className="relative flex items-center justify-center h-10 w-auto">
+                <div className="relative flex items-center justify-center h-12 w-auto">
                     <img
                         src="https://i.ibb.co/LXwJLXBp/akatsukilogo-removebg-preview.png"
                         alt="Akatsuki Logo"

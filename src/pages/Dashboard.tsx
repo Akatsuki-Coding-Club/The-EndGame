@@ -11,7 +11,7 @@ import BlipOverlay from "@/components/BlipOverlay";
 import { useGame } from "@/context/GameContext";
 import { SnapSequence } from "@/components/SnapSequence";
 import { Flame } from "lucide-react";
-import Navbar from "../components/Navbar";
+import Navbar from "@/components/Navbar";
 
 declare global {
   namespace JSX {
@@ -125,10 +125,7 @@ const Dashboard = () => {
       <HeroManager />
       <AttackOverlay />
       {me?.isFrozen && <BlipOverlay />}
-
-      {/* FIXED: Navbar called with no props, matching your Navbar.tsx setup */}
       <Navbar />
-
       <div className="flex flex-1 overflow-hidden">
         {/* ─── DYNAMIC MISSION AREA ─── */}
         <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]">
@@ -180,22 +177,6 @@ const Dashboard = () => {
 
         {/* ─── TACTICAL SIDEBAR ─── */}
         <aside className="w-80 border-l border-white/5 bg-black/40 backdrop-blur-md p-6 flex flex-col gap-8 shadow-[-10px_0_30_px_rgba(0,0,0,0.5)]">
-          <section className="flex-1 flex flex-col min-h-0">
-            <h3 className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/40 mb-5 flex items-center gap-2">
-              <Trophy size={14} className="text-yellow-600" /> Tactical Leaderboard
-            </h3>
-            <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
-              {leaderboard.map((entry, i) => (
-                <div key={entry.teamId} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${entry.teamId === me?._id ? 'border-cyan-500/40 bg-cyan-500/10 shadow-[inset_0_0_10px_rgba(6,182,212,0.1)]' : 'border-white/5 bg-white/[0.02]'}`}>
-                  <span className="text-[10px] font-bold text-white/70 truncate">
-                    <span className="text-white/20 mr-2 font-mono">{String(i + 1).padStart(2, '0')}</span> {entry.teamName}
-                  </span>
-                  <span className="text-xs font-black text-cyan-500/80 font-mono">{entry.score}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
           <section className="p-5 bg-white/[0.03] border border-white/5 rounded-2xl relative overflow-hidden">
             <h3 className="text-[9px] font-bold uppercase tracking-widest text-cyan-500 mb-4 flex items-center gap-2">
               <Swords size={14} /> Collected Artifacts
@@ -223,11 +204,11 @@ const Dashboard = () => {
 
             {/* Dynamic stone list — only shows stones team actually owns */}
             {(me?.stones?.length ?? 0) === 0 ? (
-              <p className="text-[9px] text-white/20 font-mono uppercase tracking-widest text-center py-4">
+              <p className="text-[9px] text-white/20 custom-scrollbar font-mono uppercase tracking-widest text-center py-4">
                 No artifacts acquired yet
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
                 {(me?.stones ?? []).map((s: string) => {
                   const meta = STONE_META[s] ?? { label: s, color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={16} /> };
                   const isSpace = s === "space";
