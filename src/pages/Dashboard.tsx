@@ -11,6 +11,7 @@ import BlipOverlay from "@/components/BlipOverlay";
 import { useGame } from "@/context/GameContext";
 import { SnapSequence } from "@/components/SnapSequence";
 import { Flame } from "lucide-react";
+import Navbar from "../components/Navbar";
 
 declare global {
   namespace JSX {
@@ -125,39 +126,8 @@ const Dashboard = () => {
       <AttackOverlay />
       {me?.isFrozen && <BlipOverlay />}
 
-      {/* ─── HUD HEADER ─── */}
-      <header className="flex items-center justify-between px-8 py-4 border-b border-white/5 bg-black/40 backdrop-blur-xl z-50">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center font-black text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]">A</div>
-          <div>
-            <h1 className="text-sm font-bold tracking-widest uppercase text-white/80">{me?.teamName || "UNIT_UNKNOWN"}</h1>
-            <div className="flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${me?.isFrozen ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
-              <p className="text-[9px] font-mono text-cyan-500 uppercase tracking-widest">
-                {me?.isFrozen ? "System_Locked" : "Neural_Link_Stable"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-10 items-center">
-          <div className="text-right">
-            <span className="text-[8px] uppercase text-white/30 block tracking-widest">Remaining Time</span>
-            <span className="text-lg font-bold text-red-500 italic font-mono">{timeLeft}</span>
-          </div>
-          <div className="text-right">
-            <span className="text-[8px] uppercase text-white/30 block tracking-widest">Global Rank</span>
-            <span className="text-lg font-bold text-yellow-500 italic">#{displayRank}</span>
-          </div>
-          <div className="text-right">
-            <span className="text-[8px] uppercase text-white/30 block tracking-widest">Strategic Points</span>
-            <span className="text-lg font-bold text-cyan-400">{me?.score ?? 0}</span>
-          </div>
-          <button onClick={logout} className="group flex items-center gap-2 text-[9px] border border-red-500/20 text-red-500/60 px-4 py-2 rounded hover:bg-red-500 hover:text-white transition-all uppercase font-bold tracking-widest">
-            <Zap size={12} className="group-hover:fill-current" /> Abort
-          </button>
-        </div>
-      </header>
+      {/* FIXED: Navbar called with no props, matching your Navbar.tsx setup */}
+      <Navbar />
 
       <div className="flex flex-1 overflow-hidden">
         {/* ─── DYNAMIC MISSION AREA ─── */}
@@ -309,7 +279,6 @@ const Dashboard = () => {
                 })}
               </div>
             )}
-
             <div className="absolute top-0 left-0 w-full h-px bg-cyan-500/20 animate-scan" />
           </section>
         </aside>
