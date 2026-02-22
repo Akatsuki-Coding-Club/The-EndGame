@@ -9,20 +9,6 @@ const HEROES = [
     baseWidth: '150px'
   },
   {
-    id: 'cap-shield-left',
-    src: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNW16OG1taWg0MndrZnU2MWYxOHp6aWVqM3RsejNmN2J6eHNjMTRiMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/UtWB4kipDcZvWluE6a/giphy.gif',
-    animation: 'roll-left-to-right', 
-    duration: 4000, 
-    baseWidth: '80px'
-  },
-  {
-    id: 'cap-shield-right',
-    src: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNW16OG1taWg0MndrZnU2MWYxOHp6aWVqM3RsejNmN2J6eHNjMTRiMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/UtWB4kipDcZvWluE6a/giphy.gif',
-    animation: 'roll-right-to-left', 
-    duration: 4000, 
-    baseWidth: '80px'
-  },
-  {
     id: 'thor-hammer',
     src: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHE4c25hbG1qeDNvMzk0MzlhbXJ2enBjcWtiZ3h5M2RxOHZwd2NybSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/U4AWLHWyhJUF217brs/giphy.gif',
     animation: 'fade-float', 
@@ -30,22 +16,30 @@ const HEROES = [
     baseWidth: '180px'
   },
   {
-    id: 'thor-arrival',
-    src: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbjdoN2xrbzRnMmt6Y2FuOWRmNnR3bjNqOWQwbzVtaGxocDlhYmc1NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/U7YbUVrmHnXVTACMmB/giphy.gif',
-    animation: 'thunder-strike', 
-    duration: 4000,
-    baseWidth: '200px'
-  },
-  {
-    id: 'loki',
-    src: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNXppajJ5NXhvOHVsaWZyczQ3ejc3aW1uMWI0NGZudXhiOW04aTd6NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/HlhDlZwWfnGdb160am/giphy.gif',
-    animation: 'fly-up', 
-    duration: 3000,
-    baseWidth: '100px'
-  },
-  {
     id: 'spidey-corner',
     src: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExczJ4MzA5bXFqd3B3Y3dvOGFydWRxMzR3cHJjYm9hb3o2MGY1cnh5cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/vKhKsyEFVK4IuEKzWY/giphy.gif',
+    animation: 'corner-drop', 
+    duration: 5000, 
+    baseWidth: '140px'
+  },
+  // --- NEW GIFS ADDED BELOW ---
+  {
+    id: 'Spider-man-trio',
+    src: 'https://media.tenor.com/bWnCK.gif', 
+    animation: 'fade-float', // You can change this to fly-across or drop-swing
+    duration: 6000, 
+    baseWidth: '160px'
+  },
+  {
+    id: 'Spider-man',
+    src: 'https://media.tenor.com/bTTJi.gif', 
+    animation: 'fly-across', 
+    duration: 5000, 
+    baseWidth: '150px'
+  },
+  {
+    id: 'Wanda',
+    src: 'https://media.tenor.com/bWnCF.gif', 
     animation: 'corner-drop', 
     duration: 5000, 
     baseWidth: '140px'
@@ -112,10 +106,10 @@ const HeroManager = () => {
     if (!activeHero) {
       const cooldown = random(30000, 35000); // 30s - 35s
       timerId = setTimeout(() => {
+        // Picks a random hero from the array
         const randomHero = HEROES[Math.floor(Math.random() * HEROES.length)];
         const newPosition = getSafePosition(randomHero.animation, randomHero.baseWidth);
         
-        // This moves us to State 2
         setPositionStyle(newPosition);
         setIsImageLoaded(false); 
         setActiveHero(randomHero);
@@ -123,17 +117,14 @@ const HeroManager = () => {
     } 
     
     // STATE 2: LOADING (Hero selected, but image not loaded yet)
-    // We do NOT set a timer here. We wait for <img onLoad> to trigger the next step.
-    // (Optional safety: If image fails to load in 5s, kill it so we don't get stuck)
     else if (activeHero && !isImageLoaded) {
         timerId = setTimeout(() => {
-            // Safety fallback: if image takes > 5s, just give up and reset
+            // Safety fallback: if image takes > 5s, give up and reset
             setActiveHero(null);
         }, 5000);
     }
 
     // STATE 3: ACTIVE (Hero selected AND Image loaded)
-    // Now we show the hero for their specific duration.
     else if (activeHero && isImageLoaded) {
       timerId = setTimeout(() => {
         // Animation finished, go back to State 1
@@ -142,30 +133,25 @@ const HeroManager = () => {
       }, activeHero.duration);
     }
 
-    // Cleanup: If the component unmounts or state changes, kill the pending timer
+    // Cleanup
     return () => clearTimeout(timerId);
 
-  }, [activeHero, isImageLoaded]); // Dependency array ensures this re-runs on state transitions
-
+  }, [activeHero, isImageLoaded]); 
 
   if (!activeHero) return null;
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-[100]">
       <img
-        // Key ensures React treats this as a fresh element
         key={activeHero.id} 
         src={activeHero.src}
-        alt="Hero"
-        // This triggers the transition from State 2 -> State 3
+        alt="Hero Event"
         onLoad={() => setIsImageLoaded(true)}
-        
         className={`absolute object-contain 
           ${activeHero.id.includes('cap-shield') ? '' : 'mix-blend-screen'} 
           ${activeHero.animation}`}
         style={{
             ...positionStyle,
-            // Only show when fully loaded
             opacity: isImageLoaded ? (activeHero.id.includes('cap-shield') ? 1 : 0.8) : 0,
             transition: 'opacity 0.2s ease-in'
         }}

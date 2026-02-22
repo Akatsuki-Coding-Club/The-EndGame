@@ -9,6 +9,9 @@ import HeroManager from "@/components/HeroManager";
 import AttackOverlay from "@/components/AttackOverlay";
 import BlipOverlay from "@/components/BlipOverlay";
 import { useGame } from "@/context/GameContext";
+import { SnapSequence } from "@/components/SnapSequence";
+import { Flame } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 declare global {
   namespace JSX {
@@ -142,41 +145,7 @@ const Dashboard = () => {
       <HeroManager />
       <AttackOverlay />
       {me?.isFrozen && <BlipOverlay />}
-
-      {/* ─── HUD HEADER ─── */}
-      <header className="flex items-center justify-between px-8 py-4 border-b border-white/5 bg-black/40 backdrop-blur-xl z-50">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center font-black text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]">A</div>
-          <div>
-            <h1 className="text-sm font-bold tracking-widest uppercase text-white/80">{me?.teamName || "UNIT_UNKNOWN"}</h1>
-            <div className="flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${me?.isFrozen ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
-              <p className="text-[9px] font-mono text-cyan-500 uppercase tracking-widest">
-                {me?.isFrozen ? "System_Locked" : "Neural_Link_Stable"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-10 items-center">
-          <div className="text-right">
-            <span className="text-[8px] uppercase text-white/30 block tracking-widest">Remaining Time</span>
-            <span className="text-lg font-bold text-red-500 italic font-mono">{timeLeft}</span>
-          </div>
-          <div className="text-right">
-            <span className="text-[8px] uppercase text-white/30 block tracking-widest">Global Rank</span>
-            <span className="text-lg font-bold text-yellow-500 italic">#{displayRank}</span>
-          </div>
-          <div className="text-right">
-            <span className="text-[8px] uppercase text-white/30 block tracking-widest">Strategic Points</span>
-            <span className="text-lg font-bold text-cyan-400">{me?.score ?? 0}</span>
-          </div>
-          <button onClick={logout} className="group flex items-center gap-2 text-[9px] border border-red-500/20 text-red-500/60 px-4 py-2 rounded hover:bg-red-500 hover:text-white transition-all uppercase font-bold tracking-widest">
-            <Zap size={12} className="group-hover:fill-current" /> Abort
-          </button>
-        </div>
-      </header>
-
+      <Navbar />
       <div className="flex flex-1 overflow-hidden">
         {/* ─── DYNAMIC MISSION AREA ─── */}
         <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]">
@@ -252,23 +221,7 @@ const Dashboard = () => {
         </main>
 
         {/* ─── TACTICAL SIDEBAR ─── */}
-        <aside className="w-80 border-l border-white/5 bg-black/40 backdrop-blur-md p-6 flex flex-col gap-8 shadow-[-10px_0_30_px_rgba(0,0,0,0.5)]">
-          <section className="flex-1 flex flex-col min-h-0">
-            <h3 className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/40 mb-5 flex items-center gap-2">
-              <Trophy size={14} className="text-yellow-600" /> Tactical Leaderboard
-            </h3>
-            <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
-              {leaderboard.map((entry, i) => (
-                <div key={entry.teamId} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${entry.teamId === me?._id ? 'border-cyan-500/40 bg-cyan-500/10 shadow-[inset_0_0_10px_rgba(6,182,212,0.1)]' : 'border-white/5 bg-white/[0.02]'}`}>
-                  <span className="text-[10px] font-bold text-white/70 truncate">
-                    <span className="text-white/20 mr-2 font-mono">{String(i + 1).padStart(2, '0')}</span> {entry.teamName}
-                  </span>
-                  <span className="text-xs font-black text-cyan-500/80 font-mono">{entry.score}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
+        <aside className="w-80 border-l border-white/5 bg-black/40 custom-scrollbar backdrop-blur-md p-6 flex flex-col gap-8 shadow-[-10px_0_30_px_rgba(0,0,0,0.5)]">
           <section className="p-5 bg-white/[0.03] border border-white/5 rounded-2xl relative overflow-hidden">
             <h3 className="text-[9px] font-bold uppercase tracking-widest text-cyan-500 mb-4 flex items-center gap-2">
               <Swords size={14} /> Collected Artifacts
@@ -296,11 +249,11 @@ const Dashboard = () => {
 
             {/* Dynamic stone list — only shows stones team actually owns */}
             {(me?.stones?.length ?? 0) === 0 ? (
-              <p className="text-[9px] text-white/20 font-mono uppercase tracking-widest text-center py-4">
+              <p className="text-[9px] text-white/20 custom-scrollbar font-mono uppercase tracking-widest text-center py-4">
                 No artifacts acquired yet
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
                 {(me?.stones ?? []).map((s: string) => {
                   const meta = STONE_META[s] ?? { label: s, color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={16} /> };
                   const isSpace = s === "space";
@@ -352,7 +305,6 @@ const Dashboard = () => {
                 })}
               </div>
             )}
-
             <div className="absolute top-0 left-0 w-full h-px bg-cyan-500/20 animate-scan" />
           </section>
         </aside>

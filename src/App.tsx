@@ -12,11 +12,11 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import RulesPage from "./pages/RulesPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import LeaderboardPage from "./pages/LeaderboardPage";
-import ThemeDecorations from "./components/ThemeDecorations";
+// import ThemeDecorations from "./components/ThemeDecorations";
 import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
-import TimelinePortal from "./pages/TimelinePortal";
 import MissionInterface from "./pages/MissionInterface";
+import HeroManager from "./components/HeroManager";
 
 const queryClient = new QueryClient();
 
@@ -69,7 +69,8 @@ const App = () => (
         }}
       />
       <BrowserRouter>
-        <ThemeDecorations />
+        {/* <ThemeDecorations /> */}
+        <HeroManager/>
         <AuthProvider>
           <GameProvider>
             <TimerProvider>

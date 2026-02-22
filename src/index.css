@@ -96,6 +96,20 @@
     font-family: sans-serif;
   }
 }
+@font-face {
+  font-family: 'AvengersCustom';
+  /* Ensure the name matches the file exactly (case-sensitive) */
+  src: url('/Avengers.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Optional: Add a class to force the look if Tailwind is being stubborn */
+.avengers-text {
+  font-family: 'AvengersCustom', sans-serif !important;
+  text-transform: uppercase;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Nebula Background + Hexagon Mesh
@@ -114,6 +128,32 @@ body {
   background-color: hsl(240 52% 4%);
   background-attachment: fixed;
   position: relative;
+}
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px; /* Very slim */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(34, 211, 238, 0.2); /* Subtle cyan tint */
+    border-radius: 10px;
+    transition: background 0.3s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 211, 238, 0.5); /* Brightens on hover */
+  }
+
+  /* Firefox support */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.2) rgba(0, 0, 0, 0.2);
+  }
 }
 
 /* body::before {

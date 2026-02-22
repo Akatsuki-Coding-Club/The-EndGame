@@ -2,80 +2,110 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const Landing = () => {
-    const navigate = useNavigate();
-    const handleStartRound = () => {
-        // Enter Fullscreen
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => { });
-        }
+  const navigate = useNavigate();
 
-        // navigate with REPLACE so they can't go back to Landing
-        navigate("/login", { replace: true });
-    };
-    return (
-        <div className="relative min-h-screen w-full flex flex-col items-center overflow-hidden">
+  const handleStartRound = () => {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+    navigate("/login", { replace: true });
+  };
 
-            {/* Video Background Layer */}
-            <div className="absolute inset-0 z-0 bg-[#272227]">
-                <video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="h-full w-full object-cover opacity-50"
-                >
-                    <source
-                        src="https://motionbgs.com/media/2871/avengers-heroes-united.960x540.mp4"
-                        type="video/mp4"
-                    />
-                </video>
-                {/* Subtle gradient to blend video edges and ensure text clarity */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#272227]/60 via-transparent to-[#272227]/80" />
-            </div>
+  return (
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden font-sans bg-black">
+      {/* Background Layer */}
+      <div className="absolute inset-0 z-0">
+        <div
+          className="h-full w-full bg-cover bg-center transition-transform duration-1000 scale-110 blur-[1px] opacity-30"
+          style={{
+            backgroundImage: `url('https://wallpaperaccess.com/full/4908747.jpg')`,
+          }}
+        />
+        {/* Cinematic Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90" />
+        <div className="absolute inset-0 bg-red-950/10 mix-blend-overlay" />
+      </div>
 
-            {/* Content Layer - Set to transparent to avoid "boxes" */}
-            <div className="relative z-10 flex flex-col items-center p-12 w-full bg-transparent">
-
-                {/* Akatsuki Logo at x-center y-top */}
-                <div className="mt-6">
-                    <img
-                        src="https://i.ibb.co/LXwJLXBp/akatsukilogo-removebg-preview.png"
-                        alt="Akatsuki Logo"
-                        className="w-[14rem] h-auto object-contain"
-                    />
-                </div>
-
-                {/* "Presents" text */}
-                <div className="mb-3">
-                    <p className="text-sm tracking-[0.3em] uppercase opacity-60 font-light">
-                        Presents
-                    </p>
-                </div>
-
-                {/* Event Name: Akatsuki Converges */}
-                <div className="mb-3 text-center">
-                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white drop-shadow-2xl">
-                        Akatsuki Converges
-                    </h1>
-                </div>
-
-                {/* Round Name: The Endgame */}
-                <div className="mb-12 text-center">
-                    <h2 className="text-4xl md:text-5xl font-medium tracking-widest uppercase text-red-600 drop-shadow-lg">
-                        The Endgame
-                    </h2>
-                </div>
-
-                {/* Navigation Button */}
-                <button
-                    onClick={handleStartRound}
-                    className="px-10 py-3 border border-white/40 bg-white/5 backdrop-blur-sm hover:bg-white hover:text-[#272227] transition-all duration-300 rounded text-sm font-bold uppercase tracking-[0.2em]"
-                >
-                    Start Round 3
-                </button>
-            </div>
+      {/* Main UI Container */}
+      <div className="relative z-10 flex flex-col items-center w-full max-w-6xl px-6">
+        {/* Logo Section */}
+        <div className="mb-4">
+          <img
+            src="https://i.ibb.co/LXwJLXBp/akatsukilogo-removebg-preview.png"
+            alt="Akatsuki Logo"
+            className="w-[10rem] md:w-[13rem] h-auto object-contain drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]"
+          />
         </div>
-    );
+
+        {/* Header Section */}
+        <div className="text-center w-full">
+          {/* Akatsuki Presents - Single Line, Letter Spaced */}
+          <div className="mb-6 flex items-center justify-center gap-4">
+            <div className="h-[1px] flex-1 max-w-[100px] bg-gradient-to-r from-transparent to-white/40" />
+            <p className="whitespace-nowrap text-sm md:text-base tracking-[0.6em] md:tracking-[1em] uppercase text-white font-meduim opacity-90">
+              Akatsuki Presents
+            </p>
+            <div className="h-[1px] flex-1 max-w-[100px] bg-gradient-to-l from-transparent to-white/40" />
+          </div>
+
+          {/* Main Event Text */}
+
+          {/* Subtitle with Skew */}
+          {/* Subtitle with Skew and Custom Avengers Font */}
+          <div className="inline-block relative">
+            {/* Skewed background box */}
+            <div className="absolute inset-0 bg-red-600 skew-x-[-15deg] shadow-[0_0_20px_rgba(220,38,38,0.3)]" />
+
+            {/* Added 'font-avengers' class here */}
+            <h2 className="relative px-10 py-2 text-2xl md:text-4xl font-black tracking-widest uppercase text-white font-vengers">
+              The Endgame
+            </h2>
+          </div>
+        </div>
+
+        {/* Round Info Card - Improved Glassmorphism with Blur */}
+        <div className="mt-12 mb-10 p-6 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl text-center max-w-md shadow-2xl">
+          <p className="text-white/80 text-sm md:text-base leading-relaxed tracking-wide">
+            The timelines have merged. Your final challenge begins now. Are you
+            ready for <span className="text-red-500 font-bold">Round 3</span>?
+          </p>
+        </div>
+
+        {/* Navigation Button */}
+        <button
+          onClick={handleStartRound}
+          className="relative group overflow-hidden px-14 py-4 rounded-full transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-800 transition-all duration-300 group-hover:scale-110" />
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[radial-gradient(circle,white_0%,transparent_70%)] transition-opacity duration-300 mix-blend-overlay" />
+
+          <span className="relative z-10 flex items-center gap-3 text-white font-black uppercase tracking-[0.25em] text-sm md:text-base">
+            Start Final Round
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </span>
+        </button>
+      </div>
+
+      {/* Subtle Footer Decor */}
+      
+
+      {/* Scanline Effect */}
+      <div className="pointer-events-none absolute inset-0 z-20 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
+    </div>
+  );
 };
 
 export default Landing;
