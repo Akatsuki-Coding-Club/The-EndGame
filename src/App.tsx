@@ -12,7 +12,7 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import RulesPage from "./pages/RulesPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import LeaderboardPage from "./pages/LeaderboardPage";
-import ThemeDecorations from "./components/ThemeDecorations";
+// import ThemeDecorations from "./components/ThemeDecorations";
 import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
 import TimelinePortal from "./pages/TimelinePortal";
@@ -69,7 +69,7 @@ const App = () => (
         }}
       />
       <BrowserRouter>
-        <ThemeDecorations />
+        {/* <ThemeDecorations /> */}
         <AuthProvider>
           <GameProvider>
             <TimerProvider>
