@@ -16,7 +16,7 @@ interface AuthState {
   team: Team | null;
   loading: boolean;
   login: (teamName: string, password: string) => Promise<boolean>;
-  adminLogin: (teamName: string, password: string) => Promise<boolean>;
+  adminLogin: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -81,9 +81,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const adminLogin = useCallback(async (teamName: string, password: string): Promise<boolean> => {
+  const adminLogin = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
-      const { team: t } = await api.login(teamName, password);
+      const { admin: t } = await api.loginAdmin(username, password);
       if (t.role !== "admin") {
         api.clearAuth();
         return false;

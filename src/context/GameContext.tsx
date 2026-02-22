@@ -199,7 +199,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       const [me, stoneStatus, gameState] = await Promise.all([
         api.getMe(),
         api.getStoneStatus().catch(() => null),
-        api.getGameState().catch(() => null),
+        api.getGameState(team.id).catch(() => null),
       ]);
 
       setScore(me.score ?? 0);
@@ -256,7 +256,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       try {
         const [missionsList, gameState] = await Promise.all([
           api.getMissions(),
-          api.getGameState().catch(() => null),
+          api.getGameState(team.id).catch(() => null),
         ]);
 
         if (cancelled) return;
@@ -311,15 +311,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       setGameStarted(false);
     });
 
-    // 🚦 GAME GATEKEEPER — Auto-launch all teams when admin starts the game
-    s.on("GAME_STARTED", () => {
-      setGameStarted(true);
+    s.on("GAME_STARTED", async () => {
       if (team && !isAdmin) {
-        toast.success("COMMANDER_SIGNAL_RECEIVED", {
-          description: "The warzone is now open. Redirecting...",
-        });
-        navigate("/dashboard");
+        try {
+          const gs = await api.getGameState(team.id);
+          if (gs.status === "active") {
+            setGameStarted(true);
+            toast.success("COMMANDER_SIGNAL_RECEIVED", {
+              description: "The warzone is now open. Redirecting...",
+            });
+            navigate("/dashboard");
+          }
+        } catch (e) {
+        }
       } else {
+        setGameStarted(true);
         toast.success("GAME STARTED", { description: "The warzone is now open." });
       }
     });

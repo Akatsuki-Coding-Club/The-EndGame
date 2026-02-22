@@ -52,6 +52,27 @@ export interface LoginResponse {
   };
 }
 
+export interface AdminLoginResponse {
+  token: string;
+  admin: {
+    _id: string;
+    username: string;
+    role: string;
+  };
+}
+
+
+export async function loginAdmin(username: string, password: string): Promise<AdminLoginResponse> {
+  const data = await request<AdminLoginResponse>("/api/auth/login-admin", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+    skipAuth: true,
+  });
+  setToken(data.token);
+  return data;
+}
+
+
 export async function login(teamName: string, password: string): Promise<LoginResponse> {
   const data = await request<LoginResponse>("/api/auth/login", {
     method: "POST",
@@ -200,8 +221,9 @@ export interface GameState {
   teams?: string[];
 }
 
-export async function getGameState(): Promise<GameState> {
-  return request<GameState>("/api/dashboard/game-state", { skipAuth: true });
+export async function getGameState(teamId?: string): Promise<GameState> {
+  const query = teamId ? `?teamId=${teamId}` : "";
+  return request<GameState>(`/api/dashboard/game-state${query}`, { skipAuth: true });
 }
 
 export async function addTeamToGame(gameId: string, teamId: string) {
@@ -441,8 +463,9 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   return request<LeaderboardEntry[]>("/api/dashboard/leaderboard", { skipAuth: true });
 }
 
-export async function getDashboardGameState(): Promise<GameState> {
-  return request<GameState>("/api/dashboard/game-state", { skipAuth: true });
+export async function getDashboardGameState(teamId?: string): Promise<GameState> {
+  const query = teamId ? `?teamId=${teamId}` : "";
+  return request<GameState>(`/api/dashboard/game-state${query}`, { skipAuth: true });
 }
 
 export { getToken, setToken };
@@ -499,10 +522,10 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const [leaderboard, gameState, rawMe, timelinesRes] = await Promise.all([
+  const rawMe = await getMe();
+  const [leaderboard, gameState, timelinesRes] = await Promise.all([
     getLeaderboard(),
-    getDashboardGameState(),
-    getMe(),
+    getDashboardGameState(rawMe._id),
     getTimelines(),
   ]);
 

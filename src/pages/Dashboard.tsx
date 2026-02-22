@@ -234,7 +234,7 @@ const Dashboard = () => {
             {/* 3D Infinity Gauntlet Model */}
             <div className="w-full h-48 mb-6 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center relative shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] group">
               <model-viewer
-                src="/model/QWERT.glb"
+                src="/model/G.glb"
                 auto-rotate
                 camera-controls
                 disable-zoom

@@ -172,14 +172,6 @@ const AdminDashboard = () => {
             return;
         }
         try {
-            // Mapping UI fields to Backend Schema:
-            // timeline: qTimeline
-            // difficulty: 'normal' (default)
-            // question: qContent
-            // answer: qAnswer
-            // points: qPoints
-            // We can treat qTitle as 'timeline' or 'difficulty' or metadata if needed, but schema is strict?
-            // Schema has 'timeline' (Number usually).
 
             await createQuestion({
                 timeline: parseInt(qTimeline) || 1,
@@ -314,14 +306,7 @@ const AdminDashboard = () => {
         <div className="min-h-screen bg-black text-cyan-500 font-mono relative overflow-hidden selection:bg-cyan-500/30 selection:text-white">
 
             {/* ════════════ BACKGROUND LAYERS () ════════════ */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none fixed" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_80%)] pointer-events-none fixed" />
-
-            {/* Rotating HUD Rings (Subtle Background) */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-10 pointer-events-none fixed z-0">
-                <div className="absolute inset-0 border border-cyan-500/10 rounded-full animate-[spin_120s_linear_infinite]" />
-                <div className="absolute inset-[20%] border border-cyan-500/5 rounded-full border-dashed animate-[spin_80s_linear_infinite_reverse]" />
-            </div>
+            {/* Background elements removed as per request */}
 
             {/* ════════════ TOP NAVIGATION BAR ════════════ */}
             <nav className="fixed top-0 left-0 w-full z-50 border-b border-cyan-500/30 bg-black/80 backdrop-blur-xl h-16 flex items-center justify-between px-6 shadow-[0_4px_30px_rgba(0,255,255,0.1)]">
@@ -461,9 +446,9 @@ const AdminDashboard = () => {
 
                 {/* 2. GAME MANAGEMENT TAB */}
                 {activeTab === "game" && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in-up">
+                    <div className="flex justify-center animate-fade-in-up pb-24 pt-10">
                         {/* Create Instance */}
-                        <div className="border border-cyan-500/30 bg-black/60 backdrop-blur-md p-6 relative">
+                        <div className="w-full max-w-lg p-8 relative">
                             <h3 className="text-xs font-bold uppercase text-cyan-600 mb-6 tracking-widest border-b border-cyan-900/50 pb-2">
                                 Create Game Instance
                             </h3>
@@ -492,7 +477,7 @@ const AdminDashboard = () => {
                         </div>
 
                         {/* Config Instance */}
-                        <div className="border border-cyan-500/30 bg-black/60 backdrop-blur-md p-6 relative">
+                        {/* <div className="border border-cyan-500/30 bg-black/60 backdrop-blur-md p-6 relative">
                             <h3 className="text-xs font-bold uppercase text-cyan-600 mb-6 tracking-widest border-b border-cyan-900/50 pb-2">
                                 Instance Configuration
                             </h3>
@@ -519,7 +504,7 @@ const AdminDashboard = () => {
                                     </select>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 )}
 
@@ -670,8 +655,8 @@ const AdminDashboard = () => {
                                                                     {/* Checkbox */}
                                                                     <div className="mr-3 flex-shrink-0">
                                                                         <div className={`w-4 h-4 border flex items-center justify-center transition-all ${selectedQuestionIds.includes(q._id)
-                                                                                ? 'bg-cyan-500 border-cyan-500'
-                                                                                : 'border-cyan-700/50 bg-black/50'
+                                                                            ? 'bg-cyan-500 border-cyan-500'
+                                                                            : 'border-cyan-700/50 bg-black/50'
                                                                             }`}>
                                                                             {selectedQuestionIds.includes(q._id) && <CheckSquare size={10} className="text-black" />}
                                                                         </div>
