@@ -83,53 +83,61 @@ const STONE_CONFIG: Record<string, {
   },
 };
 
-const TIMELINE_THEMES: Record<string, {
+/* ─── Define the specific type for a Timeline Theme ─── */
+// This fixes the TypeScript error by ensuring all properties are accounted for.
+interface TimelineTheme {
   name: string;
   primary: string;
   secondary: string;
   font: string;
-  bgGradient: string;
   glow: string;
-  videoBg: string; // URL for the live wallpaper
-}> = {
+  videoBg: string;
+  shadow: string;       // Added to fix TS Error
+  animation: string;    // Added to fix TS Error
+}
+
+const TIMELINE_THEMES: Record<string, TimelineTheme> = {
   morag: {
     name: "MORAG",
     primary: "text-blue-400",
     secondary: "bg-blue-600 hover:bg-blue-500",
     font: "font-mono tracking-tight",
-    bgGradient: "radial-gradient(circle, rgba(15, 23, 42, 0.8) 0%, #05050c 100%)",
     glow: "shadow-[0_0_50px_rgba(29,78,216,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-abstract-blue-and-purple-ink-in-water-21501-large.mp4" // Dark, watery/stormy
+    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-abstract-blue-and-purple-ink-in-water-21501-large.mp4",
+    shadow: "shadow-[0_0_30px_rgba(29,78,216,0.1)]", // Added missing property
+    animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
   asgard: {
     name: "ASGARD",
     primary: "text-amber-400",
     secondary: "bg-amber-500 hover:bg-amber-400",
     font: "font-serif tracking-wide uppercase",
-    bgGradient: "radial-gradient(circle, rgba(69, 26, 3, 0.7) 0%, #05050c 100%)",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-golden-particles-in-the-air-2342-large.mp4" // Golden, royal dust
+    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-golden-particles-in-the-air-2342-large.mp4",
+    shadow: "shadow-[0_0_30px_rgba(245,158,11,0.1)]", // Added missing property
+    animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
   vormir: {
-    name: "VORMIR",
-    primary: "text-red-500",
-    secondary: "bg-red-600 hover:bg-red-500",
-    font: "font-light tracking-[0.3em]",
-    bgGradient: "radial-gradient(circle, rgba(69, 10, 10, 0.8) 0%, #05050c 100%)",
-    glow: "shadow-[0_0_50px_rgba(220,38,38,0.2)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-slow-motion-of-red-smoke-on-a-black-background-21504-large.mp4" // Eerie red smoke/void
+    name: "DOMAIN OF VORMIR", 
+    primary: "text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]", 
+    secondary: "bg-orange-700 hover:bg-orange-500 text-white shadow-[0_0_20px_rgba(194,65,12,0.5)] transition-all duration-300", 
+    font: "font-serif italic tracking-[0.4em]",
+    glow: "shadow-[0_0_80px_rgba(234,88,12,0.15)] border border-orange-900/40", 
+    videoBg: "/vormir-video.mp4",
+    shadow: "shadow-[0_0_40px_rgba(234,88,12,0.1)]", // Added missing property
+    animation: "animate-in fade-in duration-700" // Custom animation for Vormir
   },
   nyc: {
     name: "NEW YORK CITY",
     primary: "text-cyan-400",
     secondary: "bg-cyan-600 hover:bg-cyan-500",
     font: "font-sans font-bold tracking-normal",
-    bgGradient: "radial-gradient(circle, rgba(8, 51, 68, 0.7) 0%, #05050c 100%)",
     glow: "shadow-[0_0_50px_rgba(6,182,212,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-night-sky-with-stars-and-clouds-background-9858-large.mp4" // Night sky / Stark tower vibes
+    videoBg: "/nyc.mp4",
+    shadow: "shadow-[0_0_30px_rgba(6,182,212,0.1)]", // Added missing property
+    animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   }
 };
-
 
 const ALL_STONES = ["time", "mind", "space", "power", "reality", "soul"];
 
@@ -468,7 +476,6 @@ const MissionInterface = () => {
         {/* Darkening Overlay for readability */}
         <div
           className="absolute inset-0 transition-colors duration-1000"
-          style={{ background: theme.bgGradient }}
         />
       </div>
       <Navbar />

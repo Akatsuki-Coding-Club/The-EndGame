@@ -16,6 +16,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
 import MissionInterface from "./pages/MissionInterface";
+import HeroManager from "./components/HeroManager";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
       />
       <BrowserRouter>
         {/* <ThemeDecorations /> */}
+        <HeroManager/>
         <AuthProvider>
           <GameProvider>
             <TimerProvider>
