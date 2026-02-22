@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Zap, Skull, Lock, Info, Play, Terminal, ShieldAlert } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import Navbar from "../components/Navbar";
 import { toast } from "sonner";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
@@ -9,63 +9,58 @@ import * as api from "@/services/api";
 
 const RulesPage = () => {
     const navigate = useNavigate();
-    const { gameStarted } = useGame();
+    const { gameStarted } = useGame(); 
     const { team } = useAuth();
-    const [registeredTeams, setRegisteredTeams] = useState([]);
+    const [registeredTeams, setRegisteredTeams] = useState<string[]>([]);
     const [bgImageUrl, setBgImageUrl] = useState("");
     const [showSecurityAlert, setShowSecurityAlert] = useState(false);
-    const audioRef = useRef(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // Persist the background from Login
     useEffect(() => {
         const savedBg = localStorage.getItem("team_session_bg");
-        if (savedBg) {
-            setBgImageUrl(savedBg);
-        } else {
-            // Fallback if they navigated directly
-            setBgImageUrl("https://i.ibb.co/0p6SgpVW/44aa5903-5c27-4602-ad23-0ec051b8276a.jpg");
-        }
+        setBgImageUrl(savedBg || "https://i.ibb.co/0p6SgpVW/44aa5903-5c27-4602-ad23-0ec051b8276a.jpg");
 
-        // Fullscreen & Audio Security logic (Same as Login)
+        const fetchRegisteredTeams = async () => {
+            try {
+                const teams = await api.getRegisteredTeams();
+                if (Array.isArray(teams)) setRegisteredTeams(teams);
+            } catch (error) {
+                console.error("Failed to fetch teams:", error);
+            }
+        };
+        fetchRegisteredTeams();
+
         audioRef.current = new Audio("/alert.mp3");
-        audioRef.current.volume = 1.0;
-
         const handleFullscreenChange = () => {
             if (!document.fullscreenElement) {
                 setShowSecurityAlert(true);
-                audioRef.current?.play().catch(() => {});
+                audioRef.current?.play().catch(() => { });
             } else {
                 setShowSecurityAlert(false);
             }
         };
 
         document.addEventListener("fullscreenchange", handleFullscreenChange);
-        fetchRegisteredTeams();
-
-        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+        return () => {
+            document.removeEventListener("fullscreenchange", handleFullscreenChange);
+        };
     }, []);
-
-    const fetchRegisteredTeams = async () => {
-        try {
-            const teams = await api.getRegisteredTeams();
-            if (Array.isArray(teams)) setRegisteredTeams(teams);
-        } catch (error) {
-            console.error("Failed to fetch teams:", error);
-        }
-    };
 
     const handleEnterWarzone = () => {
         if (!gameStarted) {
             toast.error("SYSTEM OFFLINE", { description: "Awaiting Commander's signal." });
             return;
         }
-
-        const teamRegistered = team && registeredTeams.includes(team.id);
-        if (!teamRegistered) {
-            toast.error("TEAM_NOT_REGISTERED", { description: "Contact the administrator." });
+        if (!team) {
+            toast.error("INITIALIZATION_REQUIRED", { description: "Please log in to your unit first." });
             return;
         }
 
+        const teamRegistered = registeredTeams.includes(team.id || (team as any)._id);
+        if (!teamRegistered && registeredTeams.length > 0) {
+            toast.error("TEAM_NOT_REGISTERED", { description: "Contact the administrator." });
+            return;
+        }
         navigate("/dashboard");
     };
 
@@ -80,11 +75,12 @@ const RulesPage = () => {
 
     return (
         <div className="relative min-h-screen w-full flex flex-col items-center bg-[#050505] font-sans overflow-x-hidden">
-            <Navbar />
             
-            {/* Persistent Background Layer */}
+            {/* FIXED: Called without props to resolve TS error */}
+            <Navbar />
+
             <div className="absolute inset-0 z-0">
-                <div 
+                <div
                     className="h-full w-full bg-cover bg-center opacity-30 blur-[2px] scale-105 transition-all duration-1000"
                     style={{ backgroundImage: `url('${bgImageUrl}')` }}
                 />
@@ -92,15 +88,13 @@ const RulesPage = () => {
                 <div className="absolute inset-0 bg-red-950/10 mix-blend-color" />
             </div>
 
-            {/* Security Alert */}
-            <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${showSecurityAlert ? "translate-y-0 opacity-100" : "-translate-y-40 opacity-0"}`}>
+            <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${showSecurityAlert ? "translate-y-0 opacity-100" : "-translate-y-40 opacity-0"}`}>
                 <div className="bg-[#e62429] border border-white/20 text-white px-8 py-4 rounded-xl shadow-[0_0_50px_rgba(230,36,41,0.6)] flex items-center gap-6 animate-pulse">
                     <ShieldAlert size={30} />
                     <p className="text-xs font-black uppercase tracking-widest">Security Protocol Breached: Restore Fullscreen</p>
                 </div>
             </div>
 
-            {/* Content Container */}
             <div className="relative z-10 w-full max-w-5xl px-6 py-20 flex flex-col items-center">
                 <div className="w-full mb-12 flex flex-col items-center text-center">
                     <h2 className="text-[10px] tracking-[0.6em] text-red-600 font-black uppercase mb-2">Neural Link Established</h2>
@@ -110,7 +104,6 @@ const RulesPage = () => {
                     <div className="h-[2px] w-48 bg-gradient-to-r from-transparent via-red-600 to-transparent mt-4 opacity-50" />
                 </div>
 
-                {/* Rules Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-16">
                     {rules.map((rule, index) => (
                         <div
@@ -140,7 +133,6 @@ const RulesPage = () => {
                     ))}
                 </div>
 
-                {/* Footer Action */}
                 <div className="flex flex-col items-center gap-8">
                     {!gameStarted && (
                         <div className="flex flex-col items-center gap-3">
@@ -155,26 +147,16 @@ const RulesPage = () => {
                     <button
                         onClick={handleEnterWarzone}
                         disabled={!gameStarted}
-                        className={`group relative px-16 py-5 font-black text-xs uppercase tracking-[0.5em] overflow-hidden transition-all rounded-xl shadow-2xl ${
-                            gameStarted 
-                            ? "bg-[#e62429] text-white hover:shadow-[0_0_30px_rgba(230,36,41,0.5)] active:scale-95" 
+                        className={`group relative px-16 py-5 font-black text-xs uppercase tracking-[0.5em] overflow-hidden transition-all rounded-xl shadow-2xl ${gameStarted
+                            ? "bg-[#e62429] text-white hover:shadow-[0_0_30px_rgba(230,36,41,0.5)] active:scale-95"
                             : "bg-white/5 text-white/20 cursor-not-allowed"
-                        }`}
+                            }`}
                     >
                         <span className="relative z-10">{gameStarted ? "Enter Warzone" : "System Offline"}</span>
                         {gameStarted && <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />}
                     </button>
-
-                    <div className="flex flex-col items-center gap-2 opacity-30 mt-4">
-                        <div className="flex items-center gap-2">
-                            <Terminal size={14} className="text-[#e62429]" />
-                            <p className="text-[9px] text-white uppercase tracking-[0.3em]">Protocol 14.0.6.0.5 ACTIVE</p>
-                        </div>
-                    </div>
                 </div>
             </div>
-
-            {/* Cinematic Scanlines */}
             <div className="pointer-events-none fixed inset-0 z-20 opacity-[0.06] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
         </div>
     );

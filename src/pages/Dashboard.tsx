@@ -125,7 +125,6 @@ const Dashboard = () => {
       <HeroManager />
       <AttackOverlay />
       {me?.isFrozen && <BlipOverlay />}
-
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         {/* ─── DYNAMIC MISSION AREA ─── */}
@@ -261,7 +260,6 @@ const Dashboard = () => {
                 })}
               </div>
             )}
-
             <div className="absolute top-0 left-0 w-full h-px bg-cyan-500/20 animate-scan" />
           </section>
         </aside>
