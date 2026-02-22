@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
@@ -88,7 +88,6 @@ const TIMELINE_THEMES: Record<string, {
   primary: string;
   secondary: string;
   font: string;
-  bgGradient: string;
   glow: string;
   videoBg: string; // URL for the live wallpaper
 }> = {
@@ -97,25 +96,22 @@ const TIMELINE_THEMES: Record<string, {
     primary: "text-blue-400",
     secondary: "bg-blue-600 hover:bg-blue-500",
     font: "font-mono tracking-tight",
-    bgGradient: "radial-gradient(circle, rgba(15, 23, 42, 0.8) 0%, #05050c 100%)",
     glow: "shadow-[0_0_50px_rgba(29,78,216,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-abstract-blue-and-purple-ink-in-water-21501-large.mp4" // Dark, watery/stormy
+    videoBg: "../public/morag.mp4" // Dark, watery/stormy
   },
   asgard: {
     name: "ASGARD",
     primary: "text-amber-400",
     secondary: "bg-amber-500 hover:bg-amber-400",
-    font: "font-serif tracking-wide uppercase",
-    bgGradient: "radial-gradient(circle, rgba(69, 26, 3, 0.7) 0%, #05050c 100%)",
+    font: "font-serif tracking-wide",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-golden-particles-in-the-air-2342-large.mp4" // Golden, royal dust
+    videoBg: "../public/asgard.mp4" // Golden, royal dust
   },
   vormir: {
     name: "VORMIR",
     primary: "text-red-500",
     secondary: "bg-red-600 hover:bg-red-500",
     font: "font-light tracking-[0.3em]",
-    bgGradient: "radial-gradient(circle, rgba(69, 10, 10, 0.8) 0%, #05050c 100%)",
     glow: "shadow-[0_0_50px_rgba(220,38,38,0.2)]",
     videoBg: "https://assets.mixkit.co/videos/preview/mixkit-slow-motion-of-red-smoke-on-a-black-background-21504-large.mp4" // Eerie red smoke/void
   },
@@ -124,7 +120,6 @@ const TIMELINE_THEMES: Record<string, {
     primary: "text-cyan-400",
     secondary: "bg-cyan-600 hover:bg-cyan-500",
     font: "font-sans font-bold tracking-normal",
-    bgGradient: "radial-gradient(circle, rgba(8, 51, 68, 0.7) 0%, #05050c 100%)",
     glow: "shadow-[0_0_50px_rgba(6,182,212,0.15)]",
     videoBg: "https://assets.mixkit.co/videos/preview/mixkit-night-sky-with-stars-and-clouds-background-9858-large.mp4" // Night sky / Stark tower vibes
   }
@@ -158,6 +153,7 @@ const MissionInterface = () => {
   const [confirmStone, setConfirmStone] = useState<string | null>(null);
   const [acquiredStone, setAcquiredStone] = useState<string | null>(null);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
   // Cooldown Timer State
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
@@ -207,6 +203,13 @@ const MissionInterface = () => {
   /* ─── Snap Protection & Ending Sequence ─── */
   const { snapWinner, isSnapping, initiateSupremeSnap } = useGame();
   const { team } = useAuth();
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 0.4; // Adjust this for desired slomo (0.1 to 1.0)
+    }
+  }, [theme.videoBg]);
+
   useEffect(() => {
     if (snapWinner || team?.snapActivated) {
       navigate("/dashboard");
@@ -465,18 +468,13 @@ const MissionInterface = () => {
         >
           <source src={theme.videoBg} type="video/mp4" />
         </video>
-        {/* Darkening Overlay for readability */}
-        <div
-          className="absolute inset-0 transition-colors duration-1000"
-          style={{ background: theme.bgGradient }}
-        />
       </div>
       <Navbar />
 
       {/* ─── MAIN CONTENT ─── */}
       <div className="flex-1 flex flex-col overflow-hidden pb-2 relative z-10">
         <main className={`flex-1 flex flex-col p-4 lg:p-8 overflow-hidden max-w-6xl mx-auto w-full relative z-0 pb-12 ${theme.animation}`}>
-          <div className={`flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-sm shadow-2xl ${theme.shadow}`}>
+          <div className={`flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-[6px] shadow-2xl ${theme.shadow}`}>
             {/* Question Header */}
             <div className="p-3 border-b border-white/5 flex justify-between bg-black/20">
               <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme.primary}`}>
