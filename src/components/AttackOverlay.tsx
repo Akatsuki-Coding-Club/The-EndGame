@@ -55,40 +55,49 @@ const AttackOverlay = () => {
   if (!isBlocked) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center text-white">
-      <div className="w-[500px] p-8 bg-white/5 backdrop-blur-xl rounded-2xl border border-red-500/30 shadow-2xl">
-        <h1 className="text-3xl font-bold text-red-500 mb-4">
-          ⚠ SYSTEM LOCKED
+    <div className="fixed inset-0 z-50 bg-cyan-950/80 backdrop-blur-md flex flex-col items-center justify-center text-cyan-50 overflow-hidden">
+      {/* Decorative Ice elements */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-cyan-400/10 via-transparent to-cyan-500/10 pointer-events-none" />
+
+      <div className="relative w-[500px] p-8 bg-cyan-900/30 backdrop-blur-xl rounded-2xl border border-cyan-300/40 shadow-[0_0_50px_rgba(6,182,212,0.2)] z-10 transform transition-all">
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-32 h-32 bg-cyan-400/20 blur-3xl rounded-full pointer-events-none" />
+
+        <h1 className="text-3xl font-black text-white mb-2 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] text-center tracking-widest uppercase">
+          ❄ SYSTEM FROZEN ❄
         </h1>
 
-        <p className="mb-6 text-gray-300">
-          A Power Surge has locked your systems. Solve the unlock protocol to regain control.
+        <p className="mb-8 text-cyan-200/80 text-center font-mono text-xs uppercase tracking-widest leading-relaxed">
+          A Power Surge has frozen your interface. Input valid decryption sequence to initiate core thaw.
         </p>
 
-        <div className="bg-black/40 p-4 rounded-lg mb-4">
-          <p className="text-lg font-semibold">
-            {blockPuzzleQuestion || "Solve the unlock puzzle"}
+        <div className="bg-cyan-950/50 p-6 rounded-xl border border-cyan-400/20 mb-6 shadow-inner relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.1)_0%,transparent_100%)] pointer-events-none" />
+          <p className="text-lg font-bold text-cyan-100 font-mono tracking-wider text-center relative z-10 selection:bg-cyan-500/30">
+            {blockPuzzleQuestion || "Awaiting decryption parameters..."}
           </p>
         </div>
 
         <input
           type="text"
-          className="w-full p-3 rounded-lg bg-black/50 border border-white/20 mb-4 text-white"
-          placeholder="Enter answer..."
+          className="w-full p-4 rounded-xl bg-cyan-950/80 border border-cyan-400/40 mb-6 text-white text-center text-lg font-mono font-bold tracking-widest placeholder-cyan-800 outline-none focus:border-cyan-300 focus:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all"
+          placeholder="ENTER SEQUENCE..."
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
         />
 
         <button
           disabled={loading}
           onClick={handleSubmit}
-          className="w-full py-3 rounded-lg bg-red-600 hover:bg-red-700 transition"
+          className="w-full py-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 border border-cyan-400 flex items-center justify-center gap-3 text-white font-black uppercase tracking-widest hover:shadow-[0_0_20px_rgba(34,211,238,0.6)] transition-all disabled:opacity-50 disabled:grayscale"
         >
-          {loading ? "Verifying..." : "Submit Answer"}
+          {loading ? "Verifying..." : "Initialize Thaw"}
         </button>
 
-        <div className="mt-6 text-center text-sm text-gray-400">
-          Time remaining: {timeLeft}s
+        <div className="mt-6 text-center text-xs font-mono font-bold uppercase tracking-widest text-cyan-400/60 flex items-center justify-center gap-2">
+          <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
+          Time Until Auto-Thaw: <span className="text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)]">{timeLeft}S</span>
         </div>
       </div>
     </div>

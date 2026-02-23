@@ -6,8 +6,6 @@ import { getDashboardData, DashboardData, useSpaceStone, useSnap } from "@/servi
 import { toast } from "sonner";
 import TimelinePortal from "./TimelinePortal";
 import HeroManager from "@/components/HeroManager";
-import AttackOverlay from "@/components/AttackOverlay";
-import BlipOverlay from "@/components/BlipOverlay";
 import { useGame } from "@/context/GameContext";
 import { SnapSequence } from "@/components/SnapSequence";
 import Navbar from "@/components/Navbar";
@@ -31,7 +29,7 @@ const STONE_META: Record<string, { label: string; color: string; glow: string; i
 
 const Dashboard = () => {
   const { logout } = useAuth();
-  const { allTeamsState } = useGame();
+  const { allTeamsState, isFrozen } = useGame();
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,8 +140,6 @@ const Dashboard = () => {
   return (
     <div className="h-screen flex flex-col bg-[#05050c] text-slate-200 font-sans overflow-hidden select-none">
       <HeroManager />
-      <AttackOverlay />
-      {me?.isFrozen && <BlipOverlay />}
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         {/* ─── DYNAMIC MISSION AREA ─── */}

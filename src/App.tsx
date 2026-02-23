@@ -17,6 +17,8 @@ import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
 import MissionInterface from "./pages/MissionInterface";
 import HeroManager from "./components/HeroManager";
+import BlipOverlay from "./components/BlipOverlay";
+import AttackOverlay from "./components/AttackOverlay";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +52,16 @@ const AppRoutes = () => (
   </Routes>
 );
 
+const GlobalOverlays = () => {
+  const { isFrozen, isBlocked } = useGame();
+  return (
+    <>
+      {isFrozen && <BlipOverlay />}
+      {isBlocked && <AttackOverlay />}
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -70,9 +82,10 @@ const App = () => (
       />
       <BrowserRouter>
         {/* <ThemeDecorations /> */}
-        <HeroManager/>
+        <HeroManager />
         <AuthProvider>
           <GameProvider>
+            <GlobalOverlays />
             <TimerProvider>
               <AppRoutes />
             </TimerProvider>

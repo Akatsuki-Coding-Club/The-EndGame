@@ -226,7 +226,7 @@ const MissionInterface = () => {
   };
 
   /* ─── Snap Protection & Ending Sequence ─── */
-  const { snapWinner, isSnapping, initiateSupremeSnap } = useGame();
+  const { snapWinner, isSnapping, initiateSupremeSnap, isFrozen } = useGame();
   const { team } = useAuth();
   useEffect(() => {
     // Only force return to dashboard if WE are the ones who snapped
