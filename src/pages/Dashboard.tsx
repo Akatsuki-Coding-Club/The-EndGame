@@ -10,7 +10,6 @@ import AttackOverlay from "@/components/AttackOverlay";
 import BlipOverlay from "@/components/BlipOverlay";
 import { useGame } from "@/context/GameContext";
 import { SnapSequence } from "@/components/SnapSequence";
-import { Flame } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
 declare global {
@@ -21,13 +20,13 @@ declare global {
   }
 }
 
-const STONE_META: Record<string, { label: string; color: string; glow: string; icon: React.ReactNode }> = {
-  space: { label: "Space", color: "#60a5fa", glow: "rgba(96,165,250,0.4)", icon: <Globe size={16} /> },
-  power: { label: "Power", color: "#c084fc", glow: "rgba(192,132,252,0.4)", icon: <Zap size={16} /> },
-  reality: { label: "Reality", color: "#f87171", glow: "rgba(248,113,113,0.4)", icon: <Shield size={16} /> },
-  soul: { label: "Soul", color: "#fb923c", glow: "rgba(251,146,60,0.4)", icon: <Skull size={16} /> },
-  time: { label: "Time", color: "#34d399", glow: "rgba(52,211,153,0.4)", icon: <Sparkles size={16} /> },
-  mind: { label: "Mind", color: "#fbbf24", glow: "rgba(251,191,36,0.4)", icon: <Trophy size={16} /> },
+const STONE_META: Record<string, { label: string; color: string; glow: string; image: string; icon: React.ReactNode }> = {
+  space: { label: "Space", color: "#60a5fa", glow: "rgba(96,165,250,0.4)", image: "/space-stone.png", icon: <Globe size={16} /> },
+  power: { label: "Power", color: "#c084fc", glow: "rgba(192,132,252,0.4)", image: "/power-stone.png", icon: <Zap size={16} /> },
+  reality: { label: "Reality", color: "#f87171", glow: "rgba(248,113,113,0.4)", image: "/reality-stone.png", icon: <Shield size={16} /> },
+  soul: { label: "Soul", color: "#fb923c", glow: "rgba(251,146,60,0.4)", image: "/soul_stone.jpg", icon: <Skull size={16} /> },
+  time: { label: "Time", color: "#34d399", glow: "rgba(52,211,153,0.4)", image: "/time-stone.png", icon: <Sparkles size={16} /> },
+  mind: { label: "Mind", color: "#fbbf24", glow: "rgba(251,191,36,0.4)", image: "/mind_stone.png", icon: <Trophy size={16} /> },
 };
 
 const Dashboard = () => {
@@ -255,7 +254,7 @@ const Dashboard = () => {
             ) : (
               <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
                 {(me?.stones ?? []).map((s: string) => {
-                  const meta = STONE_META[s] ?? { label: s, color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={16} /> };
+                  const meta = STONE_META[s] ?? { label: s, color: "#fff", glow: "rgba(255,255,255,0.3)", image: "", icon: <Sparkles size={16} /> };
                   const isSpace = s === "space";
                   const hasEscaped = (me?.escapedTimelines?.length ?? 0) > 0;
                   return (
@@ -270,14 +269,18 @@ const Dashboard = () => {
                     >
                       {/* Stone gem icon */}
                       <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-inner"
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-inner"
                         style={{
                           backgroundColor: `${meta.color}15`,
                           color: meta.color,
                           boxShadow: `0 0 12px ${meta.glow}`,
                         }}
                       >
-                        {meta.icon}
+                        {meta.image ? (
+                          <img src={meta.image} alt={meta.label} className="w-full h-full object-cover rounded-full drop-shadow-md" style={{ filter: `drop-shadow(0 0 5px ${meta.color})` }} />
+                        ) : (
+                          meta.icon
+                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">

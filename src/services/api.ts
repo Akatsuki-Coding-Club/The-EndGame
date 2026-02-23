@@ -116,6 +116,7 @@ export async function getAllTeams() {
       score: number;
       frozenUntil?: string | null;
       blockedUntil?: string | null;
+      cooldownUntil?: string | null;
       missionsCompleted?: number;
       buildMissionsCompleted?: number;
       activeEffects?: string[];
@@ -509,6 +510,7 @@ export interface UserMe {
   isFrozen: boolean;
   frozenUntil?: string | null;
   blockedUntil?: string | null;
+  cooldownUntil?: string | null;
   activeEffects: string[];
   snapActivated: boolean;
   gameStarted: boolean;

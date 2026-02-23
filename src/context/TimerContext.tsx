@@ -19,26 +19,27 @@ function formatTime(seconds: number): string {
 }
 
 export const TimerProvider = ({ children }: { children: ReactNode }) => {
-  const { gameStarted, gameDuration } = useGame();
-  const [totalSeconds, setTotalSeconds] = useState(0);
+  const { gameStarted, gameDuration, gameEndTime } = useGame();
+  const [remainingSeconds, setRemainingSeconds] = useState(gameDuration);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (gameStarted) {
-      intervalRef.current = setInterval(() => {
-        setTotalSeconds(prev => {
-          // Use the dynamic gameDuration instead of hardcoded constant [cite: 401]
-          if (prev >= gameDuration) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            return gameDuration;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+    if (gameStarted && gameEndTime) {
+      const updateTimer = () => {
+        const diff = Math.max(0, Math.floor((gameEndTime - Date.now()) / 1000));
+        setRemainingSeconds(diff);
+        if (diff <= 0 && intervalRef.current) clearInterval(intervalRef.current);
+      };
+
+      updateTimer(); // Initial sync
+      intervalRef.current = setInterval(updateTimer, 1000);
+    } else {
+      setRemainingSeconds(gameStarted ? gameDuration : gameDuration);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [gameStarted, gameDuration]);
-  const remainingSeconds = Math.max(0, gameDuration - totalSeconds);
+  }, [gameStarted, gameEndTime, gameDuration]);
+
+  const totalSeconds = Math.max(0, gameDuration - remainingSeconds);
   const minutesElapsed = Math.floor(totalSeconds / 60);
 
   return (

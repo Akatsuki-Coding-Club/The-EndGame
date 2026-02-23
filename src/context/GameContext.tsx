@@ -34,6 +34,7 @@ export interface TeamGameState {
   role?: string;
   isBlocked: boolean;
   isShielded?: boolean;
+  cooldownUntil?: string | null;
   stones: string[];
   completedTimelines: string[];
   snapActivated: boolean;
@@ -54,6 +55,7 @@ export interface GameState {
   blockPuzzleQuestion?: string | null;
   powersDisabled: boolean;
   gameDuration: number;
+  gameEndTime: number | null;
   setGameDuration: (seconds: number) => void;
   notifications: { id: string; message: string; type: "attack" | "success" | "system"; timestamp: string }[];
   allTeamsState: TeamGameState[];
@@ -109,6 +111,7 @@ function teamToGameState(t: {
   role?: string;
   stones?: string[];
   completedTimelines?: string[];
+  cooldownUntil?: string | null;
   snapActivated?: boolean;
   currentTimeline?: string | null;
 }): TeamGameState {
@@ -123,6 +126,7 @@ function teamToGameState(t: {
     isFrozen: !!(frozenUntil && now < frozenUntil),
     isBlocked: !!(blockedUntil && now < blockedUntil),
     role: t.role || "team",
+    cooldownUntil: t.cooldownUntil || null,
     stones: t.stones || [],
     completedTimelines: t.completedTimelines || [],
     snapActivated: t.snapActivated || false,
@@ -139,6 +143,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [score, setScore] = useState(0);
   const [puzzles, setPuzzles] = useState<Puzzle[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameEndTime, setGameEndTime] = useState<number | null>(null);
   const [isFrozen, setIsFrozen] = useState(false);
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
   const [blipPuzzleSolved, setBlipPuzzleSolved] = useState(false);
@@ -218,6 +223,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       if (gameState) {
         setGameStarted(gameState.status === "active");
         setPowersDisabled(gameState.lockdown ?? false);
+        setGameEndTime(gameState.endTime ? new Date(gameState.endTime).getTime() : null);
       }
 
       if (stoneStatus) {
@@ -266,6 +272,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (gameState) {
           setGameStarted(gameState.status === "active");
           setPowersDisabled(gameState.lockdown ?? false);
+          setGameEndTime(gameState.endTime ? new Date(gameState.endTime).getTime() : null);
         }
 
         await refreshTeams();
@@ -302,7 +309,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     s.on("connect", onConnect);
 
     // Dashboard Events (Admin & Leaderboard)
-    s.on("SCORE_UPDATE", () => refreshTeams());
+    s.on("SCORE_UPDATE", (data: any) => {
+      refreshTeams();
+      if (data?.endTime) {
+        setGameEndTime(new Date(data.endTime).getTime());
+      }
+    });
     s.on("STONE_USAGE_UPDATE", () => refreshTeams());
     s.on("STONE_SELECTION_UPDATE", () => refreshTeams());
     s.on("BLIP_PUZZLE_LEADERBOARD", () => refreshTeams());
@@ -705,6 +717,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         freezeTeam,
         unfreezeTeam,
         gameDuration,
+        gameEndTime,
         setGameDuration,
         refreshTeams,
         gameLoading,

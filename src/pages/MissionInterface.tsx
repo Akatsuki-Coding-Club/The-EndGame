@@ -31,6 +31,7 @@ const STONE_CONFIG: Record<string, {
   glow: string;        // rgba for box-shadow
   borderColor: string; // tailwind-compatible hex for inline style
   icon: React.ReactNode;
+  image: string;
   desc: string;
 }> = {
   time: {
@@ -39,6 +40,7 @@ const STONE_CONFIG: Record<string, {
     glow: "rgba(52,211,153,0.5)",
     borderColor: "#34d399",
     icon: <Clock size={22} />,
+    image: "/time-stone.png",
     desc: "Instantly escape this timeline. Progress is saved — re-enter later with the Space Stone.",
   },
   mind: {
@@ -47,6 +49,7 @@ const STONE_CONFIG: Record<string, {
     glow: "rgba(251,191,36,0.5)",
     borderColor: "#fbbf24",
     icon: <Brain size={22} />,
+    image: "/mind_stone.png",
     desc: "Decrypts a substantial hint for the current objective.",
   },
   space: {
@@ -55,6 +58,7 @@ const STONE_CONFIG: Record<string, {
     glow: "rgba(96,165,250,0.5)",
     borderColor: "#60a5fa",
     icon: <Globe size={22} />,
+    image: "/space-stone.png",
     desc: "Dimensional portal access — use from the Dashboard to re-enter escaped timelines.",
   },
   power: {
@@ -63,6 +67,7 @@ const STONE_CONFIG: Record<string, {
     glow: "rgba(192,132,252,0.5)",
     borderColor: "#c084fc",
     icon: <Flame size={22} />,
+    image: "/power-stone.png",
     desc: "Launch an orbital strike on a rival team to impede their progress.",
   },
   reality: {
@@ -71,6 +76,7 @@ const STONE_CONFIG: Record<string, {
     glow: "rgba(248,113,113,0.5)",
     borderColor: "#f87171",
     icon: <Eye size={22} />,
+    image: "/reality-stone.png",
     desc: "Rewrite the laws of physics. Your next answer will be accepted as correct.",
   },
   soul: {
@@ -79,6 +85,7 @@ const STONE_CONFIG: Record<string, {
     glow: "rgba(251,146,60,0.5)",
     borderColor: "#fb923c",
     icon: <Skull size={22} />,
+    image: "/soul_stone.jpg",
     desc: "Sacrifice one of your earned stones to gain a massive point boost.",
   },
 };
@@ -118,11 +125,11 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
   vormir: {
-    name: "DOMAIN OF VORMIR", 
-    primary: "text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]", 
-    secondary: "bg-orange-700 hover:bg-orange-500 text-white shadow-[0_0_20px_rgba(194,65,12,0.5)] transition-all duration-300", 
+    name: "DOMAIN OF VORMIR",
+    primary: "text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]",
+    secondary: "bg-orange-700 hover:bg-orange-500 text-white shadow-[0_0_20px_rgba(194,65,12,0.5)] transition-all duration-300",
     font: "font-serif italic tracking-[0.4em]",
-    glow: "shadow-[0_0_80px_rgba(234,88,12,0.15)] border border-orange-900/40", 
+    glow: "shadow-[0_0_80px_rgba(234,88,12,0.15)] border border-orange-900/40",
     videoBg: "/vormir.mp4",
     shadow: "shadow-[0_0_40px_rgba(234,88,12,0.1)]", // Added missing property
     animation: "animate-in fade-in duration-700" // Custom animation for Vormir
@@ -181,6 +188,9 @@ const MissionInterface = () => {
         navigate("/dashboard");
         return;
       }
+      if (currentTask?.question?._id !== res.question?._id) {
+        setActiveHint(null);
+      }
       setCurrentTask(res);
     } catch {
       toast.error("Signal lost. Reconnecting to timeline...");
@@ -193,7 +203,10 @@ const MissionInterface = () => {
         getStoneStatus().catch(() => null),
         getMe().catch(() => null),
       ]);
-      if (status) setStoneStatus(status);
+      if (status) {
+        setStoneStatus(status);
+        window.dispatchEvent(new Event('stoneUpdate'));
+      }
       // ✅ Pull stone list directly from the team's actual 'stones' string array
       if (me && Array.isArray(me.stones)) {
         setMyStones(me.stones);
@@ -393,23 +406,42 @@ const MissionInterface = () => {
           />
         )}
 
-        {/* Gem icon container */}
+        {/* Gem image container */}
         <div
-          className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${owned && !isDisabled ? "group-hover:scale-110" : ""}`}
-          style={owned ? {
-            backgroundColor: `${cfg.color}18`,
-            color: cfg.color,
-            boxShadow: isDisabled ? "none" : `0 0 16px ${cfg.glow}`,
-          } : { color: "#666" }}
+          className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-[2000ms] ease-in-out ${owned && !isDisabled ? "group-hover:scale-125" : ""}`}
+          style={{
+            perspective: "1000px"
+          }}
         >
-          {cfg.icon}
-
-          {/* Pulse ring for unauthenticated stones */}
-          {owned && !isDisabled && (
+          {owned ? (
+            <div className={`relative w-full h-full flex items-center justify-center ${!isDisabled ? 'animate-[float_3s_ease-in-out_infinite]' : ''}`}
+              style={{ transformStyle: 'preserve-3d' }}>
+              <img
+                src={cfg.image}
+                alt={`${cfg.label} Stone`}
+                className={`w-full h-full object-cover rounded-full shadow-2xl transition-all duration-500`}
+                style={{
+                  boxShadow: isDisabled ? "none" : `0 0 20px ${cfg.glow}, inset 0 0 15px ${cfg.glow}`,
+                  filter: isDisabled ? "grayscale(80%) opacity(0.5)" : `drop-shadow(0 0 10px ${cfg.color})`
+                }}
+              />
+              {!isDisabled && (
+                <div
+                  className="absolute inset-0 rounded-full animate-[spin_6s_linear_infinite] opacity-60"
+                  style={{
+                    border: `1px solid ${cfg.color}`,
+                    boxShadow: `0 0 10px ${cfg.glow}, inset 0 0 10px ${cfg.glow}`
+                  }}
+                />
+              )}
+            </div>
+          ) : (
             <div
-              className="absolute inset-0 rounded-xl animate-ping opacity-30"
-              style={{ border: `1px solid ${cfg.color}` }}
-            />
+              className="w-full h-full rounded-full flex items-center justify-center opacity-20 bg-black/50 border border-white/10"
+              style={{ filter: "grayscale(100%)" }}
+            >
+              {cfg.icon}
+            </div>
           )}
         </div>
 
@@ -461,6 +493,14 @@ const MissionInterface = () => {
   /* ─── Render ─── */
   return (
     <div className="h-screen bg-[#05050c] flex flex-col font-mono text-slate-300 overflow-hidden relative">
+      <style>
+        {`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate3d(1, 1, 0, 0deg); }
+            50% { transform: translateY(-5px) rotate3d(1, 1, 0, 10deg); }
+          }
+        `}
+      </style>
 
       {/* --- LIVE WALLPAPER LAYER --- */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -579,19 +619,23 @@ const MissionInterface = () => {
                 <Sparkles size={14} className="text-cyan-500" />
                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/50">Infinity Gauntlet</span>
               </div>
-              {isCooldown && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-red-500/30 bg-red-500/10">
-                  <AlertTriangle size={10} className="text-red-500 animate-in fade-in" />
-                  <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Cooldown: {formatTime(timeLeft)}</span>
-                </div>
-              )}
             </div>
 
             {/* Stone Cards Grid */}
-            <div className="py-6">
-              <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto">
-                {ALL_STONES.map(s => <StoneCard key={s} stoneKey={s} />)}
-              </div>
+            <div className="py-6 min-h-[160px] flex justify-center items-center relative">
+              {isCooldown ? (
+                <div className="flex flex-col items-center justify-center animate-in zoom-in duration-500">
+                  <div className="text-xl md:text-2xl font-mono font-bold text-red-400 tracking-widest bg-red-900/20 px-6 py-3 rounded-xl border border-red-500/30 shadow-[inset_0_0_10px_rgba(239,68,68,0.2)] flex items-center gap-3">
+                    <span className="uppercase text-red-500/80 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">Cooldown:</span>
+                    <span>{formatTime(timeLeft)}</span>
+                  </div>
+                  <p className="mt-4 text-[9px] text-red-500/50 uppercase tracking-widest font-mono">All stones are currently unstable</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto w-full">
+                  {ALL_STONES.map(s => <StoneCard key={s} stoneKey={s} />)}
+                </div>
+              )}
             </div>
 
             {/* Supreme Snap Logic */}
@@ -629,10 +673,10 @@ const MissionInterface = () => {
                 <div className="flex flex-col items-center text-center gap-5">
                   {/* Stone icon */}
                   <div
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                    style={{ backgroundColor: `${cfg.color}15`, color: cfg.color, boxShadow: `0 0 30px ${cfg.glow}` }}
+                    className="w-16 h-16 rounded-full flex items-center justify-center animate-[float_3s_ease-in-out_infinite]"
+                    style={{ boxShadow: `0 0 30px ${cfg.glow}` }}
                   >
-                    {cfg.icon}
+                    <img src={cfg.image} alt={cfg.label} className="w-full h-full object-cover rounded-full shadow-2xl" style={{ filter: `drop-shadow(0 0 10px ${cfg.color})` }} />
                   </div>
 
                   <div>
@@ -737,8 +781,8 @@ const MissionInterface = () => {
                         : "border-white/5 bg-white/[0.03] opacity-60 hover:opacity-100 hover:bg-white/[0.06]"
                         }`}
                     >
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${cfg.color}15`, color: cfg.color }}>
-                        {cfg.icon}
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110" style={{ boxShadow: `0 0 10px ${cfg.glow}` }}>
+                        <img src={cfg.image} alt={cfg.label} className="w-full h-full object-cover rounded-full" />
                       </div>
                       <span className="uppercase text-[10px] font-black tracking-widest text-white/80">{cfg.label}</span>
                     </button>
@@ -765,18 +809,21 @@ const MissionInterface = () => {
       {/* ─── STONE ACQUIRED SCREEN ─── */}
       {
         acquiredStone && (() => {
-          const cfg = STONE_CONFIG[acquiredStone] || { color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={80} />, label: acquiredStone };
+          const cfg = STONE_CONFIG[acquiredStone] || { color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={80} />, label: acquiredStone, image: "" };
           return (
             <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-8 animate-in zoom-in duration-700">
               <div className="relative">
                 <div className="absolute inset-0 blur-[120px] opacity-40 rounded-full" style={{ backgroundColor: cfg.color }} />
                 <div
-                  className="relative z-10 p-16 rounded-full bg-black/50 mb-8 shadow-2xl"
-                  style={{ border: `1px solid ${cfg.color}30`, boxShadow: `0 0 60px ${cfg.glow}` }}
+                  className="relative z-10 w-72 h-72 md:w-96 md:h-96 mb-8 animate-[float_4s_ease-in-out_infinite]"
                 >
-                  <div style={{ color: cfg.color, filter: `drop-shadow(0 0 30px ${cfg.color})` }}>
-                    {React.cloneElement(cfg.icon as React.ReactElement, { size: 80 })}
-                  </div>
+                  {cfg.image ? (
+                    <img src={cfg.image} alt={cfg.label} className="w-full h-full object-contain" style={{ filter: `drop-shadow(0 0 50px ${cfg.color}) drop-shadow(0 0 100px ${cfg.glow})` }} />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center rounded-full bg-black/50 border border-white/30 shadow-2xl" style={{ color: cfg.color, filter: `drop-shadow(0 0 30px ${cfg.color})`, boxShadow: `0 0 100px ${cfg.glow}, inset 0 0 40px ${cfg.glow}` }}>
+                      {React.cloneElement(cfg.icon as React.ReactElement, { size: 80 })}
+                    </div>
+                  )}
                 </div>
               </div>
 

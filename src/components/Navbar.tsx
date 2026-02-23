@@ -10,33 +10,34 @@ const Navbar = () => {
     const { score, allTeamsState, isFrozen, gameStarted } = useGame();
     const { formatted } = useTimer();
 
-    // Default starting stones: Time and Mind
-    const [ownedStones, setOwnedStones] = useState<string[]>(['time', 'mind']);
+    // Read directly from the dynamically updated context via socket
+    const myTeam = allTeamsState?.find(t => t.teamId === (team?.id || (team as any)?._id));
+    const ownedStones = myTeam?.stones || ['time', 'mind'];
+    const cooldownUntil = myTeam?.cooldownUntil || null;
 
-    // Fetch dynamic stone data from the API
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+
+    // Handle cooldown timer calculation
     useEffect(() => {
-        const fetchStones = async () => {
-            try {
-                const status = await getStoneStatus();
-                if (status && status.stoneType) {
-                    // Extract stones that have a count > 0
-                    const earned = Object.keys(status.stoneType).filter(key => status.stoneType[key] > 0);
-                    // Combine default stones with dynamically earned stones
-                    const combined = Array.from(new Set(['time', 'mind', ...earned]));
-                    setOwnedStones(combined);
-                }
-            } catch (error) {
-                console.error("Error syncing stone status:", error);
-            }
-        };
-
-        if (gameStarted) {
-            fetchStones();
-            // Poll for new stones every 15 seconds
-            const interval = setInterval(fetchStones, 15000);
-            return () => clearInterval(interval);
+        if (!cooldownUntil) {
+            setTimeLeft(0);
+            return;
         }
-    }, [gameStarted]);
+        const interval = setInterval(() => {
+            const diff = Math.max(0, Math.floor((new Date(cooldownUntil).getTime() - Date.now()) / 1000));
+            setTimeLeft(diff);
+            if (diff <= 0) clearInterval(interval);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [cooldownUntil]);
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, "0")}`;
+    };
+
+    const isCooldown = timeLeft > 0;
 
     // Calculate rank dynamically
     const currentRank = [...(allTeamsState || [])]
@@ -55,7 +56,7 @@ const Navbar = () => {
 
     return (
         <nav className="w-full h-16 border-b border-primary/30 bg-black flex items-center justify-between px-6 sticky top-0 z-50 overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-            
+
             {/* 1. LEFT: AKATSUKI LOGO & TEAM STATUS */}
             <div className="flex items-center gap-4 w-1/3">
                 <div className="relative flex items-center justify-center h-12 w-auto">
@@ -65,7 +66,7 @@ const Navbar = () => {
                         className="h-full w-auto object-contain drop-shadow-[0_0_10px_rgba(230,36,41,0.6)]"
                     />
                 </div>
-                
+
                 <div className="h-8 w-[1px] bg-white/10 mx-1 hidden md:block"></div>
 
                 {/* Team Name moved to the left to prevent overlap with stones */}
@@ -83,39 +84,47 @@ const Navbar = () => {
             </div>
 
             {/* 2. MIDDLE: EXCLUSIVELY INFINITY STONES */}
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 md:gap-4">
-                {infinityStones.map((stone) => {
-                    const isUnlocked = ownedStones.includes(stone.id);
-
-                    return (
-                        <div 
-                            key={stone.id} 
-                            // Container is large to accommodate the big stone
-                            className="relative flex items-center justify-center w-12 h-12 md:w-16 md:h-16 transition-all duration-500"
-                            title={isUnlocked ? `${stone.label} Stone Active` : `Empty Socket`}
-                        >
-                            {/* SMALL Background Circle / Socket (Always visible, but small) */}
-                            <div className="absolute w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#050508] border border-white/10 shadow-[inset_0_4px_8px_rgba(0,0,0,1)] z-0" />
-
-                            {isUnlocked && (
-                                <>
-                                    {/* BIG Glowing Stone Image (Static glow, no blinking) */}
-                                    <img
-                                        src={stone.src}
-                                        alt={stone.label}
-                                        className="w-12 h-12 md:w-16 md:h-16 object-contain z-10 hover:scale-110 transition-transform duration-300"
-                                        style={{ filter: `drop-shadow(0 0 15px ${stone.color}) brightness(1.2)` }}
-                                    />
-                                    {/* Constant Ambient Glow centered on the stone */}
-                                    <div 
-                                        className="absolute w-10 h-10 rounded-full blur-xl opacity-40 pointer-events-none mix-blend-screen z-0"
-                                        style={{ backgroundColor: stone.color }}
-                                    />
-                                </>
-                            )}
+            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center">
+                <div className="flex items-center justify-center gap-2 md:gap-4 relative">
+                    {isCooldown && (
+                        <div className="absolute -bottom-6 bg-red-900/90 border border-red-500/50 px-4 py-0.5 rounded-full z-20 flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.5)] whitespace-nowrap animate-in slide-in-from-top-2">
+                            <Timer className="text-red-500 animate-pulse" size={14} />
+                            <span className="text-red-400 font-black font-mono text-[10px] md:text-xs tracking-widest">{formatTime(timeLeft)}</span>
                         </div>
-                    );
-                })}
+                    )}
+                    {infinityStones.map((stone) => {
+                        const isUnlocked = ownedStones.includes(stone.id);
+                        return (
+                            <div
+                                key={stone.id}
+                                className="relative flex items-center justify-center w-12 h-12 md:w-16 md:h-16 transition-all duration-500"
+                                title={isUnlocked ? (isCooldown ? "Cooldown Active" : `${stone.label} Stone Active`) : `Empty Socket`}
+                            >
+                                {/* SMALL Background Circle / Socket (Always visible, but small) */}
+                                <div className="absolute w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#050508] border border-white/10 shadow-[inset_0_4px_8px_rgba(0,0,0,1)] z-0" />
+
+                                {isUnlocked && (
+                                    <>
+                                        {/* BIG Glowing Stone Image (Static glow, no blinking) */}
+                                        <img
+                                            src={stone.src}
+                                            alt={stone.label}
+                                            className={`w-12 h-12 md:w-16 md:h-16 object-contain z-10 transition-transform duration-300 ${isCooldown ? "grayscale opacity-40 scale-95" : "hover:scale-110"}`}
+                                            style={{ filter: isCooldown ? undefined : `drop-shadow(0 0 15px ${stone.color}) brightness(1.2)` }}
+                                        />
+                                        {/* Constant Ambient Glow centered on the stone */}
+                                        {!isCooldown && (
+                                            <div
+                                                className="absolute w-10 h-10 rounded-full blur-xl opacity-40 pointer-events-none mix-blend-screen z-0"
+                                                style={{ backgroundColor: stone.color }}
+                                            />
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* 3. RIGHT: LIVE STATS HUD */}
@@ -128,7 +137,7 @@ const Navbar = () => {
                         {gameStarted ? formatted : "02:00:00"}
                     </span>
                 </div>
-                
+
                 <div className="text-right flex flex-col items-end">
                     <span className="text-[8px] uppercase text-white/30 block tracking-[0.2em] leading-none mb-1">
                         Global Rank
@@ -137,7 +146,7 @@ const Navbar = () => {
                         {gameStarted ? `#${currentRank}` : "—"}
                     </span>
                 </div>
-                
+
                 <div className="text-right flex flex-col items-end">
                     <span className="text-[8px] uppercase text-white/30 block tracking-[0.2em] leading-none mb-1">
                         Strategic Points

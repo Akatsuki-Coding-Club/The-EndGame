@@ -32,26 +32,26 @@ const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
       )}
 
       {/* Backdrop */}
-      <div 
+      <div
         className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-500 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={() => setIsOpen(false)}
       />
 
       {/* Sidebar Panel */}
-      <div 
+      <div
         className={`fixed top-0 left-0 h-full w-full max-w-[400px] bg-[#05050c]/98 border-r border-cyan-500/20 z-[70] transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) shadow-[20px_0_80px_rgba(0,0,0,0.8)] ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         {/* Top Internal Glow */}
         <div className="absolute top-0 right-0 w-[2px] h-full bg-gradient-to-b from-cyan-500/0 via-cyan-500/40 to-cyan-500/0" />
-        
+
         <div className="flex flex-col h-full font-mono">
           {/* Header */}
           <div className="p-6 pt-10 border-b border-white/5 flex justify-between items-center bg-black/40">
             <div>
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-cyan-400">Engage_Rules</h3>
-              <p className="text-[8px] text-white/20 uppercase tracking-widest mt-1">S.H.I.E.L.D. Secure File</p>
+              <h3 className="text-sm font-black uppercase tracking-[0.3em] text-cyan-400">Engage_Rules</h3>
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">S.H.I.E.L.D. Secure File</p>
             </div>
-            <button 
+            <button
               onClick={() => setIsOpen(false)}
               className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white"
             >
@@ -67,10 +67,10 @@ const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
                   {rule.icon}
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-white/90 group-hover:text-cyan-400 transition-colors">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-white group-hover:text-cyan-400 transition-colors">
                     {rule.title}
                   </h4>
-                  <p className="text-[9px] leading-relaxed text-slate-500 group-hover:text-slate-300 transition-colors">
+                  <p className="text-[11px] font-semibold leading-relaxed text-slate-400 group-hover:text-slate-200 transition-colors">
                     {rule.desc}
                   </p>
                 </div>
