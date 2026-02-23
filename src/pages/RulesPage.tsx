@@ -65,27 +65,30 @@ const RulesPage = () => {
     };
 
     const rules = [
-        { id: "01", title: "Mission First", desc: "Solve missions to earn points — each submission is final.", icon: <Info className="text-red-500" /> },
-        { id: "02", title: "Infinity Stones", desc: "Unlock at 300/600 points; max two stones per team.", icon: <Zap className="text-red-500" /> },
-        { id: "03", title: "Power Block", desc: "Enemies can freeze your editor for 120s via puzzles.", icon: <Lock className="text-red-500" /> },
-        { id: "04", title: "Shield Protocol", desc: "Blocks one stone attack automatically, then dissolves.", icon: <Shield className="text-red-500" /> },
-        { id: "05", title: "The Blip", desc: "Global freeze phase; only Blip puzzles can be solved.", icon: <Skull className="text-red-500" /> },
-        { id: "06", title: "Endgame Phase", desc: "Last 15m disable all stones — pure skill remains.", icon: <Play className="text-red-500" /> },
+        { id: "01", title: "Mission First", desc: "Solve missions to earn points — each submission is final.", icon: <Info /> },
+        { id: "02", title: "Infinity Stones", desc: "Unlock at 300/600 points; max two stones per team.", icon: <Zap /> },
+        { id: "03", title: "Power Block", desc: "Enemies can freeze your editor for 120s via puzzles.", icon: <Lock /> },
+        { id: "04", title: "Shield Protocol", desc: "Blocks one stone attack automatically, then dissolves.", icon: <Shield /> },
+        { id: "05", title: "The Blip", desc: "Global freeze phase; only Blip puzzles can be solved.", icon: <Skull /> },
+        { id: "06", title: "Endgame Phase", desc: "Last 15m disable all stones — pure skill remains.", icon: <Play /> },
     ];
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col items-center bg-[#050505] font-sans overflow-x-hidden">
+        <div className="relative h-screen w-full flex flex-col items-center bg-[#050505] font-sans overflow-x-hidden overflow-y-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-y-contain">
             
-            {/* FIXED: Called without props to resolve TS error */}
-            <Navbar />
-
-            <div className="absolute inset-0 z-0">
+            {/* BACKGROUND */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
                 <div
-                    className="h-full w-full bg-cover bg-center opacity-30 blur-[2px] scale-105 transition-all duration-1000"
+                    className="absolute inset-0 bg-cover bg-center opacity-30 blur-[2px] scale-105 transition-all duration-1000"
                     style={{ backgroundImage: `url('${bgImageUrl}')` }}
                 />
                 <div className="absolute inset-0 bg-[radial-gradient(circle,transparent_20%,rgba(0,0,0,0.95)_100%)]" />
                 <div className="absolute inset-0 bg-red-950/10 mix-blend-color" />
+            </div>
+
+            {/* NAVBAR */}
+            <div className="w-full sticky top-0 z-50 shrink-0">
+                <Navbar />
             </div>
 
             <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${showSecurityAlert ? "translate-y-0 opacity-100" : "-translate-y-40 opacity-0"}`}>
@@ -95,37 +98,40 @@ const RulesPage = () => {
                 </div>
             </div>
 
-            <div className="relative z-10 w-full max-w-5xl px-6 py-20 flex flex-col items-center">
-                <div className="w-full mb-12 flex flex-col items-center text-center">
+            {/* MAIN CONTENT AREA - Flex-1 perfectly centers content vertically without scrolling */}
+            <div className="relative z-10 w-full max-w-6xl px-6 flex-1 flex flex-col justify-center items-center py-6">
+                
+                {/* Header (Margins reduced) */}
+                <div className="w-full mb-8 flex flex-col items-center text-center">
                     <h2 className="text-[10px] tracking-[0.6em] text-red-600 font-black uppercase mb-2">Neural Link Established</h2>
-                    <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white italic uppercase">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white  uppercase">
                         Engagement <span className="text-[#e62429]">Rules</span>
                     </h1>
-                    <div className="h-[2px] w-48 bg-gradient-to-r from-transparent via-red-600 to-transparent mt-4 opacity-50" />
+                    <div className="h-[2px] w-32 md:w-48 bg-gradient-to-r from-transparent via-red-600 to-transparent mt-3 opacity-50" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-16">
+                {/* Rules Grid - Rectangular Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full mb-10">
                     {rules.map((rule, index) => (
                         <div
                             key={rule.id}
-                            className="group backdrop-blur-xl bg-white/[0.03] border border-white/10 p-8 rounded-3xl hover:border-red-600/50 transition-all duration-500 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 shadow-2xl"
+                            className="group backdrop-blur-xl bg-white/[0.02] border border-white/10 p-5 rounded-2xl hover:border-red-600/50 transition-all duration-500 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 shadow-lg flex items-start gap-4"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
-                            <div className="flex flex-col gap-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="p-3 bg-red-600/10 rounded-2xl border border-red-600/20 group-hover:bg-red-600 transition-colors duration-500">
-                                        {React.cloneElement(rule.icon as React.ReactElement, { size: 24, className: "group-hover:text-white transition-colors" })}
-                                    </div>
-                                    <span className="text-[10px] font-black text-white/20 tracking-widest">{rule.id}</span>
+                            {/* Icon on the Left */}
+                            <div className="p-3 bg-red-600/10 rounded-xl border border-red-600/20 group-hover:bg-red-600 transition-colors duration-500 shrink-0 shadow-inner">
+                                {React.cloneElement(rule.icon as React.ReactElement, { size: 20, className: "group-hover:text-white transition-colors text-red-500" })}
+                            </div>
+
+                            {/* Text on the Right */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <h3 className="text-sm md:text-base font-black tracking-tight text-white uppercase italic group-hover:text-cyan-400 transition-colors truncate">
+                                        {rule.title}
+                                    </h3>
+                                    <span className="text-[9px] font-black text-white/20 tracking-widest shrink-0 ml-2">{rule.id}</span>
                                 </div>
-                                <div className="space-y-2">
-                                    <h3 className="text-lg font-black tracking-tight text-white uppercase italic">{rule.title}</h3>
-                                    <p className="text-xs text-white/50 leading-relaxed font-medium uppercase tracking-wider">{rule.desc}</p>
-                                </div>
-                                <h3 className="text-lg font-bold text-white mb-3 tracking-tight uppercase group-hover:text-cyan-400 transition-colors">
-                                    {rule.title}
-                                </h3>
-                                <p className="text-sm text-slate-400 leading-relaxed font-light">
+                                <p className="text-[10px] md:text-xs text-slate-400 leading-relaxed font-medium uppercase tracking-wider">
                                     {rule.desc}
                                 </p>
                             </div>
@@ -133,23 +139,22 @@ const RulesPage = () => {
                     ))}
                 </div>
 
-                <div className="flex flex-col items-center gap-8">
+                {/* Bottom Action Area */}
+                <div className="flex flex-col items-center gap-5">
                     {!gameStarted && (
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="flex items-center gap-4">
-                                <span className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
-                                <span className="text-[10px] font-black tracking-[0.4em] text-red-500 uppercase animate-pulse">Waiting for Commander's Signal</span>
-                                <span className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
-                            </div>
+                        <div className="flex items-center gap-3">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-ping" />
+                            <span className="text-[9px] font-black tracking-[0.4em] text-red-500 uppercase animate-pulse">Waiting for Commander's Signal</span>
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-ping" />
                         </div>
                     )}
 
                     <button
                         onClick={handleEnterWarzone}
                         disabled={!gameStarted}
-                        className={`group relative px-16 py-5 font-black text-xs uppercase tracking-[0.5em] overflow-hidden transition-all rounded-xl shadow-2xl ${gameStarted
+                        className={`group relative px-12 py-4 font-black text-xs uppercase tracking-[0.5em] overflow-hidden transition-all rounded-xl shadow-2xl ${gameStarted
                             ? "bg-[#e62429] text-white hover:shadow-[0_0_30px_rgba(230,36,41,0.5)] active:scale-95"
-                            : "bg-white/5 text-white/20 cursor-not-allowed"
+                            : "bg-white/5 border border-white/10 text-white/20 cursor-not-allowed"
                             }`}
                     >
                         <span className="relative z-10">{gameStarted ? "Enter Warzone" : "System Offline"}</span>
@@ -157,6 +162,8 @@ const RulesPage = () => {
                     </button>
                 </div>
             </div>
+            
+            {/* Cinematic Scanlines */}
             <div className="pointer-events-none fixed inset-0 z-20 opacity-[0.06] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
         </div>
     );
