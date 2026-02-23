@@ -53,6 +53,7 @@ export interface GameState {
   isBlocked: boolean;
   frozenUntil: number | null;
   blipPuzzleSolved: boolean;
+  blipPuzzleQuestion?: string | null;
   blockPuzzleQuestion?: string | null;
   powersDisabled: boolean;
   gameDuration: number;
@@ -86,6 +87,7 @@ export interface GameState {
   isSnapping: boolean;
   snapWinner: TeamGameState | null;
   initiateSupremeSnap: () => Promise<void>;
+  isSocketConnected: boolean;
 }
 
 const GameContext = createContext<GameState | null>(null);
@@ -149,6 +151,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [isFrozen, setIsFrozen] = useState(false);
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
   const [blipPuzzleSolved, setBlipPuzzleSolved] = useState(false);
+  const [blipPuzzleQuestion, setBlipPuzzleQuestion] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<number | null>(null);
   const [blockPuzzleQuestion, setBlockPuzzleQuestion] = useState<string | null>(null);
@@ -160,10 +163,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [isSnapping, setIsSnapping] = useState(false);
   const [snapWinner, setSnapWinner] = useState<TeamGameState | null>(null);
 
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   const [powersDisabled, setPowersDisabled] = useState(false);
   const [gameLoading, setGameLoading] = useState(true);
-  const [notifications, setNotifications] = useState<{ id: string; message: string; type: "attack" | "success" | "system"; timestamp: string }[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string; message: string; type: "attack" | "success" | "system"; timestamp: string; fullTime?: string }[]>(() => {
+    try {
+      const stored = localStorage.getItem("systemLogs");
+      if (stored) return JSON.parse(stored);
+    } catch { }
+    return [];
+  });
   const [stones, setStones] = useState<StoneState>({
     shieldCount: 0,
     blockCount: 0,
@@ -183,10 +193,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const addNotification = useCallback((message: string, type: "attack" | "success" | "system") => {
-    setNotifications((prev) => [
-      { id: Math.random().toString(36).slice(2, 11), message, type, timestamp: new Date().toLocaleTimeString() },
-      ...prev,
-    ].slice(0, 20));
+    setNotifications((prev) => {
+      const updated = [
+        { id: Math.random().toString(36).slice(2, 11), message, type, timestamp: new Date().toLocaleTimeString(), fullTime: new Date().toISOString() },
+        ...prev,
+      ].slice(0, 50);
+      localStorage.setItem("systemLogs", JSON.stringify(updated));
+      return updated;
+    });
   }, []);
 
   const refreshTeams = useCallback(async () => {
@@ -300,6 +314,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     const onConnect = () => {
       console.log("✅ Socket connected:", s.id);
+      setIsSocketConnected(true);
 
       // Everybody joins dashboard to listen for global events (SCORE_UPDATE, etc)
       s.emit("JOIN_DASHBOARD");
@@ -313,6 +328,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     };
 
     s.on("connect", onConnect);
+    s.on("disconnect", () => {
+      setIsSocketConnected(false);
+    });
 
     // Dashboard Events (Admin & Leaderboard)
     // Only refresh teams if game hasn't ended to prevent flickering on conclusion page
@@ -408,8 +426,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       // BLIP puzzle delivered directly to team
       s.on("BLIP_PUZZLE", (puzzle: { question?: string; answer?: string; freezeDurationSec?: number }) => {
-        setBlipPuzzleSolved(true);
+        setBlipPuzzleSolved(false);
         setIsFrozen(true);
+        const duration = puzzle?.freezeDurationSec || 120;
+        setFrozenUntil(Date.now() + duration * 1000);
+        setBlipPuzzleQuestion(puzzle?.question || null);
         if (puzzle && puzzle.question) {
           addNotification(`Blip puzzle: ${puzzle.question}`, "system");
         }
@@ -572,9 +593,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const blockTeam = useCallback(
     async (targetTeamId: string) => {
-      if (powersDisabled || stones.blockCount <= 0) return;
+      if (powersDisabled || !stones.ownedStones.includes('power')) return;
       try {
-        const result = await api.useBlock(targetTeamId);
+        const result = await api.usePowerStone(targetTeamId);
 
         if (result.message.includes("Shield broke")) {
           toast.info("[INTRUSION_DETECTED]", {
@@ -593,7 +614,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         toast.error("[ERROR]", { description: e.message });
       }
     },
-    [stones.blockCount, powersDisabled, syncMyState, refreshTeams]
+    [stones.ownedStones, powersDisabled, syncMyState, refreshTeams]
   );
 
   const setFrozenState = useCallback((frozen: boolean, until?: number) => {
@@ -609,6 +630,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           addNotification(`${team?.name} BYPASSED BLIP PROTOCOL`, "success");
           setIsFrozen(false);
           setFrozenUntil(null);
+          setBlipPuzzleQuestion(null);
           setScore((prev) => prev + (result.points || 0));
           setBlipPuzzleSolved(false);
           toast.success("[DECRYPTION_SUCCESS]", { description: "Security challenge bypassed successfully." });
@@ -623,6 +645,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const solveBlipPuzzle = useCallback(() => {
     setBlipPuzzleSolved(false);
+    setBlipPuzzleQuestion(null);
     setIsFrozen(false);
     setFrozenUntil(null);
   }, []);
@@ -630,12 +653,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const triggerBlip = useCallback(
     async (blipNumber: 1 | 2) => {
       try {
-        await api.triggerBlip(blipNumber);
+        const res = await api.triggerBlip(blipNumber);
         await refreshTeams();
-        const me = await api.getMe();
-        const fUntil = me.frozenUntil ? new Date(me.frozenUntil).getTime() : null;
-        if (fUntil && Date.now() < fUntil && team) {
-          setFrozenState(true, fUntil);
+
+        toast.success(res.message || `Blip ${blipNumber} triggered`);
+
+        // If the user calling this is a team, we can check their own state
+        if (team) {
+          try {
+            const me = await api.getMe();
+            const fUntil = me.frozenUntil ? new Date(me.frozenUntil).getTime() : null;
+            if (fUntil && Date.now() < fUntil) {
+              setFrozenState(true, fUntil);
+            }
+          } catch (e) {
+            console.error("Failed to read own state post-blip", e)
+          }
         }
       } catch (e) {
         toast.error("[ERROR]", { description: (e as Error).message });
@@ -739,6 +772,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         isFrozen,
         frozenUntil,
         blipPuzzleSolved,
+        blipPuzzleQuestion,
         isBlocked,
         powersDisabled,
         allTeamsState,
@@ -773,6 +807,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         isSnapping,
         snapWinner,
         initiateSupremeSnap,
+        isSocketConnected,
       }}
     >
       <ShieldDefendModal />

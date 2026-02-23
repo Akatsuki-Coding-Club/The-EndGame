@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { useTimer } from "@/context/TimerContext";
 import { getStoneStatus } from "@/services/api";
+import { STONE_PROPERTIES } from "@/lib/stoneConfig";
 
 const Navbar = () => {
     const { logout, team } = useAuth();
@@ -12,7 +13,7 @@ const Navbar = () => {
 
     // Read directly from the dynamically updated context via socket
     const myTeam = allTeamsState?.find(t => t.teamId === (team?.id || (team as any)?._id));
-    const ownedStones = myTeam?.stones || ['time', 'mind'];
+    const ownedStones = (myTeam?.stones || []).map((s: string) => s.toLowerCase());
     const cooldownUntil = myTeam?.cooldownUntil || null;
 
     const [timeLeft, setTimeLeft] = useState<number>(0);
@@ -44,18 +45,10 @@ const Navbar = () => {
         .sort((a, b) => b.score - a.score)
         .findIndex(t => t.teamId === (team?.id || (team as any)?._id)) + 1;
 
-    // Infinity Stones Configuration
-    const infinityStones = [
-        { id: "space", label: "Space", color: "#3b82f6", src: "/space-stone.png" },
-        { id: "mind", label: "Mind", color: "#eab308", src: "/mind_stone.png" },
-        { id: "reality", label: "Reality", color: "#ef4444", src: "/reality-stone.png" },
-        { id: "power", label: "Power", color: "#a855f7", src: "/power-stone.png" },
-        { id: "time", label: "Time", color: "#22c55e", src: "/time-stone.png" },
-        { id: "soul", label: "Soul", color: "#f97316", src: "/soul_stone.jpg" },
-    ];
+    const STONES_ORDER = ["space", "mind", "reality", "power", "time", "soul"];
 
     return (
-        <nav className="w-full h-16 border-b border-primary/30 bg-black flex items-center justify-between px-6 sticky top-0 z-50 overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
+        <nav className="w-full h-16 border-b border-primary/30 bg-black flex items-center justify-between px-6 sticky top-0 z-50 shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
 
             {/* 1. LEFT: AKATSUKI LOGO & TEAM STATUS */}
             <div className="flex items-center gap-4 w-1/3">
@@ -92,13 +85,13 @@ const Navbar = () => {
                             <span className="text-red-400 font-black font-mono text-[10px] md:text-xs tracking-widest">{formatTime(timeLeft)}</span>
                         </div>
                     )}
-                    {infinityStones.map((stone) => {
-                        const isUnlocked = ownedStones.includes(stone.id);
+                    {STONES_ORDER.map((id) => {
+                        const stone = STONE_PROPERTIES[id];
+                        const isUnlocked = ownedStones.includes(id);
                         return (
                             <div
-                                key={stone.id}
-                                className="relative flex items-center justify-center w-12 h-12 md:w-16 md:h-16 transition-all duration-500"
-                                title={isUnlocked ? (isCooldown ? "Cooldown Active" : `${stone.label} Stone Active`) : `Empty Socket`}
+                                key={id}
+                                className="relative flex items-center justify-center w-12 h-12 md:w-16 md:h-16 transition-all duration-500 group"
                             >
                                 {/* SMALL Background Circle / Socket (Always visible, but small) */}
                                 <div className="absolute w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#050508] border border-white/10 shadow-[inset_0_4px_8px_rgba(0,0,0,1)] z-0" />
@@ -107,7 +100,7 @@ const Navbar = () => {
                                     <>
                                         {/* BIG Glowing Stone Image (Static glow, no blinking) */}
                                         <img
-                                            src={stone.src}
+                                            src={stone.image}
                                             alt={stone.label}
                                             className={`w-12 h-12 md:w-16 md:h-16 object-contain z-10 transition-transform duration-300 ${isCooldown ? "grayscale opacity-40 scale-95" : "hover:scale-110"}`}
                                             style={{ filter: isCooldown ? undefined : `drop-shadow(0 0 15px ${stone.color}) brightness(1.2)` }}
@@ -119,7 +112,24 @@ const Navbar = () => {
                                                 style={{ backgroundColor: stone.color }}
                                             />
                                         )}
+
+                                        {/* Custom Tooltip */}
+                                        <div className="absolute top-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 w-72 bg-[#05050a] border border-white/10 border-t-2 rounded-xl p-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-[100] shadow-[0_25px_50px_rgba(0,0,0,1)]" style={{ borderTopColor: stone.color }}>
+                                            <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: stone.color }}>{stone.label} Stone</p>
+                                            <p className="text-[10px] text-slate-300 font-mono uppercase tracking-widest leading-relaxed">
+                                                {isCooldown ? "Temporal instability detected. Cooldown phase active." : stone.desc}
+                                            </p>
+                                            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#05050a] border-t border-l border-white/10 rotate-45" />
+                                        </div>
                                     </>
+                                )}
+
+                                {!isUnlocked && (
+                                    <div className="absolute top-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 w-64 bg-black border border-white/5 border-t-2 border-white/20 rounded-xl p-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-[100] shadow-2xl">
+                                        <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-1 text-white/30">Empty Socket</p>
+                                        <p className="text-[9px] text-white/10 font-mono uppercase tracking-widest leading-relaxed">Artifact signature not detected in local continuum.</p>
+                                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-black border-t border-l border-white/5 rotate-45" />
+                                    </div>
                                 )}
                             </div>
                         );
@@ -133,7 +143,7 @@ const Navbar = () => {
                     <span className="text-[8px] uppercase text-white/30 block tracking-[0.2em] leading-none mb-1">
                         Remaining Time
                     </span>
-                    <span className={`text-lg font-bold italic font-mono leading-none drop-shadow-md ${gameStarted ? 'text-red-500' : 'text-slate-500'}`}>
+                    <span className={`text-lg font-bold font-mono leading-none drop-shadow-md ${gameStarted ? 'text-red-500' : 'text-slate-500'}`}>
                         {gameStarted ? formatted : "02:00:00"}
                     </span>
                 </div>
@@ -142,7 +152,7 @@ const Navbar = () => {
                     <span className="text-[8px] uppercase text-white/30 block tracking-[0.2em] leading-none mb-1">
                         Global Rank
                     </span>
-                    <span className="text-lg font-bold text-yellow-500 italic leading-none drop-shadow-md">
+                    <span className="text-lg font-bold text-yellow-500 leading-none drop-shadow-md">
                         {gameStarted ? `#${currentRank}` : "—"}
                     </span>
                 </div>

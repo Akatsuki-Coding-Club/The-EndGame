@@ -317,6 +317,10 @@ export async function getWaitingGames() {
   return request<{ games: any[] }>("/api/game/waiting");
 }
 
+export async function getEventLogs() {
+  return request<{ logs: any[] }>("/api/dashboard/events", { skipAuth: true });
+}
+
 export async function startGame(gameId: string) {
   return request<{ message: string }>(`/api/game/start/${gameId}`, { method: "POST" });
 }
@@ -363,7 +367,7 @@ export async function requestBlockUnlockPuzzle() {
 
 export async function submitBlockUnlock(answer: string) {
   return request<{ success: boolean; message: string }>(
-    "/api/game/block-unlock/submit",
+    "/api/stones/block/submit",
     { method: "POST", body: JSON.stringify({ answer }) }
   );
 }

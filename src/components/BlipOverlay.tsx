@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
-import { getBlipPuzzle } from "@/services/api";
 
 const BlipOverlay = () => {
-  const { submitBlipAnswer, frozenUntil, setIsFrozen } = useGame();
+  const { submitBlipAnswer, frozenUntil, setIsFrozen, blipPuzzleQuestion } = useGame();
   const [answer, setAnswer] = useState("");
   const [timeLeft, setTimeLeft] = useState(0);
-  const [question, setQuestion] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!frozenUntil || Date.now() >= frozenUntil) return;
-    getBlipPuzzle()
-      .then((res) => setQuestion(res?.question ?? null))
-      .catch(() => setQuestion(null));
-  }, [frozenUntil]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -22,7 +13,6 @@ const BlipOverlay = () => {
       setTimeLeft(remaining);
       if (remaining === 0) {
         setIsFrozen(false);
-        setQuestion(null);
         clearInterval(timer);
       }
     }, 1000);
@@ -44,7 +34,7 @@ const BlipOverlay = () => {
             Decryption Required
           </p>
           <p className="text-sm text-white leading-relaxed">
-            {question ?? "Loading puzzle..."}
+            {blipPuzzleQuestion ?? "Loading puzzle..."}
           </p>
         </div>
 

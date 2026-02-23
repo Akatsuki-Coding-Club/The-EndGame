@@ -16,6 +16,7 @@ const TIMELINE_META: Record<string, any> = {
     color: "#60a5fa", // Blue
     icon: <Globe size={24} />,
     image: "/space-stone.png",
+    bgImage: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=1000&auto=format&fit=crop", // Cityscape
     desc: "Navigate the 2012 invasion and retrieve the Tesseract before S.H.I.E.L.D. loses control.",
   },
   morag: {
@@ -24,6 +25,7 @@ const TIMELINE_META: Record<string, any> = {
     color: "#c084fc", // Purple
     icon: <Zap size={24} />,
     image: "/power-stone.png",
+    bgImage: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=1000&auto=format&fit=crop", // Cosmic/Nebula
     desc: "Infiltrate the abandoned celestial temple. Secure the Orb before the Ravagers arrive.",
   },
   asgard: {
@@ -32,6 +34,7 @@ const TIMELINE_META: Record<string, any> = {
     color: "#f87171", // Red
     icon: <Shield size={24} />,
     image: "/reality-stone.png",
+    bgImage: "https://wallpaperaccess.com/full/1135531.jpg", // Golden Space
     desc: "Extraction mission: Locate the Aether during the convergence of the Nine Realms.",
   },
   vormir: {
@@ -40,6 +43,7 @@ const TIMELINE_META: Record<string, any> = {
     color: "#fb923c", // Orange
     icon: <Skull size={24} />,
     image: "/soul_stone.jpg",
+    bgImage: "https://wallpaperaccess.com/full/6366684.jpg", // Eclipse
     desc: "Journey to the center of the universe. Be prepared for the ultimate sacrifice.",
   },
 };
@@ -63,7 +67,7 @@ const SpaceStonePicker = ({ escapedTimelines, onSelect, onClose }: SpaceStonePic
             </div>
             <div>
               <p className="text-[9px] font-mono tracking-[0.4em] text-blue-400 uppercase">Tesseract Protocol</p>
-              <h3 className="text-lg font-black uppercase italic text-white tracking-tight">Select Target</h3>
+              <h3 className="text-lg font-black uppercase text-white tracking-tight">Select Target</h3>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-all">
@@ -85,14 +89,13 @@ const SpaceStonePicker = ({ escapedTimelines, onSelect, onClose }: SpaceStonePic
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_15px_currentColor]" style={{ backgroundColor: `${meta.color}15`, color: meta.color }}>
                   {meta.image ? (
-                    <img src={meta.image} alt={meta.stone} className="w-full h-full object-cover rounded-full" style={{ filter: `drop-shadow(0 0 5px ${meta.color})` }} />
+                    <img src={meta.image} alt="artifact" className="w-full h-full object-cover rounded-full" style={{ filter: `drop-shadow(0 0 5px ${meta.color})` }} />
                   ) : (
                     React.cloneElement(meta.icon as React.ReactElement, { size: 18 })
                   )}
                 </div>
                 <div className="flex-1 min-w-0 relative z-10">
                   <p className="text-sm font-black uppercase text-white tracking-widest truncate group-hover:text-blue-100 transition-colors">{meta.label}</p>
-                  <p className="text-[9px] font-mono mt-1 uppercase tracking-[0.2em]" style={{ color: `${meta.color}80` }}>COORD: QR-{id.toUpperCase()}</p>
                 </div>
                 <ChevronRight size={18} className="text-white/10 group-hover:text-blue-400 group-hover:translate-x-1 transition-all shrink-0 relative z-10" />
               </button>
@@ -142,7 +145,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
               </div>
               <div>
                 <p className="text-[10px] font-mono tracking-[0.5em] text-cyan-400/80 uppercase mb-1">Class-S Artifact</p>
-                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Space Stone</h2>
+                <h2 className="text-3xl font-black uppercase text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Space Stone</h2>
                 <p className="text-[10px] text-blue-300/50 font-mono mt-1 tracking-widest animate-pulse">TESSERACT_PROTOCOL_READY</p>
               </div>
             </div>
@@ -163,7 +166,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
               <div className="flex items-center gap-5 p-5 rounded-2xl border" style={{ borderColor: `${meta.color}40`, backgroundColor: `${meta.color}10` }}>
                 <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: `${meta.color}20`, color: meta.color, boxShadow: `0 0 20px ${meta.color}40` }}>
                   {meta.image ? (
-                    <img src={meta.image} alt={meta.stone} className="w-full h-full object-cover rounded-full" style={{ filter: `drop-shadow(0 0 10px ${meta.color})` }} />
+                    <img src={meta.image} alt="artifact" className="w-full h-full object-cover rounded-full" style={{ filter: `drop-shadow(0 0 10px ${meta.color})` }} />
                   ) : (
                     React.cloneElement(meta.icon as React.ReactElement, { size: 24 })
                   )}
@@ -171,7 +174,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
                 <div>
                   <p className="text-lg font-black uppercase text-white tracking-widest">{meta.label}</p>
                   <p className="text-[10px] font-mono mt-1 tracking-[0.2em]" style={{ color: `${meta.color}90` }}>
-                    QR-{timeline.toUpperCase()} // OVERRIDE
+                    TARGET LOCKED
                   </p>
                 </div>
               </div>
@@ -312,19 +315,19 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
         <SpaceStoneModal timeline={spaceStoneTarget} onConfirm={handleSpaceStoneConfirm} onCancel={() => !spaceStoneLoading && setSpaceStoneTarget(null)} loading={spaceStoneLoading} />
       )}
 
-      <div className="p-8 md:p-12 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
+      <div className="p-6 md:p-8 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
 
         {/* Header Section */}
-        <div className="mb-14 flex flex-col md:flex-row md:items-end justify-between border-b border-white/10 pb-8 gap-6">
-          <div className="space-y-2 relative">
+        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between border-b border-white/10 pb-6 gap-6">
+          <div className="space-y-1 relative">
             {/* Ambient Title Glow */}
             <div className="absolute -inset-4 bg-cyan-500/10 blur-3xl rounded-full pointer-events-none" />
-            <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               Quantum <span className="text-cyan-400">Portal</span>
             </h2>
-            <p className="text-[10px] md:text-xs text-cyan-500/80 uppercase tracking-[0.5em] font-mono flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              Nexus Interface // Select Coordinate
+            <p className="text-[9px] md:text-[10px] text-cyan-500/80 uppercase tracking-[0.5em] font-mono flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              Select Timelines /  Collect Stones
             </p>
           </div>
 
@@ -332,161 +335,152 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
             {hasSpaceStone && (
               <button
                 onClick={handleSpaceStoneButtonClick}
-                className="flex items-center gap-3 px-5 py-3 rounded-xl border border-blue-400/40 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:border-blue-300/80 hover:shadow-[0_0_35px_rgba(59,130,246,0.4)] transition-all active:scale-95 group relative overflow-hidden"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-blue-400/40 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:border-blue-300/80 hover:shadow-[0_0_35px_rgba(59,130,246,0.4)] transition-all active:scale-95 group relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <img src="/space-stone.png" alt="Space Stone" className="w-5 h-5 object-cover rounded-full drop-shadow-[0_0_5px_rgba(59,130,246,0.8)] relative z-10 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-200 group-hover:text-white transition-colors relative z-10">
+                <img src="/space-stone.png" alt="Space Stone" className="w-4 h-4 object-cover rounded-full drop-shadow-[0_0_5px_rgba(59,130,246,0.8)] relative z-10 group-hover:scale-110 transition-transform" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-200 group-hover:text-white transition-colors relative z-10">
                   Space Stone Ready
                 </span>
                 {eligibleEscapedTimelines.length > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-blue-500 text-[10px] font-black text-white flex items-center justify-center relative z-10 shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                  <span className="w-4 h-4 rounded-full bg-blue-500 text-[8px] font-black text-white flex items-center justify-center relative z-10 shadow-[0_0_10px_rgba(0,0,0,0.5)]">
                     {eligibleEscapedTimelines.length}
                   </span>
                 )}
               </button>
             )}
-            <div className="hidden md:flex gap-1.5 opacity-50">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className={`w-1.5 h-8 rounded-full ${i % 2 === 0 ? 'bg-cyan-500/40 animate-pulse' : 'bg-white/20'}`} style={{ animationDelay: `${i * 200}ms` }} />
-              ))}
-            </div>
           </div>
         </div>
 
         {hasSpaceStone && eligibleEscapedTimelines.length > 0 && (
-          <div className="mb-10 flex items-center gap-4 px-6 py-5 rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-900/20 to-transparent relative overflow-hidden">
+          <div className="mb-8 flex items-center gap-3 px-5 py-4 rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-900/20 to-transparent relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,1)]" />
-            <img src="/space-stone.png" alt="Space Stone" className="w-6 h-6 object-cover rounded-full animate-pulse drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] shrink-0" />
-            <p className="text-[11px] font-mono text-blue-200/80 uppercase tracking-widest leading-relaxed">
-              <strong className="text-blue-300 font-black">Tesseract Available:</strong> Timelines marked with <RotateCcw size={10} className="inline mx-1 mb-0.5" /> can be re-entered. Click to engage.
+            <img src="/space-stone.png" alt="Space Stone" className="w-5 h-5 object-cover rounded-full animate-pulse drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] shrink-0" />
+            <p className="text-[10px] font-mono text-blue-200/80 uppercase tracking-widest leading-relaxed">
+              <strong className="text-blue-300 font-black">Tesseract Available:</strong> Timelines marked with <RotateCcw size={10} className="inline mx-1 mb-0.5" /> can be re-entered.
             </p>
           </div>
         )}
 
-        {/* Timelines Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* COMPACT TIMELINES GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {displayTimelines.map((id: string) => {
-            const meta = TIMELINE_META[id] || { label: id, stone: "Unknown", color: "#fff", icon: <Lock />, image: "", desc: "Classified info." };
+            const meta = TIMELINE_META[id] || { label: id, color: "#fff", icon: <Lock />, image: "", bgImage: "", desc: "Classified info." };
 
             const isDone = completedTimelines.includes(id);
-            const isActive = me?.currentTimeline === id;
             const isEscaped = escapedTimelines.includes(id);
             const canUseSpaceStone = isEscaped && hasSpaceStone && !isDone;
 
             return (
               <div
                 key={id}
-                className={`group relative p-8 backdrop-blur-xl border rounded-3xl transition-all duration-700 overflow-hidden ${isDone
+                onClick={() => handleCardClick(id)}
+                className={`group relative p-5 md:p-6 backdrop-blur-xl border rounded-2xl transition-all duration-500 overflow-hidden flex flex-col justify-between ${isDone
                   ? "border-green-500/20 bg-green-950/10 cursor-not-allowed opacity-80"
                   : canUseSpaceStone
-                    ? "border-blue-500/30 bg-blue-950/20 hover:border-blue-400/80 cursor-pointer hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(59,130,246,0.15)]"
-                    : "border-white/10 bg-white/[0.02] hover:border-cyan-500/50 hover:bg-cyan-950/30 cursor-pointer hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(34,211,238,0.1)]"
+                    ? "border-blue-500/30 bg-blue-950/20 hover:border-blue-400/80 cursor-pointer hover:-translate-y-1 hover:shadow-[0_15px_40px_rgba(59,130,246,0.15)]"
+                    : "border-white/10 bg-[#0a0a0f] hover:border-cyan-500/50 cursor-pointer hover:-translate-y-1 hover:shadow-[0_15px_40px_rgba(34,211,238,0.1)]"
                   }`}
-                onClick={() => handleCardClick(id)}
               >
-                {/* Cinematic Background Glow on Hover */}
+                {/* NEW: Background Image Layer */}
+                {!isDone && meta.bgImage && (
+                  <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                    <img
+                      src={meta.bgImage}
+                      alt={meta.label}
+                      className="w-full h-full object-cover opacity-20 group-hover:opacity-40 group-hover:scale-105 transition-all duration-700 mix-blend-luminosity"
+                    />
+                    {/* Gradient to ensure text is always readable over the image */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#05050c] via-[#05050c]/80 to-transparent" />
+                  </div>
+                )}
+
+                {/* Cinematic Color Glow on Hover */}
                 {!isDone && (
                   <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen"
-                    style={{ background: `radial-gradient(circle at 80% 20%, ${meta.color}20, transparent 60%)` }}
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen z-0"
+                    style={{ background: `radial-gradient(circle at 80% 20%, ${meta.color}30, transparent 70%)` }}
                   />
                 )}
 
-                {/* Background Giant Image */}
-                <div className="absolute -right-12 -top-12 opacity-10 rotate-12 group-hover:-rotate-12 group-hover:scale-110 group-hover:opacity-20 transition-all duration-1000 pointer-events-none mix-blend-overlay w-64 h-64">
+                {/* Background Giant Abstract Image */}
+                <div className="absolute -right-6 -top-6 opacity-10 rotate-12 group-hover:-rotate-6 group-hover:scale-110 group-hover:opacity-20 transition-all duration-700 pointer-events-none mix-blend-overlay w-40 h-40 z-0">
                   {meta.image ? (
-                    <img src={meta.image} alt={meta.stone} className="w-full h-full object-contain blur-[2px]" />
+                    <img src={meta.image} alt="artifact background" className="w-full h-full object-contain blur-[1px]" />
                   ) : (
-                    <div className="text-white opacity-20 flex items-center justify-center w-full h-full">
-                      {React.cloneElement(meta.icon as React.ReactElement, { size: 220 })}
+                    <div className="text-white flex items-center justify-center w-full h-full">
+                      {React.cloneElement(meta.icon as React.ReactElement, { size: 140 })}
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-between items-start mb-12 relative z-10">
+                <div className="flex justify-between items-start mb-6 relative z-10">
                   <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 group-hover:shadow-[0_0_25px_-5px_currentColor] border border-white/5 group-hover:scale-110 group-hover:rotate-12 outline outline-1 outline-offset-4 outline-transparent group-hover:outline-cyan-500/20"
-                    style={{ backgroundColor: `${meta.color}15`, color: meta.color }}
+                    className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 group-hover:shadow-[0_0_20px_-5px_currentColor] border border-white/5 group-hover:scale-110 group-hover:rotate-12 bg-black/50 backdrop-blur-md"
+                    style={{ color: meta.color }}
                   >
                     {meta.image ? (
-                      <img src={meta.image} alt={meta.stone} className="w-full h-full object-cover rounded-full p-1 drop-shadow-lg" style={{ filter: `drop-shadow(0 0 10px ${meta.color})` }} />
+                      <img src={meta.image} alt="artifact" className="w-full h-full object-cover rounded-full p-1 drop-shadow-md" style={{ filter: `drop-shadow(0 0 8px ${meta.color})` }} />
                     ) : (
-                      React.cloneElement(meta.icon as React.ReactElement, { size: 28 })
+                      React.cloneElement(meta.icon as React.ReactElement, { size: 22 })
                     )}
                   </div>
 
-                  <div className="flex flex-col items-end gap-3">
-                    {/* Status Badge */}
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-end gap-2">
+                    {/* Status Badges */}
+                    <div className="flex items-center gap-1.5">
                       {isEscaped && !hasSpaceStone && !isDone && (
-                        <span className="text-[9px] font-black uppercase px-3 py-1.5 rounded-full border border-orange-500/40 bg-orange-500/10 text-orange-400 tracking-[0.2em] shadow-[0_0_15px_rgba(249,115,22,0.15)] backdrop-blur-md">
+                        <span className="text-[8px] font-black uppercase px-2.5 py-1 rounded-full border border-orange-500/40 bg-orange-500/10 text-orange-400 tracking-[0.2em] shadow-[0_0_10px_rgba(249,115,22,0.15)] backdrop-blur-md">
                           Escaped
                         </span>
                       )}
-
-                      <span
-                        className={`text-[10px] flex items-center gap-2 font-black uppercase px-4 py-1.5 rounded-full border tracking-[0.25em] shadow-xl backdrop-blur-md ${isDone ? "border-green-500/50 bg-green-500/10 text-green-400" : "border-white/10 bg-black/40 text-white/50 group-hover:border-white/20 group-hover:text-white/80 transition-colors"
-                          }`}
-                      >
-                        {meta.image && (
-                          <img src={meta.image} alt={meta.stone} className="w-3 h-3 rounded-full object-cover shadow-sm" />
-                        )}
-                        {isDone ? "Secured" : `${meta.stone} Stone`}
-                      </span>
                     </div>
 
                     {canUseSpaceStone && (
-                      <span className="text-[9px] font-black uppercase px-3 py-1.5 rounded-full border border-blue-400/50 bg-blue-500/20 text-blue-200 tracking-[0.2em] flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)] backdrop-blur-md">
-                        <Sparkles size={10} className="animate-pulse" />
-                        Space Stone Route
+                      <span className="text-[8px] font-black uppercase px-2.5 py-1 rounded-full border border-blue-400/50 bg-blue-500/20 text-blue-200 tracking-[0.2em] flex items-center gap-1.5 shadow-[0_0_10px_rgba(59,130,246,0.3)] backdrop-blur-md">
+                        <Sparkles size={8} className="animate-pulse" />
+                        Space Route
                       </span>
                     )}
-
-                    <p className="text-[9px] text-white/20 uppercase tracking-[0.3em] font-mono mt-1 opacity-70">
-                      QR-{id.toUpperCase()}
-                    </p>
                   </div>
                 </div>
 
-                <div className="relative z-10">
+                <div className="relative z-10 mb-4">
                   <h3
-                    className="text-3xl font-black uppercase tracking-tight text-white mb-4 transition-colors duration-300"
-                    style={{ textShadow: `0 2px 10px rgba(0,0,0,0.5)` }}
+                    className="text-2xl font-black uppercase tracking-tight text-white mb-2 transition-colors duration-300"
+                    style={{ textShadow: `0 2px 10px rgba(0,0,0,0.8)` }}
                   >
                     {meta.label}
                   </h3>
-                  <p className="text-sm text-white/40 leading-relaxed font-medium max-w-[90%] group-hover:text-white/60 transition-colors">
+                  <p className="text-xs text-white/50 leading-relaxed font-medium max-w-[95%] group-hover:text-white/70 transition-colors">
                     {meta.desc}
                   </p>
                 </div>
 
-                {/* Footer Action Area */}
-                <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between relative z-10">
+                {/* Cyber-line Footer Action Area */}
+                <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between relative z-10 w-full group">
                   {isDone ? (
-                    <div className="flex items-center gap-3 text-green-500/70 text-[11px] font-black uppercase tracking-[0.2em]">
-                      <Shield size={16} /> Timeline Stabilized
+                    <div className="flex items-center gap-2 text-green-500/70 text-[10px] font-black uppercase tracking-[0.2em] ml-auto">
+                      <Shield size={16} /> Stabilized
                     </div>
                   ) : canUseSpaceStone ? (
-                    <div className="flex items-center gap-3 text-blue-400 text-[11px] font-black uppercase tracking-[0.2em] group-hover:text-blue-300 group-hover:translate-x-2 transition-all">
-                      <Sparkles size={16} className="animate-pulse" /> Engage Tesseract <ChevronRight size={18} className="opacity-50" />
-                    </div>
+                    <>
+                      <div className="h-[1px] bg-blue-500/20 group-hover:bg-blue-400/60 flex-1 transition-colors mr-3" />
+                      <Sparkles size={16} className="text-blue-400 animate-pulse group-hover:translate-x-1 transition-transform" />
+                    </>
                   ) : (
-                    <div className="flex items-center gap-3 text-cyan-600 text-[11px] font-black uppercase tracking-[0.2em] group-hover:text-cyan-400 group-hover:translate-x-2 transition-all">
-                      <Fingerprint size={16} className="opacity-70 group-hover:opacity-100 group-hover:animate-pulse" />
-                      {isActive ? "Return to Mission" : "Initiate Warp Jump"}
-                      <ChevronRight size={18} className="opacity-50" />
-                    </div>
+                    <>
+                      <div className="h-[1px] bg-cyan-500/20 group-hover:bg-cyan-400/60 flex-1 transition-colors relative overflow-hidden mr-3">
+                        <div className="absolute inset-y-0 left-0 bg-cyan-400 w-0 group-hover:w-full transition-all duration-500" />
+                      </div>
+                      <ChevronRight size={18} className="text-cyan-600 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                    </>
                   )}
                 </div>
 
-                {/* HUD Corner Accents */}
-                <div className={`absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 rounded-tr-3xl transition-colors duration-500 pointer-events-none ${isDone ? "border-green-500/10" : canUseSpaceStone ? "border-blue-500/20 group-hover:border-blue-400/80" : "border-white/5 group-hover:border-cyan-400/50"
-                  }`}
-                />
-                <div className={`absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 rounded-bl-3xl transition-colors duration-500 pointer-events-none ${isDone ? "border-green-500/10" : canUseSpaceStone ? "border-blue-500/20 group-hover:border-blue-400/80" : "border-white/5 group-hover:border-cyan-400/50"
-                  }`}
-                />
+                {/* Compact HUD Corner Accents */}
+                <div className={`absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 rounded-tr-2xl transition-colors duration-500 pointer-events-none ${isDone ? "border-green-500/10" : canUseSpaceStone ? "border-blue-500/20 group-hover:border-blue-400/80" : "border-white/5 group-hover:border-cyan-400/50"}`} />
+                <div className={`absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 rounded-bl-2xl transition-colors duration-500 pointer-events-none ${isDone ? "border-green-500/10" : canUseSpaceStone ? "border-blue-500/20 group-hover:border-blue-400/80" : "border-white/5 group-hover:border-cyan-400/50"}`} />
               </div>
             );
           })}
