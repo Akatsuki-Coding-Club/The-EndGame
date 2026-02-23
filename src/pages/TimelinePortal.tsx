@@ -67,7 +67,7 @@ const SpaceStonePicker = ({ escapedTimelines, onSelect, onClose }: SpaceStonePic
             </div>
             <div>
               <p className="text-[9px] font-mono tracking-[0.4em] text-blue-400 uppercase">Tesseract Protocol</p>
-              <h3 className="text-lg font-black uppercase italic text-white tracking-tight">Select Target</h3>
+              <h3 className="text-lg font-black uppercase text-white tracking-tight">Select Target</h3>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-all">
@@ -89,14 +89,13 @@ const SpaceStonePicker = ({ escapedTimelines, onSelect, onClose }: SpaceStonePic
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-[0_0_15px_currentColor]" style={{ backgroundColor: `${meta.color}15`, color: meta.color }}>
                   {meta.image ? (
-                    <img src={meta.image} alt={meta.stone} className="w-full h-full object-cover rounded-full" style={{ filter: `drop-shadow(0 0 5px ${meta.color})` }} />
+                    <img src={meta.image} alt="artifact" className="w-full h-full object-cover rounded-full" style={{ filter: `drop-shadow(0 0 5px ${meta.color})` }} />
                   ) : (
                     React.cloneElement(meta.icon as React.ReactElement, { size: 18 })
                   )}
                 </div>
                 <div className="flex-1 min-w-0 relative z-10">
                   <p className="text-sm font-black uppercase text-white tracking-widest truncate group-hover:text-blue-100 transition-colors">{meta.label}</p>
-                  <p className="text-[9px] font-mono mt-1 uppercase tracking-[0.2em]" style={{ color: `${meta.color}80` }}>COORD: QR-{id.toUpperCase()}</p>
                 </div>
                 <ChevronRight size={18} className="text-white/10 group-hover:text-blue-400 group-hover:translate-x-1 transition-all shrink-0 relative z-10" />
               </button>
@@ -146,7 +145,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
               </div>
               <div>
                 <p className="text-[10px] font-mono tracking-[0.5em] text-cyan-400/80 uppercase mb-1">Class-S Artifact</p>
-                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Space Stone</h2>
+                <h2 className="text-3xl font-black uppercase text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Space Stone</h2>
                 <p className="text-[10px] text-blue-300/50 font-mono mt-1 tracking-widest animate-pulse">TESSERACT_PROTOCOL_READY</p>
               </div>
             </div>
@@ -167,7 +166,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
               <div className="flex items-center gap-5 p-5 rounded-2xl border" style={{ borderColor: `${meta.color}40`, backgroundColor: `${meta.color}10` }}>
                 <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: `${meta.color}20`, color: meta.color, boxShadow: `0 0 20px ${meta.color}40` }}>
                   {meta.image ? (
-                    <img src={meta.image} alt={meta.stone} className="w-full h-full object-cover rounded-full" style={{ filter: `drop-shadow(0 0 10px ${meta.color})` }} />
+                    <img src={meta.image} alt="artifact" className="w-full h-full object-cover rounded-full" style={{ filter: `drop-shadow(0 0 10px ${meta.color})` }} />
                   ) : (
                     React.cloneElement(meta.icon as React.ReactElement, { size: 24 })
                   )}
@@ -175,7 +174,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
                 <div>
                   <p className="text-lg font-black uppercase text-white tracking-widest">{meta.label}</p>
                   <p className="text-[10px] font-mono mt-1 tracking-[0.2em]" style={{ color: `${meta.color}90` }}>
-                    QR-{timeline.toUpperCase()} // OVERRIDE
+                    TARGET LOCKED
                   </p>
                 </div>
               </div>
@@ -323,7 +322,7 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
           <div className="space-y-1 relative">
             {/* Ambient Title Glow */}
             <div className="absolute -inset-4 bg-cyan-500/10 blur-3xl rounded-full pointer-events-none" />
-            <h2 className="text-3xl md:text-4xl font-black  uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               Quantum <span className="text-cyan-400">Portal</span>
             </h2>
             <p className="text-[9px] md:text-[10px] text-cyan-500/80 uppercase tracking-[0.5em] font-mono flex items-center gap-3">
@@ -350,11 +349,6 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
                 )}
               </button>
             )}
-            <div className="hidden md:flex gap-1.5 opacity-50">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className={`w-1.5 h-8 rounded-full ${i % 2 === 0 ? 'bg-cyan-500/40 animate-pulse' : 'bg-white/20'}`} style={{ animationDelay: `${i * 200}ms` }} />
-              ))}
-            </div>
           </div>
         </div>
 
@@ -371,10 +365,9 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
         {/* COMPACT TIMELINES GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {displayTimelines.map((id: string) => {
-            const meta = TIMELINE_META[id] || { label: id, stone: "Unknown", color: "#fff", icon: <Lock />, image: "", bgImage: "", desc: "Classified info." };
+            const meta = TIMELINE_META[id] || { label: id, color: "#fff", icon: <Lock />, image: "", bgImage: "", desc: "Classified info." };
 
             const isDone = completedTimelines.includes(id);
-            const isActive = me?.currentTimeline === id;
             const isEscaped = escapedTimelines.includes(id);
             const canUseSpaceStone = isEscaped && hasSpaceStone && !isDone;
 
@@ -382,7 +375,7 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
               <div
                 key={id}
                 onClick={() => handleCardClick(id)}
-                className={`group relative p-5 md:p-6 backdrop-blur-xl border rounded-2xl transition-all duration-500 overflow-hidden ${isDone
+                className={`group relative p-5 md:p-6 backdrop-blur-xl border rounded-2xl transition-all duration-500 overflow-hidden flex flex-col justify-between ${isDone
                   ? "border-green-500/20 bg-green-950/10 cursor-not-allowed opacity-80"
                   : canUseSpaceStone
                     ? "border-blue-500/30 bg-blue-950/20 hover:border-blue-400/80 cursor-pointer hover:-translate-y-1 hover:shadow-[0_15px_40px_rgba(59,130,246,0.15)]"
@@ -392,10 +385,10 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
                 {/* NEW: Background Image Layer */}
                 {!isDone && meta.bgImage && (
                   <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                    <img 
-                      src={meta.bgImage} 
-                      alt={meta.label} 
-                      className="w-full h-full object-cover opacity-20 group-hover:opacity-40 group-hover:scale-105 transition-all duration-700 mix-blend-luminosity" 
+                    <img
+                      src={meta.bgImage}
+                      alt={meta.label}
+                      className="w-full h-full object-cover opacity-20 group-hover:opacity-40 group-hover:scale-105 transition-all duration-700 mix-blend-luminosity"
                     />
                     {/* Gradient to ensure text is always readable over the image */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#05050c] via-[#05050c]/80 to-transparent" />
@@ -413,7 +406,7 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
                 {/* Background Giant Abstract Image */}
                 <div className="absolute -right-6 -top-6 opacity-10 rotate-12 group-hover:-rotate-6 group-hover:scale-110 group-hover:opacity-20 transition-all duration-700 pointer-events-none mix-blend-overlay w-40 h-40 z-0">
                   {meta.image ? (
-                    <img src={meta.image} alt={meta.stone} className="w-full h-full object-contain blur-[1px]" />
+                    <img src={meta.image} alt="artifact background" className="w-full h-full object-contain blur-[1px]" />
                   ) : (
                     <div className="text-white flex items-center justify-center w-full h-full">
                       {React.cloneElement(meta.icon as React.ReactElement, { size: 140 })}
@@ -427,7 +420,7 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
                     style={{ color: meta.color }}
                   >
                     {meta.image ? (
-                      <img src={meta.image} alt={meta.stone} className="w-full h-full object-cover rounded-full p-1 drop-shadow-md" style={{ filter: `drop-shadow(0 0 8px ${meta.color})` }} />
+                      <img src={meta.image} alt="artifact" className="w-full h-full object-cover rounded-full p-1 drop-shadow-md" style={{ filter: `drop-shadow(0 0 8px ${meta.color})` }} />
                     ) : (
                       React.cloneElement(meta.icon as React.ReactElement, { size: 22 })
                     )}
@@ -441,16 +434,6 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
                           Escaped
                         </span>
                       )}
-
-                      <span
-                        className={`text-[9px] flex items-center gap-1.5 font-black uppercase px-3 py-1 rounded-full border tracking-[0.2em] shadow-lg backdrop-blur-md ${isDone ? "border-green-500/50 bg-green-500/10 text-green-400" : "border-white/10 bg-black/60 text-white/60 group-hover:border-white/20 group-hover:text-white/90 transition-colors"
-                          }`}
-                      >
-                        {meta.image && (
-                          <img src={meta.image} alt={meta.stone} className="w-2.5 h-2.5 rounded-full object-cover shadow-sm" />
-                        )}
-                        {isDone ? "Secured" : `${meta.stone}`}
-                      </span>
                     </div>
 
                     {canUseSpaceStone && (
@@ -459,14 +442,10 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
                         Space Route
                       </span>
                     )}
-
-                    <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-mono mt-0.5">
-                      QR-{id.toUpperCase()}
-                    </p>
                   </div>
                 </div>
 
-                <div className="relative z-10">
+                <div className="relative z-10 mb-4">
                   <h3
                     className="text-2xl font-black uppercase tracking-tight text-white mb-2 transition-colors duration-300"
                     style={{ textShadow: `0 2px 10px rgba(0,0,0,0.8)` }}
@@ -478,22 +457,24 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
                   </p>
                 </div>
 
-                {/* Footer Action Area */}
-                <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between relative z-10">
+                {/* Cyber-line Footer Action Area */}
+                <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between relative z-10 w-full group">
                   {isDone ? (
-                    <div className="flex items-center gap-2 text-green-500/70 text-[10px] font-black uppercase tracking-[0.2em]">
-                      <Shield size={14} /> Stabilized
+                    <div className="flex items-center gap-2 text-green-500/70 text-[10px] font-black uppercase tracking-[0.2em] ml-auto">
+                      <Shield size={16} /> Stabilized
                     </div>
                   ) : canUseSpaceStone ? (
-                    <div className="flex items-center gap-2 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-blue-300 group-hover:translate-x-1.5 transition-all">
-                      <Sparkles size={14} className="animate-pulse" /> Engage Tesseract <ChevronRight size={16} className="opacity-50" />
-                    </div>
+                    <>
+                      <div className="h-[1px] bg-blue-500/20 group-hover:bg-blue-400/60 flex-1 transition-colors mr-3" />
+                      <Sparkles size={16} className="text-blue-400 animate-pulse group-hover:translate-x-1 transition-transform" />
+                    </>
                   ) : (
-                    <div className="flex items-center gap-2 text-cyan-600 text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-cyan-400 group-hover:translate-x-1.5 transition-all">
-                      <Fingerprint size={14} className="opacity-70 group-hover:opacity-100 group-hover:animate-pulse" />
-                      {isActive ? "Return to Mission" : "Initiate Warp Jump"}
-                      <ChevronRight size={16} className="opacity-50" />
-                    </div>
+                    <>
+                      <div className="h-[1px] bg-cyan-500/20 group-hover:bg-cyan-400/60 flex-1 transition-colors relative overflow-hidden mr-3">
+                        <div className="absolute inset-y-0 left-0 bg-cyan-400 w-0 group-hover:w-full transition-all duration-500" />
+                      </div>
+                      <ChevronRight size={18} className="text-cyan-600 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                    </>
                   )}
                 </div>
 

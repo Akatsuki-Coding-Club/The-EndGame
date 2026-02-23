@@ -23,72 +23,9 @@ import {
   Info
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { STONE_PROPERTIES } from "@/lib/stoneConfig";
 
 /* ─── Stone config: single source of truth for colors / icons / labels ─── */
-const STONE_CONFIG: Record<string, {
-  label: string;
-  color: string;       // hex
-  glow: string;        // rgba for box-shadow
-  borderColor: string; // tailwind-compatible hex for inline style
-  icon: React.ReactNode;
-  image: string;
-  desc: string;
-}> = {
-  time: {
-    label: "Time",
-    color: "#34d399",
-    glow: "rgba(52,211,153,0.5)",
-    borderColor: "#34d399",
-    icon: <Clock size={22} />,
-    image: "/time-stone.png",
-    desc: "Instantly escape this timeline. Progress is saved — re-enter later with the Space Stone.",
-  },
-  mind: {
-    label: "Mind",
-    color: "#fbbf24",
-    glow: "rgba(251,191,36,0.5)",
-    borderColor: "#fbbf24",
-    icon: <Brain size={22} />,
-    image: "/mind_stone.png",
-    desc: "Decrypts a substantial hint for the current objective.",
-  },
-  space: {
-    label: "Space",
-    color: "#60a5fa",
-    glow: "rgba(96,165,250,0.5)",
-    borderColor: "#60a5fa",
-    icon: <Globe size={22} />,
-    image: "/space-stone.png",
-    desc: "Dimensional portal access — use from the Dashboard to re-enter escaped timelines.",
-  },
-  power: {
-    label: "Power",
-    color: "#c084fc",
-    glow: "rgba(192,132,252,0.5)",
-    borderColor: "#c084fc",
-    icon: <Flame size={22} />,
-    image: "/power-stone.png",
-    desc: "Launch an orbital strike on a rival team to impede their progress.",
-  },
-  reality: {
-    label: "Reality",
-    color: "#f87171",
-    glow: "rgba(248,113,113,0.5)",
-    borderColor: "#f87171",
-    icon: <Eye size={22} />,
-    image: "/reality-stone.png",
-    desc: "Rewrite the laws of physics. Your next answer will be accepted as correct.",
-  },
-  soul: {
-    label: "Soul",
-    color: "#fb923c",
-    glow: "rgba(251,146,60,0.5)",
-    borderColor: "#fb923c",
-    icon: <Skull size={22} />,
-    image: "/soul_stone.jpg",
-    desc: "Sacrifice one of your earned stones to gain a massive point boost.",
-  },
-};
 
 /* ─── Define the specific type for a Timeline Theme ─── */
 // This fixes the TypeScript error by ensuring all properties are accounted for.
@@ -110,7 +47,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-blue-600 hover:bg-blue-500",
     font: "font-mono tracking-tight",
     glow: "shadow-[0_0_50px_rgba(29,78,216,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-abstract-blue-and-purple-ink-in-water-21501-large.mp4",
+    videoBg: "/morag.mp4",
     shadow: "shadow-[0_0_30px_rgba(29,78,216,0.1)]", // Added missing property
     animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
@@ -120,7 +57,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-amber-500 hover:bg-amber-400",
     font: "font-serif tracking-wide uppercase",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-golden-particles-in-the-air-2342-large.mp4",
+    videoBg: "/asgard.mp4",
     shadow: "shadow-[0_0_30px_rgba(245,158,11,0.1)]", // Added missing property
     animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
@@ -128,7 +65,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     name: "DOMAIN OF VORMIR",
     primary: "text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]",
     secondary: "bg-orange-700 hover:bg-orange-500 text-white shadow-[0_0_20px_rgba(194,65,12,0.5)] transition-all duration-300",
-    font: "font-serif italic tracking-[0.4em]",
+    font: "font-serif tracking-[0.4em]",
     glow: "shadow-[0_0_80px_rgba(234,88,12,0.15)] border border-orange-900/40",
     videoBg: "/vormir.mp4",
     shadow: "shadow-[0_0_40px_rgba(234,88,12,0.1)]", // Added missing property
@@ -209,7 +146,7 @@ const MissionInterface = () => {
       }
       // ✅ Pull stone list directly from the team's actual 'stones' string array
       if (me && Array.isArray(me.stones)) {
-        setMyStones(me.stones);
+        setMyStones(me.stones.map((s: string) => s.toLowerCase()));
       }
     } catch {
       console.error("Failed to fetch stone status");
@@ -374,7 +311,7 @@ const MissionInterface = () => {
 
   /* ─── Premium Stone Card ─── */
   const StoneCard = ({ stoneKey }: { stoneKey: string }) => {
-    const cfg = STONE_CONFIG[stoneKey];
+    const cfg = STONE_PROPERTIES[stoneKey];
     const owned = hasStone(stoneKey);
     const isSpace = stoneKey === "space";
     // Space stone is always disabled in mission (dashboard only)
@@ -389,11 +326,11 @@ const MissionInterface = () => {
     return (
       <div
         onClick={handleClick}
-        className={`relative flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all duration-300 select-none
+        className={`relative flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all duration-300 select-none group
           ${owned
             ? isDisabled
               ? "border-white/5 bg-black/30 opacity-40 cursor-not-allowed"
-              : "border-white/10 bg-black/40 hover:bg-white/[0.06] hover:scale-105 hover:-translate-y-1 cursor-pointer group"
+              : "border-white/10 bg-black/40 hover:bg-white/[0.06] hover:scale-105 hover:-translate-y-1 cursor-pointer"
             : "border-white/[0.03] bg-transparent opacity-20 cursor-not-allowed grayscale"
           }
         `}
@@ -477,13 +414,14 @@ const MissionInterface = () => {
 
         {/* Hover tooltip */}
         {owned && (
-          <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 w-44">
-            <div className="bg-black/95 border border-white/10 rounded-xl px-3 py-2 text-center shadow-2xl">
-              <p className="text-[8px] text-white/60 uppercase tracking-widest leading-relaxed">
-                {isDisabled ? (isSpace ? "Use from Dashboard" : "Cooldown active") : cfg.desc.substring(0, 60) + "..."}
+          <div className="absolute bottom-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 w-64">
+            <div className="bg-[#08080f] border border-white/10 border-b-2 rounded-xl p-4 text-center shadow-[0_20px_50px_rgba(0,0,0,1)]" style={{ borderBottomColor: cfg.color }}>
+              <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: cfg.color }}>{cfg.label} Stone</p>
+              <p className="text-[10px] text-slate-300 font-mono uppercase tracking-widest leading-relaxed">
+                {isDisabled ? (isSpace ? "Use from Dashboard to re-enter timelines." : "Symmetry unstable. Cooldown phase active.") : cfg.desc}
               </p>
             </div>
-            <div className="w-2 h-2 bg-black/95 border-b border-r border-white/10 rotate-45 mx-auto -mt-1" />
+            <div className="w-3 h-3 bg-[#08080f] border-b border-r border-white/10 rotate-45 -mt-1.5 mx-auto" />
           </div>
         )}
       </div>
@@ -605,7 +543,7 @@ const MissionInterface = () => {
 
         {/* The Content Drawer */}
         <div
-          className={`w-full border-t border-cyan-500/20 backdrop-blur-xl transition-all duration-500 ease-in-out pointer-events-auto
+          className={`w-full border-t border-cyan-500/20 backdrop-blur-xl transition-all duration-500 ease-in-out pointer-events-auto overflow-visible
             ${showStonePanel
               ? "h-[12rem] bg-[#05050c]/98 opacity-100 translate-y-0 shadow-[0_-20px_60px_rgba(0,0,0,0.9)]"
               : "h-0 opacity-0 translate-y-10"
@@ -656,7 +594,7 @@ const MissionInterface = () => {
       {/* ─── CONFIRMATION DIALOG ─── */}
       {
         confirmStone && (() => {
-          const cfg = STONE_CONFIG[confirmStone];
+          const cfg = STONE_PROPERTIES[confirmStone];
           return (
             <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
               <div
@@ -771,7 +709,7 @@ const MissionInterface = () => {
               <div className="grid grid-cols-3 gap-3 mb-8">
                 {["space", "power", "reality"].map(stone => {
                   if (!hasStone(stone)) return null;
-                  const cfg = STONE_CONFIG[stone];
+                  const cfg = STONE_PROPERTIES[stone];
                   return (
                     <button
                       key={stone}
@@ -789,7 +727,7 @@ const MissionInterface = () => {
                   );
                 })}
                 {!hasStone("space") && !hasStone("power") && !hasStone("reality") && (
-                  <div className="col-span-3 text-center py-6 text-white/30 text-xs italic font-mono">
+                  <div className="col-span-3 text-center py-6 text-white/30 text-xs font-mono">
                     No sacrificial stones available.
                   </div>
                 )}
@@ -809,7 +747,7 @@ const MissionInterface = () => {
       {/* ─── STONE ACQUIRED SCREEN ─── */}
       {
         acquiredStone && (() => {
-          const cfg = STONE_CONFIG[acquiredStone] || { color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={80} />, label: acquiredStone, image: "" };
+          const cfg = STONE_PROPERTIES[acquiredStone] || { color: "#fff", glow: "rgba(255,255,255,0.3)", icon: <Sparkles size={80} />, label: acquiredStone, image: "" };
           return (
             <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-8 animate-in zoom-in duration-700">
               <div className="relative">

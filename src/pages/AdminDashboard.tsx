@@ -599,7 +599,7 @@ const AdminDashboard = () => {
                                 {/* Grouped Question List */}
                                 <div className="space-y-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin">
                                     {adminQuestions.length === 0 && (
-                                        <div className="text-center py-10 text-cyan-900 italic text-xs uppercase tracking-widest">
+                                        <div className="text-center py-10 text-cyan-900 text-xs uppercase tracking-widest">
                                             NO INTEL FOUND IN SERVER
                                         </div>
                                     )}
@@ -671,7 +671,7 @@ const AdminDashboard = () => {
                                                                                 {q.points} PTS
                                                                             </span>
                                                                         </div>
-                                                                        <p className="text-[10px] text-cyan-200/80 italic max-w-md truncate font-mono">{q.question}</p>
+                                                                        <p className="text-[10px] text-cyan-200/80 max-w-md truncate font-mono">{q.question}</p>
                                                                         <p className="text-[8px] text-cyan-900 mt-1 font-mono uppercase">
                                                                             Key: <span className="text-cyan-700">{q.answer}</span>
                                                                         </p>
@@ -978,7 +978,7 @@ const AdminDashboard = () => {
                                     >
                                         <div className="text-left z-10">
                                             <span className="text-[9px] font-bold text-cyan-500 uppercase tracking-[0.3em]">Phase 01</span>
-                                            <h5 className="text-lg font-bold text-white uppercase italic tracking-wider mt-1">Initiate Initial Blip</h5>
+                                            <h5 className="text-lg font-bold text-white uppercase tracking-wider mt-1">Initiate Initial Blip</h5>
                                             <p className="text-[8px] text-cyan-700 uppercase mt-2 font-bold">Targets: 15 Randomized Units</p>
                                         </div>
                                         <Zap className="text-cyan-600 group-hover:text-cyan-400 group-hover:scale-125 transition-transform" size={40} />
@@ -990,7 +990,7 @@ const AdminDashboard = () => {
                                     >
                                         <div className="text-left z-10">
                                             <span className="text-[9px] font-bold text-purple-500 uppercase tracking-[0.3em]">Phase 02</span>
-                                            <h5 className="text-lg font-bold text-white uppercase italic tracking-wider mt-1">Initiate Final Blip</h5>
+                                            <h5 className="text-lg font-bold text-white uppercase tracking-wider mt-1">Initiate Final Blip</h5>
                                             <p className="text-[8px] text-purple-700 uppercase mt-2 font-bold">Targets: All Remaining Units</p>
                                         </div>
                                         <Zap className="text-purple-600 group-hover:text-purple-400 group-hover:scale-125 transition-transform" size={40} />

@@ -15,7 +15,7 @@ const LeaderboardPage = () => {
         <div className="flex items-center gap-6 mb-10 border-b border-slate-800 pb-6">
           <Trophy className="text-yellow-500 animate-bounce" size={48} />
           <div>
-            <h1 className="text-5xl font-bold tracking-tighter uppercase italic">Live Standings</h1>
+            <h1 className="text-5xl font-bold tracking-tighter uppercase">Live Standings</h1>
             <p className="text-blue-500 text-xs tracking-[0.5em]">MISSION_SYNC_ACTIVE</p>
           </div>
         </div>
@@ -30,7 +30,7 @@ const LeaderboardPage = () => {
               )}
             >
               <div className={cn(
-                "w-16 text-3xl font-black italic",
+                "w-16 text-3xl font-black",
                 index === 0 ? "text-yellow-500" : index === 1 ? "text-slate-300" : index === 2 ? "text-orange-500" : "text-slate-600"
               )}>
                 {String(index + 1).padStart(2, '0')}
@@ -86,7 +86,7 @@ const LeaderboardPage = () => {
 
           <div className="flex-1 space-y-4 overflow-y-auto scrollbar-none">
             {(notifications?.length || 0) === 0 ? (
-              <p className="text-[10px] text-slate-600 uppercase italic">Awaiting neural link signals...</p>
+              <p className="text-[10px] text-slate-600 uppercase">Awaiting neural link signals...</p>
             ) : (
               notifications.map((notif) => (
                 <div

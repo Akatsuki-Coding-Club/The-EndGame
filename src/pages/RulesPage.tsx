@@ -9,7 +9,7 @@ import * as api from "@/services/api";
 
 const RulesPage = () => {
     const navigate = useNavigate();
-    const { gameStarted } = useGame(); 
+    const { gameStarted } = useGame();
     const { team } = useAuth();
     const [registeredTeams, setRegisteredTeams] = useState<string[]>([]);
     const [bgImageUrl, setBgImageUrl] = useState("");
@@ -75,7 +75,7 @@ const RulesPage = () => {
 
     return (
         <div className="relative h-screen w-full flex flex-col items-center bg-[#050505] font-sans overflow-x-hidden overflow-y-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-y-contain">
-            
+
             {/* BACKGROUND */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div
@@ -100,7 +100,7 @@ const RulesPage = () => {
 
             {/* MAIN CONTENT AREA - Flex-1 perfectly centers content vertically without scrolling */}
             <div className="relative z-10 w-full max-w-6xl px-6 flex-1 flex flex-col justify-center items-center py-6">
-                
+
                 {/* Header (Margins reduced) */}
                 <div className="w-full mb-8 flex flex-col items-center text-center">
                     <h2 className="text-[10px] tracking-[0.6em] text-red-600 font-black uppercase mb-2">Neural Link Established</h2>
@@ -126,7 +126,7 @@ const RulesPage = () => {
                             {/* Text on the Right */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between mb-1.5">
-                                    <h3 className="text-sm md:text-base font-black tracking-tight text-white uppercase italic group-hover:text-cyan-400 transition-colors truncate">
+                                    <h3 className="text-sm md:text-base font-black tracking-tight text-white uppercase group-hover:text-cyan-400 transition-colors truncate">
                                         {rule.title}
                                     </h3>
                                     <span className="text-[9px] font-black text-white/20 tracking-widest shrink-0 ml-2">{rule.id}</span>
@@ -162,7 +162,7 @@ const RulesPage = () => {
                     </button>
                 </div>
             </div>
-            
+
             {/* Cinematic Scanlines */}
             <div className="pointer-events-none fixed inset-0 z-20 opacity-[0.06] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
         </div>
