@@ -59,13 +59,12 @@ const LevelView = ({ levelId, onBack }: Props) => {
                 value={answer}
                 onChange={e => setAnswer(e.target.value)}
                 placeholder="Enter your answer..."
-                className={`w-full bg-muted/50 border rounded-md px-4 py-3 text-foreground font-body placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${
-                  feedback === "correct"
+                className={`w-full bg-muted/50 border rounded-md px-4 py-3 text-foreground font-body placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all ${feedback === "correct"
                     ? "border-accent ring-accent/30"
                     : feedback === "incorrect"
-                    ? "border-destructive ring-destructive/30"
-                    : "border-border focus:ring-primary/50 focus:border-primary/50"
-                }`}
+                      ? "border-destructive ring-destructive/30"
+                      : "border-border focus:ring-primary/50 focus:border-primary/50"
+                  }`}
                 required
               />
             </div>
@@ -89,7 +88,7 @@ const LevelView = ({ levelId, onBack }: Props) => {
             </div>
 
             {showHint && puzzle.hint && (
-              <p className="text-sm font-body text-secondary animate-fade-in italic">💡 {puzzle.hint}</p>
+              <p className="text-sm font-body text-secondary animate-fade-in">💡 {puzzle.hint}</p>
             )}
 
             {feedback === "incorrect" && (
