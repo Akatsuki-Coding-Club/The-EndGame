@@ -17,20 +17,22 @@ import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
 import MissionInterface from "./pages/MissionInterface";
 import HeroManager from "./components/HeroManager";
+import GameCompletion from "./pages/GameCompletion";
 
 const queryClient = new QueryClient();
 
 /* Protected route wrapper */
 const ProtectedRoute = ({ children, admin = false }: { children: React.ReactNode; admin?: boolean }) => {
   const { isLoggedIn, isAdmin } = useAuth();
-  const { gameStarted } = useGame();
+  const { gameStarted, gameEnded } = useGame();
 
   if (!isLoggedIn) return <Navigate to="/" replace />;
   if (admin && !isAdmin) return <Navigate to="/dashboard" replace />;
   if (!admin && isAdmin) return <Navigate to="/admin" replace />;
 
   // 🔒 Game Gatekeeper: block non-admin teams from warzone until Commander starts the game
-  if (!admin && !isAdmin && !gameStarted) return <Navigate to="/rules" replace />;
+  // BUT allow access to /concluded page when game has ended
+  if (!admin && !isAdmin && !gameStarted && !gameEnded) return <Navigate to="/rules" replace />;
 
   return <>{children}</>;
 };
@@ -46,6 +48,7 @@ const AppRoutes = () => (
     <Route path="/admin/dashboard" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} />
     <Route path="/mission/:timelineId" element={<ProtectedRoute><MissionInterface /></ProtectedRoute>} />
     <Route path="/mission/:timelineId" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/concluded" element={<ProtectedRoute><GameCompletion /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
@@ -56,15 +59,13 @@ const App = () => (
       <Sonner
         position="top-right"
         toastOptions={{
-          // This makes the toast compact (half-width feel)
-          className: " rounded-none border-t-2 border-b-0 border-l-0 border-r-0 bg-slate-900/90 backdrop-blur-xl p-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)]",
+          className: "backdrop-blur-2xl bg-gradient-to-r from-slate-900/40 to-slate-900/20 border border-white/10 rounded-lg p-4 shadow-2xl",
           classNames: {
-            title: "text-[10px] font-display font-bold tracking-[0.2em] uppercase",
-            description: "text-[9px] font-body tracking-wider text-slate-400 mt-1 uppercase",
-            // Specific energy colors for the top border
-            error: "border-primary",   /* Stark Red */
-            success: "border-blue-500", /* Arc Blue */
-            info: "border-purple-500",  /* Power Purple */
+            title: "text-sm font-mono font-bold tracking-wider text-slate-100 uppercase",
+            description: "text-xs font-mono tracking-wide text-slate-300 mt-2 opacity-90",
+            error: "border-l-4 border-l-red-500 from-red-950/30 to-slate-900/20 text-red-400",
+            success: "border-l-4 border-l-green-500 from-green-950/30 to-slate-900/20 text-green-400",
+            toast: "group",
           }
         }}
       />

@@ -12,7 +12,6 @@ const AttackOverlay = () => {
 
   const blockedUntil = stones.blockedUntil;
 
-  // ⏱ Countdown logic
   useEffect(() => {
     if (!isBlocked || !blockedUntil) return;
 

@@ -48,6 +48,7 @@ export interface GameState {
   score: number;
   stones: StoneState;
   gameStarted: boolean;
+  gameEnded: boolean;
   isFrozen: boolean;
   isBlocked: boolean;
   frozenUntil: number | null;
@@ -143,6 +144,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [score, setScore] = useState(0);
   const [puzzles, setPuzzles] = useState<Puzzle[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
   const [gameEndTime, setGameEndTime] = useState<number | null>(null);
   const [isFrozen, setIsFrozen] = useState(false);
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
@@ -222,6 +224,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       if (gameState) {
         setGameStarted(gameState.status === "active");
+        // Check if game has ended
+        if (gameState.status === "ended") {
+          setGameEnded(true);
+        }
         setPowersDisabled(gameState.lockdown ?? false);
         setGameEndTime(gameState.endTime ? new Date(gameState.endTime).getTime() : null);
       }
@@ -309,19 +315,51 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     s.on("connect", onConnect);
 
     // Dashboard Events (Admin & Leaderboard)
-    s.on("SCORE_UPDATE", (data: any) => {
-      refreshTeams();
+    // Only refresh teams if game hasn't ended to prevent flickering on conclusion page
+    const handleScoreUpdate = (data: any) => {
+      if (!gameEnded) {
+        refreshTeams();
+      }
       if (data?.endTime) {
         setGameEndTime(new Date(data.endTime).getTime());
       }
-    });
-    s.on("STONE_USAGE_UPDATE", () => refreshTeams());
-    s.on("STONE_SELECTION_UPDATE", () => refreshTeams());
-    s.on("BLIP_PUZZLE_LEADERBOARD", () => refreshTeams());
-    s.on("BLOCK_RELEASED_EARLY", () => refreshTeams());
+      // Check game status on every score update
+      if (team && !isAdmin && !gameEnded) {
+        api.getGameState(team.id).then((gs) => {
+          if (gs.status === "ended") {
+            setGameStarted(false);
+            setGameEnded(true);
+          }
+        }).catch(() => {});
+      }
+    };
+    const handleTeamUpdate = () => {
+      if (!gameEnded) {
+        refreshTeams();
+      }
+    };
+
+    s.on("SCORE_UPDATE", handleScoreUpdate);
+    s.on("STONE_USAGE_UPDATE", handleTeamUpdate);
+    s.on("STONE_SELECTION_UPDATE", handleTeamUpdate);
+    s.on("BLIP_PUZZLE_LEADERBOARD", handleTeamUpdate);
+    s.on("BLOCK_RELEASED_EARLY", handleTeamUpdate);
     s.on("GAME_ENDED", () => {
       setGameStarted(false);
+      setGameEnded(true);
     });
+
+    // Poll game status every 5 seconds to ensure we catch game end in real-time
+    const statusPollInterval = setInterval(() => {
+      if (team && !isAdmin && !gameEnded) {
+        api.getGameState(team.id).then((gs) => {
+          if (gs.status === "ended") {
+            setGameStarted(false);
+            setGameEnded(true);
+          }
+        }).catch(() => {});
+      }
+    }, 5000);
 
     s.on("GAME_STARTED", async () => {
       if (team && !isAdmin) {
@@ -329,8 +367,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           const gs = await api.getGameState(team.id);
           if (gs.status === "active") {
             setGameStarted(true);
-            toast.success("COMMANDER_SIGNAL_RECEIVED", {
-              description: "The warzone is now open. Redirecting...",
+            toast.success("[GAME_STARTED]", {
+              description: "Game has started. Entering mission area.",
             });
             navigate("/dashboard");
           }
@@ -338,7 +376,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         setGameStarted(true);
-        toast.success("GAME STARTED", { description: "The warzone is now open." });
+        toast.success("[GAME_STARTED]", { description: "Game has started. Entering mission area." });
       }
     });
 
@@ -351,14 +389,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setBlockPuzzleQuestion(data.puzzleQuestion || null);
         setStones((prev) => ({ ...prev, blockedUntil: until }));
         addNotification(`You are under Power Surge attack!`, "attack");
-        toast.error("SYSTEM_LOCKED", { description: "Solve the unlock puzzle to regain control." });
+        toast.error("[SYSTEM_LOCKED]", { description: "Answer the challenge puzzle to unlock your system." });
       });
 
       s.on("STONE_ATTACK_BLOCKED", (data?: any) => {
         // Shield blocked the incoming Power Surge
         setIsBlocked(false);
         setStones((prev) => ({ ...prev, shieldActive: false }));
-        toast.success("Shield saved you", { description: "Your Shield absorbed the incoming attack." });
+        toast.success("[DEFENSE_SUCCESSFUL]", { description: "Shield blocked the incoming attack." });
       });
 
       s.on("ATTACK_OFFER_SHIELD", (data: { attackerId: string; attackerName?: string; message?: string }) => {
@@ -381,7 +419,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setIsFrozen(false);
         setFrozenUntil(null);
         setBlipPuzzleSolved(false);
-        toast.success("BLIP_RESOLVED", { description: "Blip ended - systems restored." });
+        toast.success("[DECRYPTION_SUCCESS]", { description: "Security challenge resolved. Systems online." });
       });
 
       s.on("BLOCK_RELEASED", () => {
@@ -389,19 +427,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setBlockedUntil(null);
         setBlockPuzzleQuestion(null);
         setStones((prev) => ({ ...prev, blockedUntil: null }));
-        toast.success("SYSTEM_RESTORED", { description: "Block removed successfully." });
+        toast.success("[SYSTEM_RESTORED]", { description: "Lockout removed. System fully operational." });
       });
 
       s.on("SHIELD_CONSUMED", () => {
         setStones((prev) => ({ ...prev, shieldActive: false, shieldCount: 0 }));
-        toast.success("SHIELD_DEFLECTED_ATTACK", { description: "Your Shield absorbed the incoming attack." });
+        toast.success("[DEFENSE_SUCCESSFUL]", { description: "Shield blocked incoming attack." });
       });
 
       s.on("SNAP_ACTIVATED", (data: { teamId: string; teamName: string; message: string }) => {
         setSnapWinner({ teamId: data.teamId, teamName: data.teamName, score: 0, currentLevel: 0, isFrozen: false, isBlocked: false, stones: [], completedTimelines: [], snapActivated: true });
         setPowersDisabled(true);
-        toast.error("SUPREME_SNAP_ACTIVATED", {
-          description: data.message || `${data.teamName} has achieved ultimate power.`,
+        setGameEnded(true);
+        toast.error("[TIMELINE_FINALIZED]", {
+          description: data.message || `${data.teamName} has won the game.`,
           duration: 10000
         });
         if (team && team.id === data.teamId) {
@@ -435,21 +474,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       s.disconnect();
       setSocket(null);
+      clearInterval(statusPollInterval);
     };
-  }, [team, isAdmin, addNotification, navigate, refreshTeams]);
-  // useEffect(() => {
-  //   if (isBlocked && stones.shieldActive) {
-  //     setIsBlocked(false);
-  //     setStones((prev) => ({ ...prev, shieldActive: false }));
-  //     toast.success("SHIELD_DEFLECTED_ATTACK", {
-  //       description: "Incoming Power Surge negated by Shield Matrix.",
-  //     });
-  //   } else if (isBlocked) {
-  //     toast.error("CRITICAL_SYSTEM_BREACH", {
-  //       description: "Incoming Power Surge detected. System locked.",
-  //     });
-  //   }
-  // }, [isBlocked, stones.shieldActive]);
+  }, [team, isAdmin, addNotification, navigate, refreshTeams, gameEnded]);
+
+  // 🎬 Real-time redirection when game ends
+  useEffect(() => {
+    if (gameEnded && !isAdmin) {
+      // Give a brief moment for socket event processing and refreshTeams to complete
+      const timer = setTimeout(() => {
+        navigate("/concluded", { replace: true });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [gameEnded, isAdmin, navigate]);
 
 
   useEffect(() => {
@@ -475,21 +513,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       if (!gameId) throw new Error("Game ID required to start");
       await api.startGame(gameId);
       setGameStarted(true);
-      toast.success("GAME_START");
+      toast.success("[GAME_STARTED]", { description: "Game initialization complete." });
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error("[ERROR]", { description: (e as Error).message });
     }
   }, []);
 
   const submitAnswer = useCallback(
     async (levelId: number, answer: string): Promise<boolean> => {
       if (isBlocked) {
-        toast.error("SYSTEM_LOCKED");
+        toast.error("[SYSTEM_LOCKED]", { description: "System is currently locked." });
         return false;
       }
       const puzzle = puzzles.find((p) => p.id === levelId);
       if (!puzzle?.missionId) {
-        toast.error("DECRYPTION_FAILED");
+        toast.error("[ERROR]", { description: "Mission not found." });
         return false;
       }
       try {
@@ -502,15 +540,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           setScore((prev) => prev + result.points);
           if (levelId < puzzles.length) setCurrentLevel(levelId + 1);
           addNotification(`${team?.name} SOLVED MISSION ${levelId}`, "success");
-          toast.success(`MISSION_${levelId}_COMPLETE`);
+          toast.success("[DECRYPTION_SUCCESS]", { description: `Mission ${levelId} completed. +${result.points} points.` });
           await syncMyState();
           await refreshTeams();
           return true;
         }
       } catch (e) {
-        toast.error((e as Error).message);
+        toast.error("[ERROR]", { description: (e as Error).message });
       }
-      toast.error("DECRYPTION_FAILED");
+      toast.error("[DECRYPTION_FAILED]", { description: "Incorrect answer. Try again." });
       return false;
     },
     [puzzles, team?.name, syncMyState, refreshTeams, addNotification, isBlocked]
@@ -521,15 +559,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     try {
       await api.useStone("shield");
       setStones((prev) => ({ ...prev, shieldActive: true, shieldCount: prev.shieldCount - 1 }));
-      toast.success("SHIELD_ACTIVE");
+      toast.success("[DEFENSE_ONLINE]", { description: "Shield barrier activated." });
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error("[ERROR]", { description: (e as Error).message });
     }
   }, [stones.shieldCount, powersDisabled]);
 
   const deactivateShield = useCallback(() => {
     setStones((prev) => ({ ...prev, shieldActive: false }));
-    toast.info("SHIELD_OFFLINE");
+    toast.info("[DEFENSE_OFFLINE]", { description: "Shield barrier deactivated." });
   }, []);
 
   const blockTeam = useCallback(
@@ -539,12 +577,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const result = await api.useBlock(targetTeamId);
 
         if (result.message.includes("Shield broke")) {
-          toast.info("ATTACK DEFLECTED", {
-            description: "The rival team's Shield Stone neutralized your Power Surge."
+          toast.info("[INTRUSION_DETECTED]", {
+            description: "Opponent's shield blocked the attack."
           });
         } else {
-          toast.success("POWER_SURGE_SENT", {
-            description: "Rival systems have been compromised for 120 seconds."
+          toast.success("[INTRUSION_DETECTED]", {
+            description: "Power surge sent. Opponent locked for 120 seconds."
           });
         }
 
@@ -552,7 +590,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         await syncMyState();
         await refreshTeams();
       } catch (e: any) {
-        toast.error("SYSTEM ERROR", { description: e.message });
+        toast.error("[ERROR]", { description: e.message });
       }
     },
     [stones.blockCount, powersDisabled, syncMyState, refreshTeams]
@@ -573,7 +611,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           setFrozenUntil(null);
           setScore((prev) => prev + (result.points || 0));
           setBlipPuzzleSolved(false);
-          toast.success("BLIP_BYPASS_SUCCESS");
+          toast.success("[DECRYPTION_SUCCESS]", { description: "Security challenge bypassed successfully." });
           await syncMyState();
           return true;
         }
@@ -600,7 +638,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           setFrozenState(true, fUntil);
         }
       } catch (e) {
-        toast.error((e as Error).message);
+        toast.error("[ERROR]", { description: (e as Error).message });
       }
     },
     [team, setFrozenState, refreshTeams]
@@ -614,9 +652,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           prev.map((t) => (t.teamId === teamId ? { ...t, isFrozen: true } : t))
         );
         if (team?.id === teamId) setFrozenState(true, Date.now() + 5 * 60 * 1000);
-        toast.success("UNIT FROZEN SUCCESSFULLY");
+        toast.success("[ACTION_COMPLETE]", { description: "Team has been frozen." });
       } catch (e: any) {
-        toast.error("FREEZE FAILED: " + e.message);
+        toast.error("[ACTION_FAILED]", { description: e.message });
       }
     },
     [team, setFrozenState]
@@ -630,9 +668,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           prev.map((t) => (t.teamId === teamId ? { ...t, isFrozen: false } : t))
         );
         if (team?.id === teamId) setFrozenState(false);
-        toast.success("UNIT UNFROZEN SUCCESSFULLY");
+        toast.success("[ACTION_COMPLETE]", { description: "Team has been unfrozen." });
       } catch (e: any) {
-        toast.error("UNFREEZE FAILED: " + e.message);
+        toast.error("[ACTION_FAILED]", { description: e.message });
       }
     },
     [team, setFrozenState]
@@ -642,10 +680,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     async (stoneType: "block" | "shield") => {
       try {
         await api.selectStoneType(stoneType);
-        toast.success(stoneType === "shield" ? "Shield Matrix acquired!" : "Power Surge acquired!");
+        const stoneName = stoneType === "shield" ? "Shield" : "Power Surge";
+        toast.success("[STONE_ACQUIRED]", { description: `${stoneName} stone acquired.` });
         await syncMyState();
       } catch (e) {
-        toast.error((e as Error).message);
+        toast.error("[ERROR]", { description: (e as Error).message });
       }
     },
     [syncMyState]
@@ -660,14 +699,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setPendingAttackerId(null);
         if (action === "useShield") {
           setStones((prev) => ({ ...prev, shieldCount: Math.max(0, (prev.shieldCount || 0) - 1), shieldActive: false }));
-          toast.success("SHIELD_CONSUMED_LOCAL", { description: res.message || "Shield used" });
+          toast.success("[DEFENSE_SUCCESSFUL]", { description: res.message || "Shield used to defend." });
         } else {
-          toast.info("ATTACK_CONTINUE", { description: res.message || "Continuing attack protocol" });
+          toast.info("[ACTION_CONFIRMED]", { description: res.message || "Continuing with attack protocol." });
         }
         await syncMyState();
         await refreshTeams();
       } catch (e: any) {
-        toast.error("DEFEND_ERROR", { description: e.message });
+        toast.error("[ERROR]", { description: e.message });
       }
     },
     [syncMyState, refreshTeams]
@@ -678,12 +717,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsSnapping(true);
       await api.useSnap();
-      toast.success("SUPREME_SNAP_EXECUTED", { description: "You have restored the timeline." });
+      toast.success("[TIMELINE_FINALIZED]", { description: "All infinity stones used. Timeline restored." });
       await syncMyState();
       await refreshTeams();
     } catch (e: any) {
       setIsSnapping(false);
-      toast.error("SNAP_FAILED", { description: e.message });
+      toast.error("[ACTION_FAILED]", { description: e.message });
     }
   }, [isSnapReady, syncMyState, refreshTeams]);
 
@@ -696,6 +735,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         score,
         stones,
         gameStarted,
+        gameEnded,
         isFrozen,
         frozenUntil,
         blipPuzzleSolved,

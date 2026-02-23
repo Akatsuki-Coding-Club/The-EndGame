@@ -110,7 +110,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-blue-600 hover:bg-blue-500",
     font: "font-mono tracking-tight",
     glow: "shadow-[0_0_50px_rgba(29,78,216,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-abstract-blue-and-purple-ink-in-water-21501-large.mp4",
+    videoBg: "../public/morag.mp4",
     shadow: "shadow-[0_0_30px_rgba(29,78,216,0.1)]", // Added missing property
     animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
@@ -120,7 +120,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-amber-500 hover:bg-amber-400",
     font: "font-serif tracking-wide uppercase",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
-    videoBg: "https://assets.mixkit.co/videos/preview/mixkit-golden-particles-in-the-air-2342-large.mp4",
+    videoBg: "../public/asgard.mp4",
     shadow: "shadow-[0_0_30px_rgba(245,158,11,0.1)]", // Added missing property
     animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
