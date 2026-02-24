@@ -85,10 +85,10 @@ const App = () => (
         <HeroManager />
         <AuthProvider>
           <GameProvider>
-            <GlobalOverlays />
             <TimerProvider>
               <AppRoutes />
             </TimerProvider>
+            <GlobalOverlays />
             <StoneSelectModal />
           </GameProvider>
         </AuthProvider>
