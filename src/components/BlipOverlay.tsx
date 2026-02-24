@@ -20,7 +20,7 @@ const BlipOverlay = () => {
   }, [frozenUntil, setIsFrozen]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#383838]/95 backdrop-blur-md p-6">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#383838]/95 backdrop-blur-md p-6">
       <div className="w-full max-w-lg bg-[#5a5a5a] border-t-4 border-red-500 rounded-lg p-8 shadow-2xl relative">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-white uppercase tracking-tighter">

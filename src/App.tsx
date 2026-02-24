@@ -15,9 +15,12 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 // import ThemeDecorations from "./components/ThemeDecorations";
 import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
+import CompletionPage from "./pages/CompletionPage";
 import MissionInterface from "./pages/MissionInterface";
 import HeroManager from "./components/HeroManager";
+
 import GameCompletion from "./pages/GameCompletion";
+
 import BlipOverlay from "./components/BlipOverlay";
 import AttackOverlay from "./components/AttackOverlay";
 
@@ -26,15 +29,14 @@ const queryClient = new QueryClient();
 /* Protected route wrapper */
 const ProtectedRoute = ({ children, admin = false }: { children: React.ReactNode; admin?: boolean }) => {
   const { isLoggedIn, isAdmin } = useAuth();
-  const { gameStarted, gameEnded } = useGame();
+  const { gameStarted } = useGame();
 
   if (!isLoggedIn) return <Navigate to="/" replace />;
   if (admin && !isAdmin) return <Navigate to="/dashboard" replace />;
   if (!admin && isAdmin) return <Navigate to="/admin" replace />;
 
   // 🔒 Game Gatekeeper: block non-admin teams from warzone until Commander starts the game
-  // BUT allow access to /concluded page when game has ended
-  if (!admin && !isAdmin && !gameStarted && !gameEnded) return <Navigate to="/rules" replace />;
+  if (!admin && !isAdmin && !gameStarted) return <Navigate to="/rules" replace />;
 
   return <>{children}</>;
 };
@@ -50,7 +52,7 @@ const AppRoutes = () => (
     <Route path="/admin/dashboard" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} />
     <Route path="/mission/:timelineId" element={<ProtectedRoute><MissionInterface /></ProtectedRoute>} />
     <Route path="/mission/:timelineId" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/concluded" element={<ProtectedRoute><GameCompletion /></ProtectedRoute>} />
+    <Route path="/completion" element={<CompletionPage />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
@@ -70,15 +72,15 @@ const App = () => (
     <TooltipProvider>
       <Sonner
         position="top-right"
+        theme="dark"
+        richColors
+        offset={8}
         toastOptions={{
-          className: "backdrop-blur-2xl bg-gradient-to-r from-slate-900/40 to-slate-900/20 border border-white/10 rounded-lg p-4 shadow-2xl",
+          className: "font-display",
           classNames: {
-            title: "text-sm font-mono font-bold tracking-wider text-slate-100 uppercase",
-            description: "text-xs font-mono tracking-wide text-slate-300 mt-2 opacity-90",
-            error: "border-l-4 border-l-red-500 from-red-950/30 to-slate-900/20 text-red-400",
-            success: "border-l-4 border-l-green-500 from-green-950/30 to-slate-900/20 text-green-400",
-            toast: "group",
-          }
+            title: "text-[11px] font-bold tracking-[0.15em] uppercase",
+            description: "text-[10px] font-body tracking-wider opacity-90 mt-0.5 uppercase",
+          },
         }}
       />
       <BrowserRouter>
@@ -86,10 +88,10 @@ const App = () => (
         <HeroManager />
         <AuthProvider>
           <GameProvider>
-            <GlobalOverlays />
             <TimerProvider>
               <AppRoutes />
             </TimerProvider>
+            <GlobalOverlays />
             <StoneSelectModal />
           </GameProvider>
         </AuthProvider>

@@ -11,6 +11,7 @@ const AttackOverlay = () => {
 
   const blockedUntil = stones.blockedUntil;
 
+  // ⏱ Countdown logic
   useEffect(() => {
     if (!isBlocked || !blockedUntil) return;
 
@@ -53,7 +54,7 @@ const AttackOverlay = () => {
   if (!isBlocked) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-cyan-950/80 backdrop-blur-md flex flex-col items-center justify-center text-cyan-50 overflow-hidden">
+    <div className="fixed inset-0 z-[9999] bg-cyan-950/80 backdrop-blur-md flex flex-col items-center justify-center text-cyan-50 overflow-hidden">
       {/* Decorative Ice elements */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-cyan-400/10 via-transparent to-cyan-500/10 pointer-events-none" />
