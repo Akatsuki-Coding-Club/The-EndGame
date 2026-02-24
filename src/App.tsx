@@ -67,17 +67,15 @@ const App = () => (
     <TooltipProvider>
       <Sonner
         position="top-right"
+        theme="dark"
+        richColors
+        offset={8}
         toastOptions={{
-          // This makes the toast compact (half-width feel)
-          className: " rounded-none border-t-2 border-b-0 border-l-0 border-r-0 bg-slate-900/90 backdrop-blur-xl p-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)]",
+          className: "font-display",
           classNames: {
-            title: "text-[10px] font-display font-bold tracking-[0.2em] uppercase",
-            description: "text-[9px] font-body tracking-wider text-slate-400 mt-1 uppercase",
-            // Specific energy colors for the top border
-            error: "border-primary",   /* Stark Red */
-            success: "border-blue-500", /* Arc Blue */
-            info: "border-purple-500",  /* Power Purple */
-          }
+            title: "text-[11px] font-bold tracking-[0.15em] uppercase",
+            description: "text-[10px] font-body tracking-wider opacity-90 mt-0.5 uppercase",
+          },
         }}
       />
       <BrowserRouter>
