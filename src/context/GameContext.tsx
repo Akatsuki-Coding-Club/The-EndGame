@@ -51,7 +51,6 @@ export interface GameState {
   isFrozen: boolean;
   isBlocked: boolean;
   frozenUntil: number | null;
-  blockedUntil: number | null;
   blipPuzzleSolved: boolean;
   blipPuzzleQuestion?: string | null;
   blockPuzzleQuestion?: string | null;
@@ -374,23 +373,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       s.on("TEAM_BLOCKED", (data: { blockedUntil: string; puzzleQuestion?: string }) => {
         const until = data?.blockedUntil ? new Date(data.blockedUntil).getTime() : null;
         if (!until) return;
-
-        // Immediate State updates for the overlay
         setIsBlocked(true);
         setBlockedUntil(until);
         setBlockPuzzleQuestion(data.puzzleQuestion || null);
-
-        // Update stone metadata for local logic
         setStones((prev) => ({ ...prev, blockedUntil: until }));
-
-        // Refresh full team list to show block in sidebars/leaderboards
-        refreshTeams();
-
-        addNotification(`CRITICAL_ALERT: Your systems are under Power Surge attack!`, "attack");
-        toast.error("SYSTEM_LOCKED", {
-          description: "A rival team has breached your firewall. Solve the decryption puzzle to thaw.",
-          duration: 6000
-        });
+        addNotification(`You are under Power Surge attack!`, "attack");
+        toast.error("SYSTEM_LOCKED", { description: "Solve the unlock puzzle to regain control." });
       });
 
       s.on("STONE_ATTACK_BLOCKED", (data?: any) => {
@@ -412,15 +400,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setBlipPuzzleSolved(false);
         setIsFrozen(true);
         const duration = puzzle?.freezeDurationSec || 120;
-        const until = Date.now() + duration * 1000;
-        setFrozenUntil(until);
+        setFrozenUntil(Date.now() + duration * 1000);
         setBlipPuzzleQuestion(puzzle?.question || null);
-
-        // Sync teams to update frozen status in other UI parts
-        refreshTeams();
-
         if (puzzle && puzzle.question) {
-          addNotification(`BLIP_DETECTION: ${puzzle.question}`, "system");
+          addNotification(`Blip puzzle: ${puzzle.question}`, "system");
         }
       });
 
@@ -794,7 +777,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         snapWinner,
         initiateSupremeSnap,
         isSocketConnected,
-        blockedUntil,
       }}
     >
       <ShieldDefendModal />

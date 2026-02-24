@@ -163,7 +163,7 @@ const MissionInterface = () => {
   };
 
   /* ─── Snap Protection & Ending Sequence ─── */
-  const { snapWinner, isSnapping, initiateSupremeSnap, isBlocked: globalIsBlocked, isFrozen, blockedUntil, frozenUntil, refreshTeams: syncGameState } = useGame();
+  const { snapWinner, isSnapping, initiateSupremeSnap, isFrozen } = useGame();
   const { team } = useAuth();
   useEffect(() => {
     // Only force return to dashboard if WE are the ones who snapped
@@ -181,27 +181,16 @@ const MissionInterface = () => {
     init();
   }, [timelineId]);
 
-  /* ─── Unified Cooldown Timer ─── */
+  /* ─── Cooldown Timer ─── */
   useEffect(() => {
-    const getTargetTime = () => {
-      const stoneTime = stoneStatus?.cooldownUntil ? new Date(stoneStatus.cooldownUntil).getTime() : 0;
-      const attackTime = blockedUntil || 0;
-      const blipTime = frozenUntil || 0;
-      return Math.max(stoneTime, attackTime, blipTime);
-    };
-
+    if (!stoneStatus?.cooldownUntil) { setTimeLeft(0); return; }
     const interval = setInterval(() => {
-      const until = getTargetTime();
-      if (!until) {
-        setTimeLeft(0);
-        return;
-      }
-      const diff = Math.max(0, Math.floor((until - Date.now()) / 1000));
+      const diff = Math.max(0, Math.floor((new Date(stoneStatus.cooldownUntil!).getTime() - Date.now()) / 1000));
       setTimeLeft(diff);
       if (diff <= 0) clearInterval(interval);
     }, 1000);
     return () => clearInterval(interval);
-  }, [stoneStatus, blockedUntil, frozenUntil]);
+  }, [stoneStatus]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -218,26 +207,13 @@ const MissionInterface = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!answer.trim() || !currentTask?.question?._id) return;
-
-    // Check global system status from GameContext before submission
-    if (globalIsBlocked) {
-      toast.error("SYSTEM_LOCKED", { description: "Remote interference detected. Decrypt the block overlay first." });
-      return;
-    }
-
     try {
       setSubmitting(true);
-      // Use original API submitAnswer for mission-specific control
       const res = await submitAnswer(currentTask.question._id, answer);
-
       if (res.isCorrect) {
         toast.success(`KEY_ACCEPTED: +${res.points} Strategic Points`);
         setAnswer("");
         setRealityActive(false);
-
-        // Notify GameContext to sync stats (score, stones, etc)
-        await syncGameState();
-
         if (res.earnedStone) {
           setAcquiredStone(res.earnedStone);
         } else if (res.completed) {
@@ -338,10 +314,9 @@ const MissionInterface = () => {
     const cfg = STONE_PROPERTIES[stoneKey];
     const owned = hasStone(stoneKey);
     const isSpace = stoneKey === "space";
-    // Space stone is always disabled in mission (dashboard only).
-    // Also disable if team is blocked (attacked) or frozen (blip).
-    const isDisabled = isSpace || isCooldown || !owned || globalIsBlocked || isFrozen;
-    const canActivate = owned && !isSpace && !isCooldown && !globalIsBlocked && !isFrozen;
+    // Space stone is always disabled in mission (dashboard only)
+    const isDisabled = isSpace || isCooldown || !owned;
+    const canActivate = owned && !isSpace && !isCooldown;
 
     const handleClick = () => {
       if (!canActivate) return;
@@ -415,11 +390,11 @@ const MissionInterface = () => {
           {cfg.label}
         </span>
 
-        {/* Cooldown/Block overlay badge */}
-        {owned && (isCooldown || globalIsBlocked || isFrozen) && !isSpace && (
-          <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-black/80 px-1.5 py-0.5 rounded-full border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-            <Clock size={7} className="text-red-500 animate-pulse" />
-            <span className="text-[7px] font-mono text-red-400 font-bold">{formatTime(timeLeft)}</span>
+        {/* Cooldown overlay badge */}
+        {owned && isCooldown && !isSpace && (
+          <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-black/80 px-1.5 py-0.5 rounded-full border border-red-500/30">
+            <Clock size={7} className="text-red-500 animate-in fade-in" />
+            <span className="text-[7px] font-mono text-red-400">{formatTime(timeLeft)}</span>
           </div>
         )}
 
@@ -585,19 +560,20 @@ const MissionInterface = () => {
             </div>
 
             {/* Stone Cards Grid */}
-            <div className="py-2 min-h-[140px] flex flex-col justify-center items-center relative gap-4">
-              {(isCooldown || globalIsBlocked || isFrozen) && (
-                <div className="flex items-center gap-3 bg-red-900/10 border border-red-500/20 px-4 py-1.5 rounded-full animate-in slide-in-from-top-2 duration-500">
-                  <Clock size={12} className="text-red-500 animate-pulse" />
-                  <span className="text-[9px] font-mono text-red-400 font-black uppercase tracking-widest">
-                    {isFrozen ? "Systems Frozen" : globalIsBlocked ? "Power Block Active" : "Stones Cooling Down"}: {formatTime(timeLeft)}
-                  </span>
+            <div className="py-6 min-h-[160px] flex justify-center items-center relative">
+              {isCooldown ? (
+                <div className="flex flex-col items-center justify-center animate-in zoom-in duration-500">
+                  <div className="text-xl md:text-2xl font-mono font-bold text-red-400 tracking-widest bg-red-900/20 px-6 py-3 rounded-xl border border-red-500/30 shadow-[inset_0_0_10px_rgba(239,68,68,0.2)] flex items-center gap-3">
+                    <span className="uppercase text-red-500/80 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">Cooldown:</span>
+                    <span>{formatTime(timeLeft)}</span>
+                  </div>
+                  <p className="mt-4 text-[9px] text-red-500/50 uppercase tracking-widest font-mono">All stones are currently unstable</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto w-full">
+                  {ALL_STONES.map(s => <StoneCard key={s} stoneKey={s} />)}
                 </div>
               )}
-
-              <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto w-full px-4">
-                {ALL_STONES.map(s => <StoneCard key={s} stoneKey={s} />)}
-              </div>
             </div>
 
             {/* Supreme Snap Logic */}

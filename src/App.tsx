@@ -47,15 +47,13 @@ const AppRoutes = () => (
     <Route path="/leaderboard" element={<LeaderboardPage />} />
     <Route path="/admin/dashboard" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} />
     <Route path="/mission/:timelineId" element={<ProtectedRoute><MissionInterface /></ProtectedRoute>} />
+    <Route path="/mission/:timelineId" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
 
 const GlobalOverlays = () => {
   const { isFrozen, isBlocked } = useGame();
-
-  // These overlays respond instantly to isFrozen/isBlocked state changes from the GameContext.
-  // The GameContext is updated in real-time by socket events (TEAM_BLOCKED, BLIP_PUZZLE)
   return (
     <>
       {isFrozen && <BlipOverlay />}
@@ -87,10 +85,10 @@ const App = () => (
         <HeroManager />
         <AuthProvider>
           <GameProvider>
-            <GlobalOverlays />
             <TimerProvider>
               <AppRoutes />
             </TimerProvider>
+            <GlobalOverlays />
             <StoneSelectModal />
           </GameProvider>
         </AuthProvider>
