@@ -48,6 +48,7 @@ export interface GameState {
   score: number;
   stones: StoneState;
   gameStarted: boolean;
+  gameEnded: boolean;
   isFrozen: boolean;
   isBlocked: boolean;
   frozenUntil: number | null;
@@ -146,6 +147,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [score, setScore] = useState(0);
   const [puzzles, setPuzzles] = useState<Puzzle[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
   const [gameEndTime, setGameEndTime] = useState<number | null>(null);
   const [isFrozen, setIsFrozen] = useState(false);
   const [frozenUntil, setFrozenUntil] = useState<number | null>(null);
