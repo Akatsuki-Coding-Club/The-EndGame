@@ -3,7 +3,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Shield, Zap, Skull, Globe, Trophy, Swords, Sparkles, Flame, ChevronRight, X, AlertTriangle, Target, Clock } from "lucide-react";
 import { getDashboardData, DashboardData, useSpaceStone, useSnap, usePowerStone } from "@/services/api";
-import { toast } from "sonner";
 import TimelinePortal from "./TimelinePortal";
 import HeroManager from "@/components/HeroManager";
 import { useGame } from "@/context/GameContext";
@@ -51,7 +50,7 @@ const DASHBOARD_TIMELINE_META: Record<string, { label: string; color: string; bg
 
 const Dashboard = () => {
   const { logout } = useAuth();
-  const { allTeamsState, isFrozen } = useGame();
+  const { allTeamsState, isFrozen, showToast } = useGame();
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,7 +84,7 @@ const Dashboard = () => {
   const handleStoneClick = (stoneId: string) => {
     const isCooldown = data?.me?.cooldownUntil ? new Date(data.me.cooldownUntil).getTime() > Date.now() : false;
     if (isCooldown && stoneId !== "space") {
-      toast.error("COOLDOWN_ACTIVE", { description: "Quantum systems are currently unstable." });
+      showToast("COOLDOWN_ACTIVE", "error", "Quantum systems are currently unstable.");
       return;
     }
 
@@ -98,15 +97,15 @@ const Dashboard = () => {
 
   const executePower = async () => {
     if (!targetTeam) return;
-    const t = toast.loading("Power Stone: Priming orbital cannon...");
+    showToast("Power Stone", "info", "Priming orbital cannon...");
     try {
       await usePowerStone(targetTeam);
-      toast.success("POWER STONE ACTIVE: Orbital Strike Launched", { id: t });
+      showToast("POWER STONE ACTIVE", "success", "Orbital Strike Launched");
       setShowPowerModal(false);
       setTargetTeam("");
       loadTacticalData();
     } catch (e: any) {
-      toast.error(e.message || "Power Stone activation failed", { id: t });
+      showToast("Power Stone activation failed", "error", e.message);
     }
   };
 
@@ -124,19 +123,19 @@ const Dashboard = () => {
       (id: string) => !(data?.me?.completedTimelines ?? []).includes(id)
     );
     if (escaped.length === 0) {
-      toast.error("NO_ELIGIBLE_TIMELINES", { description: "Escape a timeline first to use the Space Stone for re-entry." });
+      showToast("NO_ELIGIBLE_TIMELINES", "error", "Escape a timeline first to use the Space Stone for re-entry.");
       return;
     }
     // Use first escaped timeline (or extend later for picker)
     const target = escaped[0];
     setSpaceStoneLoading(true);
-    const t = toast.loading("Initiating Tesseract Protocol...");
+    showToast("Initiating Tesseract Protocol...", "info");
     try {
       await useSpaceStone(target);
-      toast.success(`SPACE_STONE_ACTIVATED: Re-entering ${target.toUpperCase()}`, { id: t, description: "Quantum warp recalculated." });
+      showToast("SPACE_STONE_ACTIVATED", "success", `Re-entering ${target.toUpperCase()}`);
       navigate(`/mission/${target}`);
     } catch (e: any) {
-      toast.error(e.message || "Tesseract Protocol Failed", { id: t });
+      showToast("Tesseract Protocol Failed", "error", e.message);
     } finally {
       setSpaceStoneLoading(false);
     }
@@ -145,12 +144,12 @@ const Dashboard = () => {
   const handleActivateSnap = async () => {
     try {
       setIsSnapping(true);
-      const toastId = toast.loading("Executing Supreme Snap...");
+      showToast("Executing Supreme Snap...", "info");
       await useSnap();
-      toast.success("Reality rewritten!", { id: toastId });
+      showToast("Reality rewritten!", "success");
       loadTacticalData();
     } catch (e: any) {
-      toast.error(e.message || "Failed to activate snap");
+      showToast("Snap Failed", "error", e.message || "Failed to activate snap");
     } finally {
       setIsSnapping(false);
     }
@@ -161,7 +160,7 @@ const Dashboard = () => {
       const res = await getDashboardData();
       setData(res);
     } catch (e) {
-      toast.error("Neural link unstable. Reconnecting...");
+      showToast("Neural link unstable", "error", "Reconnecting...");
     } finally {
       setLoading(false);
     }

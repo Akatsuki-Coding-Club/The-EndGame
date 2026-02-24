@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useGame } from "@/context/GameContext";
-import { toast } from "sonner";
 import { Shield, Users, Play, Database, Zap, PlusCircle, LayoutList, Activity, Unlock, Lock, ExternalLink, LogOut, Globe, CheckSquare, Trash2, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createTeam, addTeamsToGame, cleanupTeams, getGameState, getAllQuestions, createQuestion, addQuestionToGame, cleanupQuestions, createQuestionsBulk, createGame, getWaitingGames } from "@/services/api";
@@ -18,6 +17,7 @@ const AdminDashboard = () => {
         setGameDuration,
         gameDuration,
         refreshTeams,
+        showToast,
     } = useGame();
 
     const maxLevel = puzzles.length || 15;
@@ -87,17 +87,17 @@ const AdminDashboard = () => {
 
     const handleCreateTeam = async () => {
         if (!newTeamName.trim() || !newTeamPassword.trim()) {
-            toast.error("NAME AND PASSWORD REQUIRED");
+            showToast("INPUT REQUIRED", "error", "NAME AND PASSWORD REQUIRED");
             return;
         }
         try {
             await createTeam(newTeamName, newTeamPassword);
-            toast.success("UNIT REGISTERED SUCCESSFULLY");
+            showToast("SUCCESS", "success", "UNIT REGISTERED SUCCESSFULLY");
             setNewTeamName("");
             setNewTeamPassword("");
             if (refreshTeams) refreshTeams();
         } catch (e: any) {
-            toast.error("DEPLOYMENT FAILED: " + e.message);
+            showToast("DEPLOYMENT FAILED", "error", e.message);
         }
     };
 
@@ -130,18 +130,18 @@ const AdminDashboard = () => {
 
     const handleBulkAddToGame = async () => {
         if (!dbGameId) {
-            toast.error("NO ACTIVE GAME INSTANCE FOUND");
+            showToast("ERROR", "error", "NO ACTIVE GAME INSTANCE FOUND");
             return;
         }
         if (selectedTeamIds.length === 0) return;
 
         try {
             await addTeamsToGame(dbGameId, selectedTeamIds);
-            toast.success(`ADDED ${selectedTeamIds.length} UNITS TO ACTIVE PROTOCOL`);
+            showToast("SUCCESS", "success", `ADDED ${selectedTeamIds.length} UNITS TO ACTIVE PROTOCOL`);
             setSelectedTeamIds([]);
             if (refreshTeams) refreshTeams();
         } catch (e: any) {
-            toast.error("OPERATION FAILED: " + e.message);
+            showToast("OPERATION FAILED", "error", e.message);
         }
     };
 
@@ -157,18 +157,18 @@ const AdminDashboard = () => {
 
         try {
             await cleanupTeams(teamNames);
-            toast.success(`TERMINATED ${teamNames.length} UNITS`);
+            showToast("SUCCESS", "success", `TERMINATED ${teamNames.length} UNITS`);
             setSelectedTeamIds([]);
             if (refreshTeams) refreshTeams();
         } catch (e: any) {
-            toast.error("CLEANUP FAILED: " + e.message);
+            showToast("CLEANUP FAILED", "error", e.message);
         }
     };
 
     // Question Management Handlers
     const handleCreateQuestion = async () => {
         if (!qContent || !qAnswer) {
-            toast.error("DATA AND KEY REQUIRED");
+            showToast("INPUT REQUIRED", "error", "DATA AND KEY REQUIRED");
             return;
         }
         try {
@@ -182,26 +182,26 @@ const AdminDashboard = () => {
                 points: qPoints,
                 isActive: true
             });
-            toast.success("INTEL UPLOADED TO SERVER");
+            showToast("SUCCESS", "success", "INTEL UPLOADED TO SERVER");
             setQContent("");
             setQAnswer("");
             setQPoints(100);
             refreshQuestions();
         } catch (e: any) {
-            toast.error("UPLOAD FAILED: " + e.message);
+            showToast("UPLOAD FAILED", "error", e.message);
         }
     };
 
     const handleAddQuestionToGame = async (qId: string) => {
         if (!dbGameId) {
-            toast.error("NO ACTIVE GAME INSTANCE");
+            showToast("ERROR", "error", "NO ACTIVE GAME INSTANCE");
             return;
         }
         try {
             await addQuestionToGame(dbGameId, qId);
-            toast.success("INTEL LINKED TO ACTIVE PROTOCOL");
+            showToast("SUCCESS", "success", "INTEL LINKED TO ACTIVE PROTOCOL");
         } catch (e: any) {
-            toast.error("LINK FAILED: " + e.message);
+            showToast("LINK FAILED", "error", e.message);
         }
     };
 
@@ -209,10 +209,10 @@ const AdminDashboard = () => {
         if (!confirm("PURGE ALL INTEL FROM DATABASE? THIS ACTION IS IRREVERSIBLE.")) return;
         try {
             await cleanupQuestions();
-            toast.success("DATABASE PURGED");
+            showToast("SUCCESS", "success", "DATABASE PURGED");
             refreshQuestions();
         } catch (e: any) {
-            toast.error("PURGE FAILED: " + e.message);
+            showToast("PURGE FAILED", "error", e.message);
         }
     }
 
@@ -232,14 +232,14 @@ const AdminDashboard = () => {
     };
 
     const handleBulkAddQuestionsToGame = async () => {
-        if (!dbGameId) { toast.error("NO ACTIVE GAME INSTANCE"); return; }
+        if (!dbGameId) { showToast("ERROR", "error", "NO ACTIVE GAME INSTANCE"); return; }
         if (selectedQuestionIds.length === 0) return;
         try {
             await Promise.all(selectedQuestionIds.map(qid => addQuestionToGame(dbGameId, qid)));
-            toast.success(`LINKED ${selectedQuestionIds.length} INTEL ITEMS TO PROTOCOL`);
+            showToast("SUCCESS", "success", `LINKED ${selectedQuestionIds.length} INTEL ITEMS TO PROTOCOL`);
             setSelectedQuestionIds([]);
         } catch (e: any) {
-            toast.error("BULK LINK FAILED: " + e.message);
+            showToast("BULK LINK FAILED", "error", e.message);
         }
     };
 
@@ -279,14 +279,14 @@ const AdminDashboard = () => {
             try {
                 const json = JSON.parse(e.target?.result as string);
                 if (!Array.isArray(json)) {
-                    toast.error("INVALID JSON: MUST BE AN ARRAY OF QUESTIONS");
+                    showToast("INVALID JSON", "error", "MUST BE AN ARRAY OF QUESTIONS");
                     return;
                 }
                 const res = await createQuestionsBulk(json);
-                toast.success(`UPLOADED ${res.createdCount} INTEL ITEMS`);
+                showToast("SUCCESS", "success", `UPLOADED ${res.createdCount} INTEL ITEMS`);
                 refreshQuestions();
             } catch (err: any) {
-                toast.error("UPLOAD FAILED: " + err.message);
+                showToast("UPLOAD FAILED", "error", err.message);
             }
         };
         reader.readAsText(file);
@@ -427,9 +427,9 @@ const AdminDashboard = () => {
                                     onClick={() => {
                                         if (dbGameId) {
                                             startGame(dbGameId);
-                                            toast.success("SYSTEM_ONLINE", { description: "Mission clock started." });
+                                            showToast("SYSTEM_ONLINE", "success", "Mission clock started.");
                                         } else {
-                                            toast.error("NO ACTIVE GAME INSTANCE TO START");
+                                            showToast("ERROR", "error", "NO ACTIVE GAME INSTANCE TO START");
                                         }
                                     }}
                                     className={`relative overflow-hidden group bg-cyan-900/20 border border-cyan-500/50 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_30px_cyan] text-cyan-400 px-10 py-4 font-bold uppercase text-xs tracking-[0.3em] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${gameStarted && !dbGameId ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -460,14 +460,14 @@ const AdminDashboard = () => {
                             />
                             <button
                                 onClick={async () => {
-                                    if (!newInstanceName) return toast.error("INSTANCE NAME REQUIRED");
+                                    if (!newInstanceName) return showToast("ERROR", "error", "INSTANCE NAME REQUIRED");
                                     try {
                                         const res = await createGame(newInstanceName);
                                         setDbGameId(res.game._id);
-                                        toast.success("GAME INSTANCE INITIALIZED: " + res.game.name);
+                                        showToast("SUCCESS", "success", "GAME INSTANCE INITIALIZED: " + res.game.name);
                                         setNewInstanceName("");
                                     } catch (e: any) {
-                                        toast.error("INIT FAILED: " + e.message);
+                                        showToast("INIT FAILED", "error", e.message);
                                     }
                                 }}
                                 className="w-full border border-cyan-500/30 text-cyan-400 py-3 text-[10px] uppercase font-bold hover:bg-cyan-500 hover:text-black transition-all tracking-widest"

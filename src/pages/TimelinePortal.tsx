@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Globe, Shield, Zap, Skull, ChevronRight, Lock, Sparkles, X, RotateCcw, AlertTriangle, Crosshair, Fingerprint } from "lucide-react";
 import { TimelineName, enterTimeline, useSpaceStone } from "@/services/api";
-import { toast } from "sonner";
+import { useGame } from "@/context/GameContext";
 import { useNavigate } from "react-router-dom";
 
 interface PortalProps {
@@ -224,6 +224,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
 const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
   const navigate = useNavigate();
   const { me, timelines = [] } = data;
+  const { showToast } = useGame();
 
   const [spaceStoneTarget, setSpaceStoneTarget] = useState<string | null>(null);
   const [spaceStoneLoading, setSpaceStoneLoading] = useState(false);
@@ -239,7 +240,7 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
   const handleSpaceStoneButtonClick = () => {
     if (!hasSpaceStone) return;
     if (eligibleEscapedTimelines.length === 0) {
-      toast.error("NO_ELIGIBLE_TIMELINES", { description: "Escape a timeline first to use the Space Stone for re-entry." });
+      showToast("NO_ELIGIBLE_TIMELINES", "error", "Escape a timeline first to use the Space Stone for re-entry.");
       return;
     }
     if (eligibleEscapedTimelines.length === 1) {
@@ -269,35 +270,29 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
   };
 
   const handleJump = async (id: TimelineName) => {
-    const jumpToast = toast.loading("Calculating Quantum Coordinates...");
+    showToast("Warp", "info", "Calculating Quantum Coordinates...");
     try {
       await enterTimeline(id);
-      toast.success(`WARP SUCCESSFUL: Destination ${id.toUpperCase()}`, { id: jumpToast });
+      showToast("WARP SUCCESSFUL", "success", `Destination ${id.toUpperCase()}`);
       onRefresh();
       navigate(`/mission/${id}`);
     } catch (e: any) {
-      toast.error(e.message || "Warp Drive Failure: Coordinates Invalid", { id: jumpToast });
+      showToast("Warp Drive Failure", "error", e.message || "Coordinates Invalid");
     }
   };
 
   const handleSpaceStoneConfirm = async () => {
     if (!spaceStoneTarget) return;
     setSpaceStoneLoading(true);
-    const jumpToast = toast.loading("Initiating Tesseract Protocol...");
+    showToast("Tesseract Protocol", "info", "Initiating Tesseract Protocol...");
     try {
       await useSpaceStone(spaceStoneTarget);
-      toast.success(`SPACE_STONE_ACTIVATED: Re-entering ${spaceStoneTarget.toUpperCase()}`, {
-        id: jumpToast,
-        description: "Quantum warp coordinates recalculated.",
-      });
+      showToast("SPACE_STONE_ACTIVATED", "success", `Re-entering ${spaceStoneTarget.toUpperCase()}. Quantum warp coordinates recalculated.`);
       setSpaceStoneTarget(null);
       onRefresh();
       navigate(`/mission/${spaceStoneTarget}`);
     } catch (e: any) {
-      toast.error(e.message || "Tesseract Protocol Failed", {
-        id: jumpToast,
-        description: "Space Stone energy depleted or cooldown active.",
-      });
+      showToast("Tesseract Protocol Failed", "error", e.message || "Space Stone energy depleted or cooldown active.");
     } finally {
       setSpaceStoneLoading(false);
     }

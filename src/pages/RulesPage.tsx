@@ -2,16 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Zap, Skull, Lock, Info, Play, Terminal, ShieldAlert } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { toast } from "sonner";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
 import * as api from "@/services/api";
 
 const RulesPage = () => {
     const navigate = useNavigate();
-    const { gameStarted } = useGame();
+    const { gameStarted, showToast, allTeamsState } = useGame();
     const { team } = useAuth();
-    const [registeredTeams, setRegisteredTeams] = useState<string[]>([]);
     const [bgImageUrl, setBgImageUrl] = useState("");
     const [showSecurityAlert, setShowSecurityAlert] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -19,16 +17,6 @@ const RulesPage = () => {
     useEffect(() => {
         const savedBg = localStorage.getItem("team_session_bg");
         setBgImageUrl(savedBg || "https://i.ibb.co/0p6SgpVW/44aa5903-5c27-4602-ad23-0ec051b8276a.jpg");
-
-        const fetchRegisteredTeams = async () => {
-            try {
-                const teams = await api.getRegisteredTeams();
-                if (Array.isArray(teams)) setRegisteredTeams(teams);
-            } catch (error) {
-                console.error("Failed to fetch teams:", error);
-            }
-        };
-        fetchRegisteredTeams();
 
         audioRef.current = new Audio("/alert.mp3");
         const handleFullscreenChange = () => {
@@ -48,17 +36,17 @@ const RulesPage = () => {
 
     const handleEnterWarzone = () => {
         if (!gameStarted) {
-            toast.error("SYSTEM OFFLINE", { description: "Awaiting Commander's signal." });
+            showToast("SYSTEM OFFLINE", "error", "Awaiting Commander's signal.");
             return;
         }
         if (!team) {
-            toast.error("INITIALIZATION_REQUIRED", { description: "Please log in to your unit first." });
+            showToast("INITIALIZATION_REQUIRED", "error", "Please log in to your unit first.");
             return;
         }
 
-        const teamRegistered = registeredTeams.includes(team.id || (team as any)._id);
-        if (!teamRegistered && registeredTeams.length > 0) {
-            toast.error("TEAM_NOT_REGISTERED", { description: "Contact the administrator." });
+        const teamRegistered = allTeamsState.some(t => t.teamId === (team.id || (team as any)._id));
+        if (!teamRegistered && allTeamsState.length > 0) {
+            showToast("TEAM_NOT_REGISTERED", "error", "Contact the administrator.");
             return;
         }
         navigate("/dashboard");
