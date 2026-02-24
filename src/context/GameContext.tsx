@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useMemo, useRef } from "react";
 import ShieldDefendModal from "@/components/ShieldDefendModal";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
@@ -87,12 +87,7 @@ export interface GameState {
   snapWinner: TeamGameState | null;
   initiateSupremeSnap: () => Promise<void>;
   isSocketConnected: boolean;
-  completionSummary: {
-    teamName: string;
-    score: number;
-    rank: number | null;
-    stones: string[];
-  } | null;
+  showToast: (message: string, type?: "success" | "error" | "info", description?: string) => void;
 }
 
 const GameContext = createContext<GameState | null>(null);
@@ -187,12 +182,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   });
   const [pendingStoneCount, setPendingStoneCount] = useState(0);
   const [allTeamsState, setAllTeamsState] = useState<TeamGameState[]>([]);
-  const [completionSummary, setCompletionSummary] = useState<{
-    teamName: string;
-    score: number;
-    rank: number | null;
-    stones: string[];
-  } | null>(null);
+  const lastStateFetchRef = useRef<number>(0);
+  const isInitialFetchDoneRef = useRef(false);
 
   const setGameDuration = useCallback((minutes: number) => {
     setGameDurationState(minutes * 60);
@@ -213,7 +204,23 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info", description?: string) => {
+    toast.dismiss();
+    const options = {
+      description,
+      duration: 1500,
+    };
+    if (type === "success") toast.success(message, options);
+    else if (type === "error") toast.error(message, options);
+    else toast(message, options);
+  }, []);
+
   const refreshTeams = useCallback(async () => {
+    // Throttle refreshes to once every 20 seconds to reduce server load
+    const now = Date.now();
+    if (now - lastStateFetchRef.current < 20000) return;
+    lastStateFetchRef.current = now;
+
     try {
       const list = await api.getAllTeams();
       setAllTeamsState(list.map(teamToGameState));
@@ -224,13 +231,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const isSnapReady = stones.ownedStones.length === 6 && !isSnapping && !snapWinner;
 
-  const syncMyState = useCallback(async () => {
+  const syncMyState = useCallback(async (existingGameState?: any) => {
     if (!api.getToken() || !team) return;
     try {
       const [me, stoneStatus, gameState] = await Promise.all([
         api.getMe(),
         api.getStoneStatus().catch(() => null),
-        api.getGameState(team.id).catch(() => null),
+        existingGameState ? Promise.resolve(existingGameState) : api.getGameState(team.id).catch(() => null),
       ]);
 
       setScore(me.score ?? 0);
@@ -278,9 +285,18 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       setAllTeamsState([]);
       // Still fetch game state for unauthenticated users on /rules
       // so the lock/unlock UI reflects reality on page load
-      api.getGameState().then((gs) => {
-        if (gs) setGameStarted(gs.status === "active");
-      }).catch(() => { });
+      // Still fetch game state for unauthenticated users on /rules
+      // so the lock/unlock UI reflects reality on page load
+      if (!isInitialFetchDoneRef.current) {
+        api.getGameState().then((gs) => {
+          if (gs) {
+            setGameStarted(gs.status === "active");
+            isInitialFetchDoneRef.current = true;
+          }
+        }).catch(() => { });
+        // Also fetch teams once for the leaderboard on Rules/Landing
+        refreshTeams();
+      }
       return;
     }
 
@@ -308,7 +324,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
 
         await refreshTeams();
-        await syncMyState();
+        await syncMyState(gameState);
       } catch {
         if (!cancelled) setPuzzles([]);
       } finally {
@@ -345,55 +361,50 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     });
 
     // Dashboard Events (Admin & Leaderboard)
-    s.on("SCORE_UPDATE", (data: any) => {
+    const handleScoreUpdate = (data: any) => {
       refreshTeams();
       if (data?.endTime) {
         setGameEndTime(new Date(data.endTime).getTime());
       }
-      if (data?.status === "ended") {
-        setGameStarted(false);
-        if (team && !isAdmin && window.location.pathname !== "/completion") {
-          navigate("/completion");
-        }
-      }
-    });
-    s.on("STONE_USAGE_UPDATE", () => {
+    };
+    const handleTeamUpdate = () => {
       refreshTeams();
-      addNotification("A high-energy artifact signature was detected.", "system");
-    });
-    s.on("STONE_SELECTION_UPDATE", () => {
-      refreshTeams();
-    });
-    s.on("BLIP_PUZZLE_LEADERBOARD", (data: any) => {
-      refreshTeams();
-      if (data?.teamName) addNotification(`${data.teamName} has bypassed the Blip!`, "success");
-    });
-    s.on("BLOCK_RELEASED_EARLY", () => refreshTeams());
+    };
+
+    s.on("SCORE_UPDATE", handleScoreUpdate);
+    s.on("STONE_USAGE_UPDATE", handleTeamUpdate);
+    s.on("STONE_SELECTION_UPDATE", handleTeamUpdate);
+    s.on("BLIP_PUZZLE_LEADERBOARD", handleTeamUpdate);
+    s.on("BLOCK_RELEASED_EARLY", handleTeamUpdate);
     s.on("GAME_ENDED", () => {
       setGameStarted(false);
-      addNotification("CRITICAL: Endgame constraints applied.", "system");
+      setGameEnded(true);
+    });
 
-      if (team && !isAdmin) {
-        navigate("/completion");
+    s.on("NEW_EVENT_LOG", (log: any) => {
+      setNotifications((prev) => {
+        const updated = [log, ...prev].slice(0, 50);
+        localStorage.setItem("systemLogs", JSON.stringify(updated));
+        return updated;
+      });
+      refreshTeams();
+    });
+
+    s.on("SNAP_ACTIVATED", (data: any) => {
+      setSnapWinner({ teamId: data.teamId, teamName: data.teamName, score: 0, currentLevel: 0, isFrozen: false, isBlocked: false, stones: [], completedTimelines: [], snapActivated: true });
+      setPowersDisabled(true);
+      setGameEnded(true);
+      showToast("[TIMELINE_FINALIZED]", "error", data.message || `${data.teamName} has won the game.`);
+      if (team?.id === data.teamId) {
+        navigate("/dashboard");
       }
     });
 
     s.on("GAME_STARTED", async () => {
+      setGameStarted(true);
+      showToast("[GAME_STARTED]", "success", "Game has started. Entering mission area.");
       if (team && !isAdmin) {
-        try {
-          const gs = await api.getGameState(team.id);
-          if (gs.status === "active") {
-            setGameStarted(true);
-            toast.success("COMMANDER_SIGNAL_RECEIVED", {
-              description: "The warzone is now open. Redirecting...",
-            });
-            navigate("/dashboard");
-          }
-        } catch (e) {
-        }
-      } else {
-        setGameStarted(true);
-        toast.success("GAME STARTED", { description: "The warzone is now open." });
+        navigate("/dashboard");
       }
     });
 
@@ -406,21 +417,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setBlockPuzzleQuestion(data.puzzleQuestion || null);
         setStones((prev) => ({ ...prev, blockedUntil: until }));
         addNotification(`You are under Power Surge attack!`, "attack");
-        toast.error("SYSTEM_LOCKED", { description: "Solve the unlock puzzle to regain control." });
+        showToast("[SYSTEM_LOCKED]", "error", "Answer the challenge puzzle to unlock your system.");
       });
 
       s.on("STONE_ATTACK_BLOCKED", (data?: any) => {
         // Shield blocked the incoming Power Surge
         setIsBlocked(false);
         setStones((prev) => ({ ...prev, shieldActive: false }));
-        toast.success("Shield saved you", { description: "Your Shield absorbed the incoming attack." });
+        showToast("[DEFENSE_SUCCESSFUL]", "success", "Shield blocked the incoming attack.");
       });
 
       s.on("ATTACK_OFFER_SHIELD", (data: { attackerId: string; attackerName?: string; message?: string }) => {
         setPendingAttackerId(data?.attackerId || null);
         setShowShieldOffer(true);
         addNotification(`Incoming attack from ${data?.attackerName || "an opponent"}`, "attack");
-        toast((data?.message) || "Incoming attack - choose defend or continue");
+        showToast("INCOMING_ATTACK", "info", (data?.message) || "Incoming attack - choose defend or continue");
       });
 
       // BLIP puzzle delivered directly to team
@@ -439,7 +450,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setIsFrozen(false);
         setFrozenUntil(null);
         setBlipPuzzleSolved(false);
-        toast.success("BLIP_RESOLVED", { description: "Blip ended - systems restored." });
+        showToast("[DECRYPTION_SUCCESS]", "success", "Security challenge resolved. Systems online.");
       });
 
       s.on("BLOCK_RELEASED", () => {
@@ -447,67 +458,49 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setBlockedUntil(null);
         setBlockPuzzleQuestion(null);
         setStones((prev) => ({ ...prev, blockedUntil: null }));
-        toast.success("SYSTEM_RESTORED", { description: "Block removed successfully." });
+        showToast("[SYSTEM_RESTORED]", "success", "Lockout removed. System fully operational.");
       });
 
       s.on("SHIELD_CONSUMED", () => {
         setStones((prev) => ({ ...prev, shieldActive: false, shieldCount: 0 }));
-        toast.success("SHIELD_DEFLECTED_ATTACK", { description: "Your Shield absorbed the incoming attack." });
-      });
-
-      s.on("SNAP_ACTIVATED", (data: { teamId: string; teamName: string; message: string }) => {
-        setSnapWinner({ teamId: data.teamId, teamName: data.teamName, score: 0, currentLevel: 0, isFrozen: false, isBlocked: false, stones: [], completedTimelines: [], snapActivated: true });
-        setPowersDisabled(true);
-        toast.error("SUPREME_SNAP_ACTIVATED", {
-          description: data.message || `${data.teamName} has achieved ultimate power.`,
-          duration: 10000
-        });
-        if (team && team.id === data.teamId) {
-          navigate("/dashboard");
-        }
+        showToast("[DEFENSE_SUCCESSFUL]", "success", "Shield blocked incoming attack.");
       });
     }
 
     setSocket(s);
 
     return () => {
-      s.off("connect", onConnect);
-      s.off("GAME_STARTED");
-      s.off("SCORE_UPDATE");
-      s.off("STONE_USAGE_UPDATE");
-      s.off("STONE_SELECTION_UPDATE");
-      s.off("BLIP_PUZZLE_LEADERBOARD");
-      s.off("BLOCK_RELEASED_EARLY");
-      s.off("GAME_ENDED");
-
-      if (team && !isAdmin) {
-        s.off("TEAM_BLOCKED");
-        s.off("ATTACK_OFFER_SHIELD");
-        s.off("STONE_ATTACK_BLOCKED");
-        s.off("BLOCK_RELEASED");
-        s.off("SHIELD_CONSUMED");
-        s.off("BLIP_PUZZLE");
-        s.off("BLIP_ENDED");
-        s.off("SNAP_ACTIVATED");
-      }
-
       s.disconnect();
       setSocket(null);
     };
-  }, [team, isAdmin, addNotification, navigate, refreshTeams]);
-  // useEffect(() => {
-  //   if (isBlocked && stones.shieldActive) {
-  //     setIsBlocked(false);
-  //     setStones((prev) => ({ ...prev, shieldActive: false }));
-  //     toast.success("SHIELD_DEFLECTED_ATTACK", {
-  //       description: "Incoming Power Surge negated by Shield Matrix.",
-  //     });
-  //   } else if (isBlocked) {
-  //     toast.error("CRITICAL_SYSTEM_BREACH", {
-  //       description: "Incoming Power Surge detected. System locked.",
-  //     });
-  //   }
-  // }, [isBlocked, stones.shieldActive]);
+  }, [team?.id, isAdmin, navigate]);
+
+  // Failsafe Polling: Only run every 2 minutes as backup to socket events
+  useEffect(() => {
+    if (!team || isAdmin || gameEnded) return;
+
+    const interval = setInterval(() => {
+      api.getGameState(team.id).then((gs) => {
+        if (gs.status === "ended") {
+          setGameStarted(false);
+          setGameEnded(true);
+        }
+      }).catch(() => { });
+    }, 120000);
+
+    return () => clearInterval(interval);
+  }, [team?.id, isAdmin, gameEnded]);
+
+  // 🎬 Real-time redirection when game ends
+  useEffect(() => {
+    if (gameEnded && !isAdmin) {
+      // Give a brief moment for socket event processing and refreshTeams to complete
+      const timer = setTimeout(() => {
+        navigate("/concluded", { replace: true });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [gameEnded, isAdmin, navigate]);
 
 
   useEffect(() => {
@@ -730,17 +723,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setPendingAttackerId(null);
         if (action === "useShield") {
           setStones((prev) => ({ ...prev, shieldCount: Math.max(0, (prev.shieldCount || 0) - 1), shieldActive: false }));
-          toast.success("SHIELD_CONSUMED_LOCAL", { description: res.message || "Shield used" });
+          showToast("[DEFENSE_SUCCESSFUL]", "success", res.message || "Shield used to defend.");
         } else {
-          toast.info("ATTACK_CONTINUE", { description: res.message || "Continuing attack protocol" });
+          showToast("[ACTION_CONFIRMED]", "info", res.message || "Continuing with attack protocol.");
         }
         await syncMyState();
         await refreshTeams();
       } catch (e: any) {
-        toast.error("DEFEND_ERROR", { description: e.message });
+        showToast("[ERROR]", "error", e.message);
       }
     },
-    [syncMyState, refreshTeams]
+    [syncMyState, refreshTeams, showToast]
   );
 
   const initiateSupremeSnap = useCallback(async () => {
@@ -757,57 +750,67 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isSnapReady, syncMyState, refreshTeams]);
 
+  const gameContextValue = useMemo(() => ({
+    puzzles,
+    currentLevel,
+    completedLevels,
+    score,
+    stones,
+    gameStarted,
+    gameEnded,
+    isFrozen,
+    frozenUntil,
+    blipPuzzleSolved,
+    blipPuzzleQuestion,
+    isBlocked,
+    powersDisabled,
+    allTeamsState,
+    startGame,
+    submitAnswer,
+    activateShield,
+    deactivateShield,
+    blockTeam,
+    setIsFrozen,
+    setIsBlocked,
+    setFrozen: setFrozenState,
+    notifications,
+    submitBlipAnswer,
+    solveBlipPuzzle,
+    triggerBlip,
+    freezeTeam,
+    unfreezeTeam,
+    gameDuration,
+    gameEndTime,
+    setGameDuration,
+    refreshTeams,
+    gameLoading,
+    resetBlipState,
+    blockPuzzleQuestion,
+    setBlockPuzzleQuestion,
+    showShieldOffer,
+    pendingAttackerId,
+    respondToAttack,
+    pendingStoneCount,
+    selectStoneType,
+    isSnapReady,
+    isSnapping,
+    snapWinner,
+    initiateSupremeSnap,
+    isSocketConnected,
+    showToast,
+  }), [
+    puzzles, currentLevel, completedLevels, score, stones, gameStarted, gameEnded, isFrozen,
+    frozenUntil, blipPuzzleSolved, blipPuzzleQuestion, isBlocked, powersDisabled, allTeamsState,
+    startGame, submitAnswer, activateShield, deactivateShield, blockTeam, setIsFrozen,
+    setIsBlocked, setFrozenState, notifications, submitBlipAnswer, solveBlipPuzzle, triggerBlip,
+    freezeTeam, unfreezeTeam, gameDuration, gameEndTime, setGameDuration, refreshTeams,
+    gameLoading, resetBlipState, blockPuzzleQuestion, setBlockPuzzleQuestion, showShieldOffer,
+    pendingAttackerId, respondToAttack, pendingStoneCount, selectStoneType, isSnapReady,
+    isSnapping, snapWinner, initiateSupremeSnap, isSocketConnected, showToast
+  ]);
+
   return (
-    <GameContext.Provider
-      value={{
-        puzzles,
-        currentLevel,
-        completedLevels,
-        score,
-        stones,
-        gameStarted,
-        isFrozen,
-        frozenUntil,
-        blipPuzzleSolved,
-        blipPuzzleQuestion,
-        isBlocked,
-        powersDisabled,
-        allTeamsState,
-        startGame,
-        submitAnswer,
-        activateShield,
-        deactivateShield,
-        blockTeam,
-        setIsFrozen,
-        setIsBlocked,
-        setFrozen: setFrozenState,
-        notifications,
-        submitBlipAnswer,
-        solveBlipPuzzle,
-        triggerBlip,
-        freezeTeam,
-        unfreezeTeam,
-        gameDuration,
-        gameEndTime,
-        setGameDuration,
-        refreshTeams,
-        gameLoading,
-        resetBlipState,
-        blockPuzzleQuestion,
-        setBlockPuzzleQuestion,
-        showShieldOffer,
-        pendingAttackerId,
-        respondToAttack,
-        pendingStoneCount,
-        selectStoneType,
-        isSnapReady,
-        isSnapping,
-        snapWinner,
-        initiateSupremeSnap,
-        isSocketConnected,
-        completionSummary,
-      }}
-    >
+    <GameContext.Provider value={gameContextValue}>
       <ShieldDefendModal />
       {children}
     </GameContext.Provider>

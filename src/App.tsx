@@ -18,6 +18,9 @@ import StoneSelectModal from "./components/StoneSelectModal";
 import CompletionPage from "./pages/CompletionPage";
 import MissionInterface from "./pages/MissionInterface";
 import HeroManager from "./components/HeroManager";
+
+import GameCompletion from "./pages/GameCompletion";
+
 import BlipOverlay from "./components/BlipOverlay";
 import AttackOverlay from "./components/AttackOverlay";
 

@@ -211,16 +211,6 @@ useEffect(() => {
           </form>
         </div>
 
-        {/* Footer Security Badge */}
-        <div className="mt-10 flex flex-col items-center gap-3 opacity-30">
-          <div className="flex items-center gap-2">
-            <Terminal size={14} className="text-[#e62429]" />
-            <p className="text-[10px] text-white uppercase tracking-[0.3em]">
-              Protocol 14.0.6.0.5
-            </p>
-          </div>
-          <div className="h-[2px] w-20 bg-gradient-to-r from-transparent via-[#e62429] to-transparent" />
-        </div>
       </div>
 
       {/* Cinematic CRT/Scanline Effect */}

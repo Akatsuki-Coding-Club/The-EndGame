@@ -3,13 +3,13 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Shield, Zap, Skull, Globe, Trophy, Swords, Sparkles, Flame, ChevronRight, X, AlertTriangle, Target, Clock } from "lucide-react";
 import { getDashboardData, DashboardData, useSpaceStone, useSnap, usePowerStone } from "@/services/api";
-import { toast } from "sonner";
 import TimelinePortal from "./TimelinePortal";
 import HeroManager from "@/components/HeroManager";
 import { useGame } from "@/context/GameContext";
 import { SnapSequence } from "@/components/SnapSequence";
 import Navbar from "@/components/Navbar";
 import { STONE_PROPERTIES } from "@/lib/stoneConfig";
+import { motion, AnimatePresence } from "framer-motion";
 
 declare global {
   namespace JSX {
@@ -50,7 +50,7 @@ const DASHBOARD_TIMELINE_META: Record<string, { label: string; color: string; bg
 
 const Dashboard = () => {
   const { logout } = useAuth();
-  const { allTeamsState, isFrozen } = useGame();
+  const { allTeamsState, isFrozen, showToast } = useGame();
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +84,7 @@ const Dashboard = () => {
   const handleStoneClick = (stoneId: string) => {
     const isCooldown = data?.me?.cooldownUntil ? new Date(data.me.cooldownUntil).getTime() > Date.now() : false;
     if (isCooldown && stoneId !== "space") {
-      toast.error("COOLDOWN_ACTIVE", { description: "Quantum systems are currently unstable." });
+      showToast("COOLDOWN_ACTIVE", "error", "Quantum systems are currently unstable.");
       return;
     }
 
@@ -97,15 +97,15 @@ const Dashboard = () => {
 
   const executePower = async () => {
     if (!targetTeam) return;
-    const t = toast.loading("Power Stone: Priming orbital cannon...");
+    showToast("Power Stone", "info", "Priming orbital cannon...");
     try {
       await usePowerStone(targetTeam);
-      toast.success("POWER STONE ACTIVE: Orbital Strike Launched", { id: t });
+      showToast("POWER STONE ACTIVE", "success", "Orbital Strike Launched");
       setShowPowerModal(false);
       setTargetTeam("");
       loadTacticalData();
     } catch (e: any) {
-      toast.error(e.message || "Power Stone activation failed", { id: t });
+      showToast("Power Stone activation failed", "error", e.message);
     }
   };
 
@@ -123,19 +123,19 @@ const Dashboard = () => {
       (id: string) => !(data?.me?.completedTimelines ?? []).includes(id)
     );
     if (escaped.length === 0) {
-      toast.error("NO_ELIGIBLE_TIMELINES", { description: "Escape a timeline first to use the Space Stone for re-entry." });
+      showToast("NO_ELIGIBLE_TIMELINES", "error", "Escape a timeline first to use the Space Stone for re-entry.");
       return;
     }
     // Use first escaped timeline (or extend later for picker)
     const target = escaped[0];
     setSpaceStoneLoading(true);
-    const t = toast.loading("Initiating Tesseract Protocol...");
+    showToast("Initiating Tesseract Protocol...", "info");
     try {
       await useSpaceStone(target);
-      toast.success(`SPACE_STONE_ACTIVATED: Re-entering ${target.toUpperCase()}`, { id: t, description: "Quantum warp recalculated." });
+      showToast("SPACE_STONE_ACTIVATED", "success", `Re-entering ${target.toUpperCase()}`);
       navigate(`/mission/${target}`);
     } catch (e: any) {
-      toast.error(e.message || "Tesseract Protocol Failed", { id: t });
+      showToast("Tesseract Protocol Failed", "error", e.message);
     } finally {
       setSpaceStoneLoading(false);
     }
@@ -144,12 +144,12 @@ const Dashboard = () => {
   const handleActivateSnap = async () => {
     try {
       setIsSnapping(true);
-      const toastId = toast.loading("Executing Supreme Snap...");
+      showToast("Executing Supreme Snap...", "info");
       await useSnap();
-      toast.success("Reality rewritten!", { id: toastId });
+      showToast("Reality rewritten!", "success");
       loadTacticalData();
     } catch (e: any) {
-      toast.error(e.message || "Failed to activate snap");
+      showToast("Snap Failed", "error", e.message || "Failed to activate snap");
     } finally {
       setIsSnapping(false);
     }
@@ -160,7 +160,7 @@ const Dashboard = () => {
       const res = await getDashboardData();
       setData(res);
     } catch (e) {
-      toast.error("Neural link unstable. Reconnecting...");
+      showToast("Neural link unstable", "error", "Reconnecting...");
     } finally {
       setLoading(false);
     }
@@ -364,7 +364,7 @@ const Dashboard = () => {
             </h3>
 
             {/* 3D Infinity Gauntlet Model */}
-            <div className="w-full h-48 mb-6 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center relative shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] group">
+            <div className="w-full h-48 mb-6 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center relative shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] group shrink-0">
               <model-viewer
                 src="/model/G.glb"
                 auto-rotate
@@ -380,6 +380,50 @@ const Dashboard = () => {
               <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 rounded bg-black/60 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
                 <span className="text-[7px] text-white/50 font-mono uppercase tracking-widest">3D Preview</span>
+              </div>
+            </div>
+
+            {/* LIVE LEADERBOARD (Simple) */}
+            <div className="mb-6 shrink-0 flex flex-col min-h-0">
+              <div className="mb-3 flex items-center justify-between shrink-0">
+                <h3 className="text-[9px] font-bold uppercase tracking-widest text-cyan-500 flex items-center gap-1.5">
+                  <Trophy size={12} /> Live Standings
+                </h3>
+              </div>
+
+              {/* Simple Leaderboard List with Shuffling Animation */}
+              <div className="max-h-56 max-w-full overflow-y-auto custom-scrollbar space-y-1.5 pr-1 shrink-0 relative">
+                <AnimatePresence>
+                  {leaderboard.map((team, idx) => {
+                    const isMe = myRankIndex !== -1 && leaderboard[myRankIndex].teamId === team.teamId;
+                    return (
+                      <motion.div
+                        key={team.teamId}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.4, type: "spring", stiffness: 200, damping: 20 }}
+                        className={`flex justify-between items-center border p-2.5 rounded-lg text-[10px] ${isMe
+                            ? "bg-green-950/40 border-green-500/30 text-green-300 shadow-[0_0_10px_rgba(34,197,94,0.15)]"
+                            : "bg-black/40 border-white/5 text-white/70"
+                          }`}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden flex-1">
+                          <span className={`font-mono w-4 shrink-0 font-bold ${isMe ? "text-green-400" : "opacity-50"}`}>
+                            {idx + 1}.
+                          </span>
+                          <span className="uppercase font-bold truncate tracking-wider">{team.teamName}</span>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0 pl-2">
+                          <span className={`font-mono shrink-0 font-bold ${isMe ? "text-green-400" : ""}`}>
+                            {team.score}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
             </div>
 

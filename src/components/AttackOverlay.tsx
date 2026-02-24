@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import * as api from "@/services/api";
-import { toast } from "sonner";
 
 const AttackOverlay = () => {
-  const { isBlocked, stones, blockPuzzleQuestion, setIsBlocked } = useGame();
+  const { isBlocked, stones, blockPuzzleQuestion, setIsBlocked, showToast } = useGame();
 
   const [answer, setAnswer] = useState("");
   const [timeLeft, setTimeLeft] = useState(0);
@@ -30,7 +29,7 @@ const AttackOverlay = () => {
 
   const handleSubmit = async () => {
     if (!answer.trim()) {
-      toast.error("Please enter an answer");
+      showToast("Please enter an answer", "error");
       return;
     }
 
@@ -39,13 +38,13 @@ const AttackOverlay = () => {
       const res = await api.submitBlockUnlock(answer);
 
       if (res.success) {
-        toast.success("ACCESS_RESTORED");
+        showToast("ACCESS_RESTORED", "success");
         setIsBlocked?.(false);
         setAnswer("");
       }
     } catch (err: any) {
       // Wrong answer - show error but keep overlay visible
-      toast.error("Wrong answer. Try again.");
+      showToast("Wrong answer", "error", "Try again.");
       setAnswer("");
     } finally {
       setLoading(false);
