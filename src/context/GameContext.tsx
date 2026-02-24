@@ -258,9 +258,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       if (gameState) {
         setGameStarted(gameState.status === "active");
         setPowersDisabled(gameState.lockdown ?? false);
-        setGameEndTime(gameState.endTime ? new Date(gameState.endTime).getTime() : null);
+        const endTime = gameState.endTime ? new Date(gameState.endTime).getTime() : null;
+        setGameEndTime(endTime);
+
+        // Only navigate to completion if status is ended AND the timer has actually expired
         if (gameState.status === "ended" && team && !isAdmin && window.location.pathname !== "/completion") {
-          navigate("/completion");
+          const now = Date.now();
+          if (!endTime || now >= endTime) {
+            navigate("/completion");
+          }
         }
       }
 
@@ -395,8 +401,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     s.on("SNAP_ACTIVATED", (data: any) => {
       setSnapWinner({ teamId: data.teamId, teamName: data.teamName, score: 0, currentLevel: 0, isFrozen: false, isBlocked: false, stones: [], completedTimelines: [], snapActivated: true });
       setPowersDisabled(true);
-      setGameEnded(true);
-      showToast("[TIMELINE_FINALIZED]", "error", data.message || `${data.teamName} has won the game.`);
+      // Removed setGameEnded(true) to allow other teams to continue until time runs out
+      showToast("[SUPREME_SNAP_DETECTED]", "error", data.message || `${data.teamName} has initiated the final reconfiguration.`);
       if (team?.id === data.teamId) {
         navigate("/dashboard");
       }
@@ -495,14 +501,19 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   // 🎬 Real-time redirection when game ends
   useEffect(() => {
+    // Navigate to completion only when the game time actually ends
     if (gameEnded && !isAdmin) {
-      // Give a brief moment for socket event processing and refreshTeams to complete
-      const timer = setTimeout(() => {
-        navigate("/concluded", { replace: true });
-      }, 500);
-      return () => clearTimeout(timer);
+      const now = Date.now();
+      const isTimerExpired = gameEndTime ? now >= gameEndTime : true;
+
+      if (isTimerExpired) {
+        const timer = setTimeout(() => {
+          navigate("/completion", { replace: true });
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [gameEnded, isAdmin, navigate]);
+  }, [gameEnded, gameEndTime, isAdmin, navigate]);
 
 
   useEffect(() => {

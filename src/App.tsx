@@ -17,12 +17,13 @@ import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
 import CompletionPage from "./pages/CompletionPage";
 import MissionInterface from "./pages/MissionInterface";
-import HeroManager from "./components/HeroManager";
+
 
 import GameCompletion from "./pages/GameCompletion";
 
 import BlipOverlay from "./components/BlipOverlay";
 import AttackOverlay from "./components/AttackOverlay";
+import { SnapSequence } from "./components/SnapSequence";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const GlobalOverlays = () => {
     <>
       {isFrozen && <BlipOverlay />}
       {isBlocked && <AttackOverlay />}
+      <SnapSequence />
     </>
   );
 };
@@ -85,7 +87,7 @@ const App = () => (
       />
       <BrowserRouter>
         {/* <ThemeDecorations /> */}
-        <HeroManager />
+
         <AuthProvider>
           <GameProvider>
             <TimerProvider>

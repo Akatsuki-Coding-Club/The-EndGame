@@ -79,12 +79,7 @@ const Navbar = () => {
             {/* 2. MIDDLE: EXCLUSIVELY INFINITY STONES */}
             <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center">
                 <div className="flex items-center justify-center gap-2 md:gap-4 relative">
-                    {isCooldown && (
-                        <div className="absolute -bottom-6 bg-red-900/90 border border-red-500/50 px-4 py-0.5 rounded-full z-20 flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.5)] whitespace-nowrap animate-in slide-in-from-top-2">
-                            <Timer className="text-red-500 animate-pulse" size={14} />
-                            <span className="text-red-400 font-black font-mono text-[10px] md:text-xs tracking-widest">{formatTime(timeLeft)}</span>
-                        </div>
-                    )}
+
                     {STONES_ORDER.map((id) => {
                         const stone = STONE_PROPERTIES[id];
                         const isUnlocked = ownedStones.includes(id);

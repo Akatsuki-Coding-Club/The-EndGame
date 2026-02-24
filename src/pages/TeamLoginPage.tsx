@@ -10,7 +10,7 @@ const TeamLoginPage = () => {
   const [error, setError] = useState("");
   const [showSecurityAlert, setShowSecurityAlert] = useState(false);
   const [bgImageUrl, setBgImageUrl] = useState("");
-  
+
   // 1. Defined the missing isLoading state
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,11 +27,11 @@ const TeamLoginPage = () => {
     "https://i.ibb.co/ZRfNDzrp/0b879b21-1833-41ef-b4d6-19729f5697a3.jpg",
   ];
 
-useEffect(() => {
+  useEffect(() => {
     const randomIdx = Math.floor(Math.random() * backgroundOptions.length);
     const selectedBg = backgroundOptions[randomIdx];
     setBgImageUrl(selectedBg);
-    
+
     // SAVE TO LOCALSTORAGE HERE
     localStorage.setItem("team_session_bg", selectedBg);
 
@@ -41,13 +41,7 @@ useEffect(() => {
 
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
-        setShowSecurityAlert(true);
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(() => {});
-        }
-      } else {
-        setShowSecurityAlert(false);
+        // Removed security alert logic
       }
     };
 
@@ -64,11 +58,11 @@ useEffect(() => {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().catch(() => { });
     }
   };
 
@@ -108,21 +102,7 @@ useEffect(() => {
       </div>
 
       {/* Security Alert Pop-up */}
-      <div
-        className={`fixed top-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${showSecurityAlert ? "translate-y-0 opacity-100" : "-translate-y-40 opacity-0"}`}
-      >
-        <div className="bg-[#e62429] border border-white/20 text-white px-8 py-4 rounded-xl shadow-[0_0_50px_rgba(230,36,41,0.6)] flex items-center gap-6 animate-pulse">
-          <ShieldAlert size={36} />
-          <div>
-            <h2 className="text-xl font-black uppercase tracking-[0.1em]">
-              Security Protocol Breached
-            </h2>
-            <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">
-              Restore Fullscreen to re-enable access
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Security Alert Pop-up Removed */}
 
       {/* Login Card Container */}
       <div className="relative z-10 w-full max-w-md px-6 animate-in fade-in zoom-in duration-700">

@@ -21,10 +21,7 @@ const RulesPage = () => {
         audioRef.current = new Audio("/alert.mp3");
         const handleFullscreenChange = () => {
             if (!document.fullscreenElement) {
-                setShowSecurityAlert(true);
-                audioRef.current?.play().catch(() => { });
-            } else {
-                setShowSecurityAlert(false);
+                // Removed security alert logic
             }
         };
 
@@ -79,12 +76,7 @@ const RulesPage = () => {
                 <Navbar />
             </div>
 
-            <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${showSecurityAlert ? "translate-y-0 opacity-100" : "-translate-y-40 opacity-0"}`}>
-                <div className="bg-[#e62429] border border-white/20 text-white px-8 py-4 rounded-xl shadow-[0_0_50px_rgba(230,36,41,0.6)] flex items-center gap-6 animate-pulse">
-                    <ShieldAlert size={30} />
-                    <p className="text-xs font-black uppercase tracking-widest">Security Protocol Breached: Restore Fullscreen</p>
-                </div>
-            </div>
+            {/* Security Alert Pop-up Removed */}
 
             {/* MAIN CONTENT AREA - Flex-1 perfectly centers content vertically without scrolling */}
             <div className="relative z-10 w-full max-w-6xl px-6 flex-1 flex flex-col justify-center items-center py-6">

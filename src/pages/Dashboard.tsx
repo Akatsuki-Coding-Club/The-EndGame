@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Shield, Zap, Skull, Globe, Trophy, Swords, Sparkles, Flame, ChevronRight, X, AlertTriangle, Target, Clock } from "lucide-react";
-import { getDashboardData, DashboardData, useSpaceStone, useSnap, usePowerStone } from "@/services/api";
+import { getDashboardData, DashboardData, useSpaceStone, useSnap, usePowerStone, useSoulStone } from "@/services/api";
 import TimelinePortal from "./TimelinePortal";
 import HeroManager from "@/components/HeroManager";
 import { useGame } from "@/context/GameContext";
@@ -59,6 +59,8 @@ const Dashboard = () => {
   const [isSnapping, setIsSnapping] = useState(false);
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [targetTeam, setTargetTeam] = useState("");
+  const [showSoulModal, setShowSoulModal] = useState(false);
+  const [sacrificedStone, setSacrificedStone] = useState("");
   const [confirmStone, setConfirmStone] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
 
@@ -92,6 +94,8 @@ const Dashboard = () => {
       handleSidebarSpaceStone();
     } else if (stoneId === "power") {
       setConfirmStone("power");
+    } else if (stoneId === "soul") {
+      setConfirmStone("soul");
     }
   };
 
@@ -109,10 +113,27 @@ const Dashboard = () => {
     }
   };
 
+  const executeSoul = async () => {
+    if (!sacrificedStone) return;
+    showToast("Soul Stone", "info", "Commencing ritual...");
+    try {
+      await useSoulStone(sacrificedStone);
+      showToast("SOUL STONE ACTIVE", "success", "Sacrifice accepted. Reality enriched.");
+      setShowSoulModal(false);
+      setSacrificedStone("");
+      loadTacticalData();
+    } catch (e: any) {
+      showToast("Soul Stone activation failed", "error", e.message);
+    }
+  };
+
   const handleConfirmAction = () => {
     if (!confirmStone) return;
     if (confirmStone === "power") {
       setShowPowerModal(true);
+      setConfirmStone(null);
+    } else if (confirmStone === "soul") {
+      setShowSoulModal(true);
       setConfirmStone(null);
     }
   };
@@ -219,8 +240,8 @@ const Dashboard = () => {
               </div>
 
               {/* Central 3D Visualizer */}
-              <div className="w-full max-w-2xl h-[450px] relative mb-16 animate-in zoom-in duration-1500">
-                <div className="absolute -inset-10 bg-yellow-500/5 blur-[80px] rounded-full animate-pulse" />
+              <div className={`w-full ${isSnapping ? 'max-w-4xl h-[600px]' : 'max-w-2xl h-[450px]'} relative mb-16 animate-in zoom-in duration-1500 transition-all duration-1000 ease-in-out`}>
+                <div className={`absolute -inset-10 ${isSnapping ? 'bg-yellow-500/20 blur-[120px]' : 'bg-yellow-500/5 blur-[80px]'} rounded-full animate-pulse`} />
                 <model-viewer
                   src={isSnapActive ? "/model/QWERT.glb" : "/model/G.glb"}
                   auto-rotate
@@ -229,7 +250,7 @@ const Dashboard = () => {
                   environment-image="neutral"
                   exposure="1.4"
                   auto-rotate-delay="0"
-                  rotation-per-second="15deg"
+                  rotation-per-second={isSnapping ? "60deg" : "15deg"}
                   style={{ width: '100%', height: '100%', outline: 'none' }}
                 />
 
@@ -269,15 +290,33 @@ const Dashboard = () => {
                     <p className="text-center text-white/40 font-mono text-[9px] tracking-widest uppercase mt-4">Warning: Reality reconfiguration is irreversible</p>
                   </div>
                 ) : (
-                  <div className="text-center space-y-6 animate-in slide-in-from-bottom-5 duration-1000 relative">
-                    <div className="absolute -inset-16 bg-yellow-500/10 blur-[100px] rounded-full pointer-events-none animate-pulse" />
-                    <h2 className="text-6xl font-black tracking-tighter text-yellow-500 [text-shadow:0_0_40px_rgba(234,179,8,0.6)] relative uppercase">Reality Rewritten</h2>
-                    <div className="inline-flex items-center gap-4 bg-yellow-500/10 px-10 py-4 rounded-full border border-yellow-500/40 shadow-[0_0_30px_rgba(234,179,8,0.2)] backdrop-blur-xl">
-                      <Sparkles className="text-yellow-400 animate-pulse" size={20} />
-                      <p className="text-yellow-400 font-mono tracking-[0.4em] font-black uppercase text-sm">
-                        Eternal Harmony Established
-                      </p>
+                  <div className="text-center space-y-8 animate-in slide-in-from-bottom-5 duration-1000 relative">
+                    <div className="absolute -inset-24 bg-yellow-500/10 blur-[120px] rounded-full pointer-events-none animate-pulse" />
+
+                    <div className="relative inline-block mb-4">
+                      <Trophy size={48} className="text-yellow-500 mx-auto drop-shadow-[0_0_20px_rgba(234,179,8,0.5)]" />
+                      <div className="absolute -inset-2 border border-yellow-500/20 rounded-full animate-ping" />
                     </div>
+
+                    <div className="space-y-4">
+                      <h2 className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-yellow-200 to-yellow-600 uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                        Reality Anchored
+                      </h2>
+
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="h-px w-32 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
+                        <div className="inline-flex items-center gap-4 bg-yellow-500/5 px-8 py-3 rounded-full border border-yellow-500/20 backdrop-blur-md">
+                          <Sparkles className="text-yellow-500 animate-pulse" size={16} />
+                          <p className="text-yellow-500 font-mono tracking-[0.4em] font-black uppercase text-[10px]">
+                            Ascended Status Active
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-white/30 font-mono text-[8px] tracking-[0.5em] uppercase max-w-[250px] mx-auto leading-relaxed pt-4">
+                      Protocol fulfilled. Temporal stability maintained at 100% capacity.
+                    </p>
                   </div>
                 )}
               </div>
@@ -290,7 +329,12 @@ const Dashboard = () => {
               </div>
             </div>
           ) : !me?.currentTimeline ? (
-            <TimelinePortal data={{ ...data, timelines, leaderboard }} onRefresh={loadTacticalData} onPowerStoneClick={() => handleStoneClick("power")} />
+            <TimelinePortal
+              data={{ ...data, timelines, leaderboard }}
+              onRefresh={loadTacticalData}
+              onPowerStoneClick={() => handleStoneClick("power")}
+              onSoulStoneClick={() => handleStoneClick("soul")}
+            />
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-12 relative overflow-hidden group/heist">
               {/* Timeline Background Image */}
@@ -405,8 +449,8 @@ const Dashboard = () => {
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.4, type: "spring", stiffness: 200, damping: 20 }}
                         className={`flex justify-between items-center border p-2.5 rounded-lg text-[10px] ${isMe
-                            ? "bg-green-950/40 border-green-500/30 text-green-300 shadow-[0_0_10px_rgba(34,197,94,0.15)]"
-                            : "bg-black/40 border-white/5 text-white/70"
+                          ? "bg-green-950/40 border-green-500/30 text-green-300 shadow-[0_0_10px_rgba(34,197,94,0.15)]"
+                          : "bg-black/40 border-white/5 text-white/70"
                           }`}
                       >
                         <div className="flex items-center gap-2 overflow-hidden flex-1">
@@ -531,6 +575,70 @@ const Dashboard = () => {
                   className="flex-1 py-4 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs transition-all shadow-lg shadow-purple-900/40"
                 >
                   Confirm Strike
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+      {
+        showSoulModal && (
+          <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-[#0a0a12] border border-orange-500/30 w-full max-w-lg p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
+              <button onClick={() => setShowSoulModal(false)} className="absolute top-4 right-4 text-white/20 hover:text-white/60 transition-colors"><X size={16} /></button>
+
+              <h3 className="text-orange-400 font-black uppercase tracking-widest mb-6 flex items-center gap-3 text-base">
+                <Skull size={18} /> Altar of Sacrifice
+              </h3>
+
+              <div className="space-y-4 mb-8">
+                <p className="text-[11px] text-white/40 font-mono uppercase tracking-[0.2em] leading-relaxed">
+                  To obtain the Soul Stone's blessing, you must sacrifice another artifact. Choose wisely.
+                </p>
+
+                <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
+                  {(me?.stones || []).filter(s => s !== "soul").length === 0 && (
+                    <p className="text-white/30 text-center py-4 text-xs font-mono">NO_STONES_AVAILABLE_FOR_SACRIFICE</p>
+                  )}
+                  {(me?.stones || [])
+                    .filter(s => s !== "soul")
+                    .map(stoneKey => {
+                      const cfg = STONE_PROPERTIES[stoneKey];
+                      if (!cfg) return null;
+                      return (
+                        <button
+                          key={stoneKey}
+                          onClick={() => setSacrificedStone(stoneKey)}
+                          className={`w-full text-left px-5 py-4 rounded-xl border transition-all flex justify-between items-center ${sacrificedStone === stoneKey
+                            ? "bg-orange-900/20 border-orange-500/50 text-white"
+                            : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10"
+                            }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-black/40 border border-white/10">
+                              <img src={cfg.image} alt={cfg.label} className="w-6 h-6 object-contain" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold tracking-wider text-sm uppercase">{cfg.label} Stone</span>
+                              <span className="text-[9px] text-white/30 font-mono italic">Sacrifice for Soul energy</span>
+                            </div>
+                          </div>
+                          {sacrificedStone === stoneKey && <Sparkles size={16} className="text-orange-400 animate-pulse" />}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button onClick={() => setShowSoulModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 font-black uppercase tracking-widest text-xs">Abort</button>
+                <button
+                  disabled={!sacrificedStone}
+                  onClick={executeSoul}
+                  className="flex-1 py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs transition-all shadow-lg shadow-orange-900/40"
+                >
+                  Sacrifice Artifact
                 </button>
               </div>
             </div>

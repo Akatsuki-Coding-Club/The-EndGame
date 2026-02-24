@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { STONE_PROPERTIES } from "@/lib/stoneConfig";
+import HeroManager from "@/components/HeroManager";
 
 /* ─── Stone config: single source of truth for colors / icons / labels ─── */
 
@@ -77,7 +78,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     font: "font-sans font-bold tracking-normal",
     glow: "shadow-[0_0_50px_rgba(6,182,212,0.15)]",
     // IF YOU HAVE A VIDEO, PUT THE URL HERE:
-    videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771870962/vormir_uqk02g.mp4",
+    videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771871346/grok-video-2a30ee02-773c-4f57-8d26-d68965ddcbd9_zqvf7w.mp4",
     shadow: "shadow-[0_0_30px_rgba(6,182,212,0.1)]",
     animation: "animate-in slide-in-from-bottom-4 duration-500"
   }
@@ -390,12 +391,7 @@ const MissionInterface = () => {
         </span>
 
         {/* Cooldown overlay badge */}
-        {owned && isCooldown && !isSpace && (
-          <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-black/80 px-1.5 py-0.5 rounded-full border border-red-500/30">
-            <Clock size={7} className="text-red-500 animate-in fade-in" />
-            <span className="text-[7px] font-mono text-red-400">{formatTime(timeLeft)}</span>
-          </div>
-        )}
+
 
         {/* Space badge */}
         {isSpace && owned && (
@@ -430,6 +426,8 @@ const MissionInterface = () => {
   /* ─── Render ─── */
   return (
     <div className="h-screen bg-[#05050c] flex flex-col font-mono text-slate-300 overflow-hidden relative">
+      <HeroManager />
+      <Navbar />
       <style>
         {`
           @keyframes float {
@@ -464,7 +462,7 @@ const MissionInterface = () => {
         {/* Darkening Overlay for readability */}
         <div className="absolute inset-0 bg-black/40" />
       </div>
-      <Navbar />
+
 
       {/* ─── MAIN CONTENT ─── */}
       <div className="flex-1 flex flex-col overflow-hidden pb-2 relative z-10">

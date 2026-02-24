@@ -8,6 +8,7 @@ interface PortalProps {
   data: any;
   onRefresh: () => void;
   onPowerStoneClick?: () => void;
+  onSoulStoneClick?: () => void;
 }
 
 const TIMELINE_META: Record<string, any> = {
@@ -222,7 +223,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
 };
 
 /* ─── Main Component ─── */
-const TimelinePortal = ({ data, onRefresh, onPowerStoneClick }: PortalProps) => {
+const TimelinePortal = ({ data, onRefresh, onPowerStoneClick, onSoulStoneClick }: PortalProps) => {
   const navigate = useNavigate();
   const { me, timelines = [] } = data;
   const { showToast } = useGame();
@@ -233,6 +234,7 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick }: PortalProps) => 
 
   const hasSpaceStone = Array.isArray(me?.stones) && me.stones.includes("space");
   const hasPowerStone = Array.isArray(me?.stones) && me.stones.includes("power");
+  const hasSoulStone = Array.isArray(me?.stones) && me.stones.includes("soul");
 
   const completedTimelines = Array.isArray(me?.completedTimelines) ? me.completedTimelines : [];
   const escapedTimelines = Array.isArray(me?.escapedTimelines) ? me.escapedTimelines : [];
@@ -315,7 +317,7 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick }: PortalProps) => 
       <div className="p-6 md:p-8 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
 
         {/* Header Section */}
-        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between border-b border-white/10 pb-6 gap-6">
+        <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 pb-6 gap-6">
           <div className="space-y-1 relative">
             {/* Ambient Title Glow */}
             <div className="absolute -inset-4 bg-cyan-500/10 blur-3xl rounded-full pointer-events-none" />
@@ -328,19 +330,19 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick }: PortalProps) => 
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-3 flex-shrink-0">
             {hasSpaceStone && (
               <button
                 onClick={handleSpaceStoneButtonClick}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-blue-400/40 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:border-blue-300/80 hover:shadow-[0_0_35px_rgba(59,130,246,0.4)] transition-all active:scale-95 group relative overflow-hidden"
+                className="flex items-center gap-3 px-4 py-2.5 min-w-[140px] h-11 rounded-xl border border-blue-400/40 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:border-blue-300/80 hover:shadow-[0_0_35px_rgba(59,130,246,0.4)] transition-all active:scale-95 group relative overflow-hidden flex-shrink-0"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <img src="/space-stone.png" alt="Space Stone" className="w-4 h-4 object-cover rounded-full drop-shadow-[0_0_5px_rgba(59,130,246,0.8)] relative z-10 group-hover:scale-110 transition-transform" />
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-200 group-hover:text-white transition-colors relative z-10">
-                  Space Stone Ready
+                <img src="/space-stone.png" alt="Space Stone" className="w-5 h-5 object-cover rounded-full drop-shadow-[0_0_5px_rgba(59,130,246,0.8)] relative z-10 group-hover:scale-110 transition-transform" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-200 group-hover:text-white transition-colors relative z-10 whitespace-nowrap">
+                  Space Stone
                 </span>
                 {eligibleEscapedTimelines.length > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-blue-500 text-[8px] font-black text-white flex items-center justify-center relative z-10 shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                  <span className="w-4 h-4 rounded-full bg-blue-500 text-[8px] font-black text-white flex items-center justify-center relative z-10 shadow-[0_0_10px_rgba(0,0,0,0.5)] shrink-0">
                     {eligibleEscapedTimelines.length}
                   </span>
                 )}
@@ -350,12 +352,25 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick }: PortalProps) => 
             {hasPowerStone && (
               <button
                 onClick={onPowerStoneClick}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-purple-400/40 bg-purple-500/10 shadow-[0_0_20px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:border-purple-300/80 hover:shadow-[0_0_35px_rgba(168,85,247,0.4)] transition-all active:scale-95 group relative overflow-hidden"
+                className="flex items-center gap-3 px-4 py-2.5 min-w-[140px] h-11 rounded-xl border border-purple-400/40 bg-purple-500/10 shadow-[0_0_20px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:border-purple-300/80 hover:shadow-[0_0_35px_rgba(168,85,247,0.4)] transition-all active:scale-95 group relative overflow-hidden flex-shrink-0"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400/0 via-purple-400/10 to-purple-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <img src="/power-stone.png" alt="Power Stone" className="w-12 h-12 object-cover rounded-full drop-shadow-[0_0_5px_rgba(168,85,247,0.8)] relative z-10 group-hover:scale-110 transition-transform" />
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-purple-200 group-hover:text-white transition-colors relative z-10">
+                <img src="/power-stone.png" alt="Power Stone" className="w-5 h-5 object-cover rounded-full drop-shadow-[0_0_5px_rgba(168,85,247,0.8)] relative z-10 group-hover:scale-110 transition-transform" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-purple-200 group-hover:text-white transition-colors relative z-10 whitespace-nowrap">
                   Power Stone
+                </span>
+              </button>
+            )}
+
+            {hasSoulStone && (
+              <button
+                onClick={onSoulStoneClick}
+                className="flex items-center gap-3 px-4 py-2.5 min-w-[140px] h-11 rounded-xl border border-orange-400/40 bg-orange-500/10 shadow-[0_0_20px_rgba(251,146,60,0.2)] hover:bg-orange-500/20 hover:border-orange-300/80 hover:shadow-[0_0_35px_rgba(251,146,60,0.4)] transition-all active:scale-95 group relative overflow-hidden flex-shrink-0"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/0 via-orange-400/10 to-orange-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                <img src="/soul_stone.jpg" alt="Soul Stone" className="w-5 h-5 object-cover rounded-full drop-shadow-[0_0_5px_rgba(251,146,60,0.8)] relative z-10 group-hover:scale-110 transition-transform" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-orange-200 group-hover:text-white transition-colors relative z-10 whitespace-nowrap">
+                  Soul Stone
                 </span>
               </button>
             )}
