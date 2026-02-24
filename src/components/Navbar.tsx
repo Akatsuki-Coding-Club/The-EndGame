@@ -162,7 +162,7 @@ const Navbar = () => {
                         Strategic Points
                     </span>
                     <span className="text-lg font-bold text-cyan-400 leading-none drop-shadow-md">
-                        {score ?? 0}
+                        {myTeam?.score ?? score ?? 0}
                     </span>
                 </div>
 
