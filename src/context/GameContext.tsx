@@ -59,7 +59,7 @@ export interface GameState {
   gameDuration: number;
   gameEndTime: number | null;
   setGameDuration: (seconds: number) => void;
-  notifications: { id: string; message: string; type: "attack" | "success" | "system"; timestamp: string }[];
+  notifications: { id: string; message: string; type: "attack" | "success" | "system"; timestamp: string; fullTime?: string; createdAt?: string }[];
   allTeamsState: TeamGameState[];
   startGame: (gameId?: string) => void;
   submitAnswer: (levelId: number, answer: string) => Promise<boolean>;
@@ -168,7 +168,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const [powersDisabled, setPowersDisabled] = useState(false);
   const [gameLoading, setGameLoading] = useState(true);
-  const [notifications, setNotifications] = useState<{ id: string; message: string; type: "attack" | "success" | "system"; timestamp: string; fullTime?: string }[]>(() => {
+  const [notifications, setNotifications] = useState<{ id: string; message: string; type: "attack" | "success" | "system"; timestamp: string; fullTime?: string; createdAt?: string }[]>(() => {
     try {
       const stored = localStorage.getItem("systemLogs");
       if (stored) return JSON.parse(stored);
@@ -217,10 +217,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     else toast(message, options);
   }, []);
 
-  const refreshTeams = useCallback(async () => {
+  const refreshTeams = useCallback(async (force: boolean = false) => {
     // Throttle refreshes to once every 20 seconds to reduce server load
     const now = Date.now();
-    if (now - lastStateFetchRef.current < 20000) return;
+    if (!force && now - lastStateFetchRef.current < 20000) return;
+    if (force && now - lastStateFetchRef.current < 1500) return; // Allow quick refresh but still prevent storming
     lastStateFetchRef.current = now;
 
     try {
@@ -370,13 +371,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     // Dashboard Events (Admin & Leaderboard)
     const handleScoreUpdate = (data: any) => {
-      refreshTeams();
+      refreshTeams(true);
       if (data?.endTime) {
         setGameEndTime(new Date(data.endTime).getTime());
       }
     };
     const handleTeamUpdate = () => {
-      refreshTeams();
+      refreshTeams(true);
     };
 
     s.on("SCORE_UPDATE", handleScoreUpdate);
@@ -395,7 +396,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("systemLogs", JSON.stringify(updated));
         return updated;
       });
-      refreshTeams();
+      refreshTeams(true);
     });
 
     s.on("SNAP_ACTIVATED", (data: any) => {
