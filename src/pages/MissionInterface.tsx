@@ -47,7 +47,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-blue-600 hover:bg-blue-500",
     font: "font-mono tracking-tight",
     glow: "shadow-[0_0_50px_rgba(29,78,216,0.15)]",
-    videoBg: "/morag.mp4",
+    videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771871022/morag_ejxr9z.mp4",
     shadow: "shadow-[0_0_30px_rgba(29,78,216,0.1)]", // Added missing property
     animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
@@ -57,7 +57,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-amber-500 hover:bg-amber-400",
     font: "font-serif tracking-wide uppercase",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
-    videoBg: "/asgard.mp4",
+    videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771870884/asgard_gd52ji.mp4",
     shadow: "shadow-[0_0_30px_rgba(245,158,11,0.1)]", // Added missing property
     animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
   },
@@ -67,7 +67,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-orange-700 hover:bg-orange-500 text-white shadow-[0_0_20px_rgba(194,65,12,0.5)] transition-all duration-300",
     font: "font-serif tracking-[0.4em]",
     glow: "shadow-[0_0_80px_rgba(234,88,12,0.15)] border border-orange-900/40",
-    videoBg: "/vormir.mp4",
+    videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771870962/vormir_uqk02g.mp4",
     shadow: "shadow-[0_0_40px_rgba(234,88,12,0.1)]", // Added missing property
     animation: "animate-in fade-in duration-700" // Custom animation for Vormir
   },
@@ -77,9 +77,10 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     secondary: "bg-cyan-600 hover:bg-cyan-500",
     font: "font-sans font-bold tracking-normal",
     glow: "shadow-[0_0_50px_rgba(6,182,212,0.15)]",
-    videoBg: "",
-    shadow: "shadow-[0_0_30px_rgba(6,182,212,0.1)]", // Added missing property
-    animation: "animate-in slide-in-from-bottom-4 duration-500" // Added missing property
+    // IF YOU HAVE A VIDEO, PUT THE URL HERE:
+    videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771870962/vormir_uqk02g.mp4",
+    shadow: "shadow-[0_0_30px_rgba(6,182,212,0.1)]",
+    animation: "animate-in slide-in-from-bottom-4 duration-500"
   }
 };
 
@@ -314,9 +315,10 @@ const MissionInterface = () => {
     const cfg = STONE_PROPERTIES[stoneKey];
     const owned = hasStone(stoneKey);
     const isSpace = stoneKey === "space";
+    const { isBlocked } = useGame();
     // Space stone is always disabled in mission (dashboard only)
-    const isDisabled = isSpace || isCooldown || !owned;
-    const canActivate = owned && !isSpace && !isCooldown;
+    const isDisabled = isSpace || isCooldown || !owned || isBlocked;
+    const canActivate = owned && !isSpace && !isCooldown && !isBlocked;
 
     const handleClick = () => {
       if (!canActivate) return;
@@ -442,20 +444,28 @@ const MissionInterface = () => {
 
       {/* --- LIVE WALLPAPER LAYER --- */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <video
-          key={theme.videoBg} // Key force-reloads video when timeline changes
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover opacity-30 grayscale-[0.3] scale-110" // Low opacity so UI pops
-        >
-          <source src={theme.videoBg} type="video/mp4" />
-        </video>
+        {theme.videoBg.endsWith(".mp4") ? (
+          <video
+            key={theme.videoBg} // Force re-render when URL changes
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover opacity-30 grayscale-[0.3] scale-110"
+          >
+            <source src={theme.videoBg} type="video/mp4" />
+          </video>
+        ) : (
+          <img
+            key={theme.videoBg}
+            src={theme.videoBg}
+            alt="Background"
+            className="w-full h-full object-cover opacity-30 grayscale-[0.3] scale-110"
+          />
+        )}
+
         {/* Darkening Overlay for readability */}
-        <div
-          className="absolute inset-0 transition-colors duration-1000"
-        />
+        <div className="absolute inset-0 bg-black/40" />
       </div>
       <Navbar />
 

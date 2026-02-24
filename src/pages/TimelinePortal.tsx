@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 interface PortalProps {
   data: any;
   onRefresh: () => void;
+  onPowerStoneClick?: () => void;
 }
 
 const TIMELINE_META: Record<string, any> = {
@@ -144,18 +145,18 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
                 <div className="absolute -inset-2 rounded-3xl border border-cyan-400/30 animate-ping z-0" style={{ animationDuration: "2.5s" }} />
               </div>
               <div>
-                <p className="text-[10px] font-mono tracking-[0.5em] text-cyan-400/80 uppercase mb-1">Class-S Artifact</p>
+                {/* <p className="text-[10px] font-mono tracking-[0.5em] text-cyan-400/80 uppercase mb-1">Class-S Artifact</p> */}
                 <h2 className="text-3xl font-black uppercase text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Space Stone</h2>
                 <p className="text-[10px] text-blue-300/50 font-mono mt-1 tracking-widest animate-pulse">TESSERACT_PROTOCOL_READY</p>
               </div>
             </div>
 
-            <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 relative overflow-hidden">
+            {/* <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
               <p className="text-[11px] font-mono text-blue-200/90 uppercase tracking-[0.2em] leading-relaxed pl-2">
-                Temporal re-entry sequence initiated. The Space Stone will fold reality to return your unit to previously escaped coordinates.
-              </p>
-            </div>
+                  Temporal re-entry sequence initiated. The Space Stone will fold reality to return your unit to previously escaped coordinates.
+                </p>
+            </div> */}
           </div>
 
           <div className="p-10 pt-8 space-y-8 bg-black/40">
@@ -180,12 +181,12 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-red-950/30 border border-red-500/30">
+            {/* <div className="flex items-start gap-4 p-4 rounded-xl bg-red-950/30 border border-red-500/30">
               <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0 animate-pulse" />
               <p className="text-[10px] font-mono text-red-400/80 leading-relaxed uppercase tracking-widest">
                 WARNING: The Space Stone will be consumed upon activation. This action is irreversible during the current phase.
               </p>
-            </div>
+            </div> */}
 
             <div className="flex gap-4 pt-2">
               <button onClick={onCancel} disabled={loading} className="w-1/3 py-4 text-xs font-black uppercase tracking-[0.3em] text-white/30 border border-white/10 rounded-xl hover:border-white/30 hover:text-white hover:bg-white/5 transition-all disabled:opacity-30">
@@ -221,7 +222,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
 };
 
 /* ─── Main Component ─── */
-const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
+const TimelinePortal = ({ data, onRefresh, onPowerStoneClick }: PortalProps) => {
   const navigate = useNavigate();
   const { me, timelines = [] } = data;
 
@@ -230,6 +231,7 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
   const [showPicker, setShowPicker] = useState(false);
 
   const hasSpaceStone = Array.isArray(me?.stones) && me.stones.includes("space");
+  const hasPowerStone = Array.isArray(me?.stones) && me.stones.includes("power");
 
   const completedTimelines = Array.isArray(me?.completedTimelines) ? me.completedTimelines : [];
   const escapedTimelines = Array.isArray(me?.escapedTimelines) ? me.escapedTimelines : [];
@@ -331,7 +333,7 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
             </p>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4">
             {hasSpaceStone && (
               <button
                 onClick={handleSpaceStoneButtonClick}
@@ -347,6 +349,19 @@ const TimelinePortal = ({ data, onRefresh }: PortalProps) => {
                     {eligibleEscapedTimelines.length}
                   </span>
                 )}
+              </button>
+            )}
+
+            {hasPowerStone && (
+              <button
+                onClick={onPowerStoneClick}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-purple-400/40 bg-purple-500/10 shadow-[0_0_20px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:border-purple-300/80 hover:shadow-[0_0_35px_rgba(168,85,247,0.4)] transition-all active:scale-95 group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/0 via-purple-400/10 to-purple-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                <img src="/power-stone.png" alt="Power Stone" className="w-12 h-12 object-cover rounded-full drop-shadow-[0_0_5px_rgba(168,85,247,0.8)] relative z-10 group-hover:scale-110 transition-transform" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-purple-200 group-hover:text-white transition-colors relative z-10">
+                  Power Stone
+                </span>
               </button>
             )}
           </div>

@@ -8,7 +8,7 @@ import { STONE_PROPERTIES } from "@/lib/stoneConfig";
 
 const Navbar = () => {
     const { logout, team } = useAuth();
-    const { score, allTeamsState, isFrozen, gameStarted } = useGame();
+    const { score, allTeamsState, isFrozen, gameStarted, isBlocked } = useGame();
     const { formatted } = useTimer();
 
     // Read directly from the dynamically updated context via socket
@@ -38,7 +38,7 @@ const Navbar = () => {
         return `${m}:${s.toString().padStart(2, "0")}`;
     };
 
-    const isCooldown = timeLeft > 0;
+    const isCooldown = timeLeft > 0 || isBlocked;
 
     // Calculate rank dynamically
     const currentRank = [...(allTeamsState || [])]
@@ -117,7 +117,7 @@ const Navbar = () => {
                                         <div className="absolute top-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 w-72 bg-[#05050a] border border-white/10 border-t-2 rounded-xl p-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-[100] shadow-[0_25px_50px_rgba(0,0,0,1)]" style={{ borderTopColor: stone.color }}>
                                             <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: stone.color }}>{stone.label} Stone</p>
                                             <p className="text-[10px] text-slate-300 font-mono uppercase tracking-widest leading-relaxed">
-                                                {isCooldown ? "Temporal instability detected. Cooldown phase active." : stone.desc}
+                                                {isBlocked ? "System frozen by Power Surge. Artifact inaccessible." : isCooldown ? "Temporal instability detected. Cooldown phase active." : stone.desc}
                                             </p>
                                             <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#05050a] border-t border-l border-white/10 rotate-45" />
                                         </div>

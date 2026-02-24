@@ -290,7 +290,7 @@ const Dashboard = () => {
               </div>
             </div>
           ) : !me?.currentTimeline ? (
-            <TimelinePortal data={{ ...data, timelines, leaderboard }} onRefresh={loadTacticalData} />
+            <TimelinePortal data={{ ...data, timelines, leaderboard }} onRefresh={loadTacticalData} onPowerStoneClick={() => handleStoneClick("power")} />
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-12 relative overflow-hidden group/heist">
               {/* Timeline Background Image */}
@@ -384,84 +384,6 @@ const Dashboard = () => {
             </div>
 
             {/* Dynamic stone list — only shows stones team actually owns */}
-            {(me?.stones?.length ?? 0) === 0 ? (
-              <p className="text-[9px] text-white/20 custom-scrollbar font-mono uppercase tracking-widest text-center py-4">
-                No artifacts acquired yet
-              </p>
-            ) : (
-              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
-                {(me?.stones ?? []).map((s: string) => {
-                  const meta = STONE_PROPERTIES[s] ?? { label: s, color: "#fff", glow: "rgba(255,255,255,0.3)", image: "", icon: <Sparkles size={16} />, desc: "Unknown artifact resonance." };
-                  const isSpace = s === "space";
-                  const hasEscaped = (me?.escapedTimelines?.length ?? 0) > 0;
-                  return (
-                    <div
-                      key={s}
-                      onClick={() => handleStoneClick(s)}
-                      className={`group relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 ${isSpace
-                        ? "border-blue-500/30 bg-blue-500/[0.06] cursor-pointer hover:border-blue-400/80 hover:bg-blue-500/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] active:scale-95"
-                        : "border-white/[0.06] bg-black/40 hover:border-white/10 cursor-pointer"
-                        }`}
-                      style={!isSpace ? { borderColor: `${meta.color}18` } : {}}
-                    >
-                      {/* Background Aura */}
-                      <div
-                        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"
-                        style={{ backgroundColor: meta.color }}
-                      />
-
-                      {/* Stone gem icon */}
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg relative z-10 overflow-hidden"
-                        style={{
-                          backgroundColor: `${meta.color}20`,
-                          color: meta.color,
-                          boxShadow: `0 0 15px ${meta.glow}`,
-                        }}
-                      >
-                        {meta.image ? (
-                          <img src={meta.image} alt={meta.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-125" style={{ filter: `drop-shadow(0 0 8px ${meta.color})` }} />
-                        ) : (
-                          meta.icon
-                        )}
-                        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-
-                      <div className="flex-1 min-w-0 relative z-10">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[10px] font-black uppercase tracking-widest leading-none" style={{ color: meta.color }}>
-                            {meta.label}
-                          </p>
-                          <span className="w-1 h-1 rounded-full bg-white/20" />
-                        </div>
-                        {isSpace && (
-                          <p className="text-[8px] font-mono text-blue-400/60 uppercase tracking-widest mt-1 group-hover:text-blue-300 transition-colors">
-                            {hasEscaped ? "Initiate Tesseract" : "Coordinates Locked"}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Active Status Indicator */}
-                      <div className="flex flex-col items-end gap-1 relative z-10">
-                        <div
-                          className="w-1.5 h-1.5 rounded-full animate-pulse"
-                          style={{ backgroundColor: meta.color, boxShadow: `0 0 8px ${meta.color}` }}
-                        />
-                        {isSpace && hasEscaped && (
-                          <Sparkles size={10} className="text-blue-400 animate-bounce" />
-                        )}
-                      </div>
-
-                      {/* Hover Tooltip */}
-                      <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 w-48 bg-black/95 border-r-2 rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-[100] shadow-2xl" style={{ borderRightColor: meta.color }}>
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: meta.color }}>{meta.label} Stone</p>
-                        <p className="text-[8px] text-white/60 font-mono uppercase tracking-wider leading-relaxed">{meta.desc}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
             <div className="absolute top-0 left-0 w-full h-px bg-cyan-500/20 animate-scan" />
           </section>
         </aside>
