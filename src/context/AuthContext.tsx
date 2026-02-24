@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useMemo } from "react";
 import * as api from "@/services/api";
 
 export interface Team {
@@ -96,18 +96,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const authValue = useMemo(() => ({
+    isLoggedIn: !!team,
+    isAdmin,
+    team,
+    loading,
+    login,
+    adminLogin,
+    logout,
+  }), [team, isAdmin, loading, login, adminLogin, logout]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        isLoggedIn: !!team,
-        isAdmin,
-        team,
-        loading,
-        login,
-        adminLogin,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={authValue}>
       {!loading && children}
     </AuthContext.Provider>
   );

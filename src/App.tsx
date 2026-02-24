@@ -17,12 +17,9 @@ import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
 import MissionInterface from "./pages/MissionInterface";
 import HeroManager from "./components/HeroManager";
-<<<<<<< HEAD
 import GameCompletion from "./pages/GameCompletion";
-=======
 import BlipOverlay from "./components/BlipOverlay";
 import AttackOverlay from "./components/AttackOverlay";
->>>>>>> 983aec7f4a5d0b54aaac8cb6acb189d272602450
 
 const queryClient = new QueryClient();
 

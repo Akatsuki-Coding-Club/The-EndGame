@@ -16,7 +16,6 @@ import {
   useSoulStone,
   StoneStatus
 } from "@/services/api";
-import { toast } from "sonner";
 import {
   Terminal, Loader2, Target, Zap, Clock, Brain, Globe, Flame, Eye, Skull,
   ChevronUp, ChevronDown, AlertTriangle, Sparkles, Shield, X,
@@ -110,6 +109,8 @@ const MissionInterface = () => {
   const [confirmStone, setConfirmStone] = useState<string | null>(null);
   const [acquiredStone, setAcquiredStone] = useState<string | null>(null);
 
+  const { snapWinner, isSnapping, initiateSupremeSnap, isFrozen, showToast } = useGame();
+
   // Cooldown Timer State
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
@@ -121,7 +122,7 @@ const MissionInterface = () => {
     try {
       const res = await getCurrentQuestion();
       if (res.completed) {
-        toast.success("MISSION_COMPLETE: Timeline Stabilized");
+        showToast("MISSION_COMPLETE", "success", "Timeline Stabilized");
         navigate("/dashboard");
         return;
       }
@@ -130,7 +131,7 @@ const MissionInterface = () => {
       }
       setCurrentTask(res);
     } catch {
-      toast.error("Signal lost. Reconnecting to timeline...");
+      showToast("Signal lost", "error", "Reconnecting to timeline...");
     }
   };
 
@@ -163,7 +164,6 @@ const MissionInterface = () => {
   };
 
   /* ─── Snap Protection & Ending Sequence ─── */
-  const { snapWinner, isSnapping, initiateSupremeSnap, isFrozen } = useGame();
   const { team } = useAuth();
   useEffect(() => {
     // Only force return to dashboard if WE are the ones who snapped
@@ -211,7 +211,7 @@ const MissionInterface = () => {
       setSubmitting(true);
       const res = await submitAnswer(currentTask.question._id, answer);
       if (res.isCorrect) {
-        toast.success(`KEY_ACCEPTED: +${res.points} Strategic Points`);
+        showToast("KEY_ACCEPTED", "success", `+${res.points} Strategic Points`);
         setAnswer("");
         setRealityActive(false);
         if (res.earnedStone) {
@@ -222,11 +222,11 @@ const MissionInterface = () => {
           await fetchProgress();
         }
       } else {
-        toast.error("KEY_REJECTED: Unauthorized decryption code");
+        showToast("KEY_REJECTED", "error", "Unauthorized decryption code");
         setAnswer("");
       }
     } catch {
-      toast.error("Transmission interruption detected.");
+      showToast("Error", "error", "Transmission interruption detected.");
     } finally {
       setSubmitting(false);
     }
@@ -236,44 +236,41 @@ const MissionInterface = () => {
   const executeTime = async () => {
     try {
       await useTimeStone();
-      toast.success("TIME STONE ACTIVATED: Temporal Shift Initiated");
+      showToast("TIME STONE ACTIVATED", "success", "Temporal Shift Initiated");
       navigate("/dashboard");
-    } catch (e: any) { toast.error(e.message || "Failed to activate Time Stone"); }
+    } catch (e: any) { showToast("Failed to activate Time Stone", "error", e.message); }
   };
 
   const executeMind = async () => {
     try {
       const res = await useMindStone();
       setActiveHint(res.hint);
-      toast.success("MIND STONE ACTIVE: Neural Pathway Illuminated");
+      showToast("MIND STONE ACTIVE", "success", "Neural Pathway Illuminated");
       fetchStones();
-    } catch (e: any) { toast.error(e.message || "Mind Stone activation failed"); }
+    } catch (e: any) { showToast("Mind Stone activation failed", "error", e.message); }
   };
 
   const executePower = async () => {
     if (!targetTeam) return;
     try {
       await usePowerStone(targetTeam);
-      toast.success("POWER STONE ACTIVE: Orbital Strike Launched");
+      showToast("POWER STONE ACTIVE", "success", "Orbital Strike Launched");
       setShowPowerModal(false);
       setTargetTeam("");
       fetchStones();
-    } catch (e: any) { toast.error(e.message || "Power Stone activation failed"); }
+    } catch (e: any) { showToast("Power Stone activation failed", "error", e.message); }
   };
 
   const executeReality = async () => {
-    const t = toast.loading("REALITY STONE: Rewriting physics engine...");
+    showToast("REALITY STONE", "info", "Rewriting physics engine...");
     try {
       await useRealityStone();
       // ✅ Only activate the visual state AFTER the backend confirms success
       setRealityActive(true);
-      toast.success("REALITY STONE ACTIVE: Physics Engine Rewritten", {
-        id: t,
-        description: "Your next answer will be accepted regardless of correctness.",
-      });
+      showToast("REALITY STONE ACTIVE", "success", "Physics Engine Rewritten. Your next answer will be accepted regardless of correctness.");
       fetchStones(); // refresh cooldown state
     } catch (e: any) {
-      toast.error(e.message || "Reality Stone activation failed", { id: t });
+      showToast("Reality Stone activation failed", "error", e.message);
       // Do NOT set realityActive — the backend rejected the activation
     }
   };
@@ -282,11 +279,11 @@ const MissionInterface = () => {
     if (!sacrificeStone) return;
     try {
       await useSoulStone(sacrificeStone);
-      toast.success("SOUL STONE ACTIVE: Equivalent Exchange Complete");
+      showToast("SOUL STONE ACTIVE", "success", "Equivalent Exchange Complete");
       setShowSoulModal(false);
       setSacrificeStone("");
       fetchStones();
-    } catch (e: any) { toast.error(e.message || "Soul Stone activation failed"); }
+    } catch (e: any) { showToast("Soul Stone activation failed", "error", e.message); }
   };
 
   const handleConfirmAction = () => {
