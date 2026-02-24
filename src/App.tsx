@@ -15,6 +15,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 // import ThemeDecorations from "./components/ThemeDecorations";
 import Landing from "./pages/Landing";
 import StoneSelectModal from "./components/StoneSelectModal";
+import CompletionPage from "./pages/CompletionPage";
 import MissionInterface from "./pages/MissionInterface";
 import HeroManager from "./components/HeroManager";
 import BlipOverlay from "./components/BlipOverlay";
@@ -48,6 +49,7 @@ const AppRoutes = () => (
     <Route path="/admin/dashboard" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} />
     <Route path="/mission/:timelineId" element={<ProtectedRoute><MissionInterface /></ProtectedRoute>} />
     <Route path="/mission/:timelineId" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/completion" element={<CompletionPage />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

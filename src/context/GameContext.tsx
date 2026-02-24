@@ -87,6 +87,12 @@ export interface GameState {
   snapWinner: TeamGameState | null;
   initiateSupremeSnap: () => Promise<void>;
   isSocketConnected: boolean;
+  completionSummary: {
+    teamName: string;
+    score: number;
+    rank: number | null;
+    stones: string[];
+  } | null;
 }
 
 const GameContext = createContext<GameState | null>(null);
@@ -181,6 +187,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   });
   const [pendingStoneCount, setPendingStoneCount] = useState(0);
   const [allTeamsState, setAllTeamsState] = useState<TeamGameState[]>([]);
+  const [completionSummary, setCompletionSummary] = useState<{
+    teamName: string;
+    score: number;
+    rank: number | null;
+    stones: string[];
+  } | null>(null);
 
   const setGameDuration = useCallback((minutes: number) => {
     setGameDurationState(minutes * 60);
@@ -238,6 +250,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setGameStarted(gameState.status === "active");
         setPowersDisabled(gameState.lockdown ?? false);
         setGameEndTime(gameState.endTime ? new Date(gameState.endTime).getTime() : null);
+        if (gameState.status === "ended" && team && !isAdmin && window.location.pathname !== "/completion") {
+          navigate("/completion");
+        }
       }
 
       if (stoneStatus) {
@@ -287,6 +302,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           setGameStarted(gameState.status === "active");
           setPowersDisabled(gameState.lockdown ?? false);
           setGameEndTime(gameState.endTime ? new Date(gameState.endTime).getTime() : null);
+          if (!cancelled && gameState.status === "ended" && team && !isAdmin && window.location.pathname !== "/completion") {
+            navigate("/completion");
+          }
         }
 
         await refreshTeams();
@@ -332,6 +350,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       if (data?.endTime) {
         setGameEndTime(new Date(data.endTime).getTime());
       }
+      if (data?.status === "ended") {
+        setGameStarted(false);
+        if (team && !isAdmin && window.location.pathname !== "/completion") {
+          navigate("/completion");
+        }
+      }
     });
     s.on("STONE_USAGE_UPDATE", () => {
       refreshTeams();
@@ -348,6 +372,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     s.on("GAME_ENDED", () => {
       setGameStarted(false);
       addNotification("CRITICAL: Endgame constraints applied.", "system");
+
+      if (team && !isAdmin) {
+        navigate("/completion");
+      }
     });
 
     s.on("GAME_STARTED", async () => {
@@ -777,6 +805,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         snapWinner,
         initiateSupremeSnap,
         isSocketConnected,
+        completionSummary,
       }}
     >
       <ShieldDefendModal />
