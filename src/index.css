@@ -241,6 +241,141 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Sonner Toasts — Full redesign: dark card + left accent bar, new animation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-sonner-toaster],
+[data-sonner-toaster][data-theme="dark"] {
+  width: fit-content !important;
+  max-width: 320px;
+  --offset-right: 10px;
+  --toast-bg: #1a1d24;
+  --toast-text: #e2e6ee;
+  --success-bg: var(--toast-bg);
+  --success-border: transparent;
+  --success-text: var(--toast-text);
+  --error-bg: var(--toast-bg);
+  --error-border: transparent;
+  --error-text: var(--toast-text);
+  --warning-bg: var(--toast-bg);
+  --warning-border: transparent;
+  --warning-text: var(--toast-text);
+  --normal-bg: var(--toast-bg);
+  --normal-border: transparent;
+  --normal-text: var(--toast-text);
+  --info-bg: var(--toast-bg);
+  --info-border: transparent;
+  --info-text: var(--toast-text);
+}
+
+[data-sonner-toast][data-styled="true"] {
+  position: relative;
+  width: fit-content !important;
+  max-width: 100%;
+  border: none !important;
+  border-radius: 6px;
+  background: var(--toast-bg) !important;
+  color: var(--toast-text) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  padding: 8px 8px 8px 14px;
+  min-height: 36px;
+  overflow: hidden;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+[data-sonner-toast][data-styled="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #4b5563;
+  border-radius: 6px 0 0 6px;
+}
+
+[data-sonner-toast][data-type="success"][data-styled="true"]::before {
+  background: #22c55e;
+}
+
+[data-sonner-toast][data-type="error"][data-styled="true"]::before,
+[data-sonner-toast][data-type="warning"][data-styled="true"]::before {
+  background: #ef4444;
+}
+
+[data-sonner-toast][data-mounted="true"] {
+  animation: toast-enter 0.35s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+[data-sonner-toaster][data-y-position="bottom"] [data-sonner-toast][data-mounted="true"] {
+  animation: toast-enter-bottom 0.35s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+@keyframes toast-enter-bottom {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-sonner-toast] [data-title] {
+  color: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+[data-sonner-toast] [data-description] {
+  color: inherit;
+  opacity: 0.85;
+  font-size: 10px;
+  margin-top: 1px;
+}
+
+[data-sonner-toast] [data-icon] {
+  color: inherit;
+  opacity: 0.9;
+}
+
+[data-sonner-toast] [data-icon] svg {
+  width: 14px;
+  height: 14px;
+}
+
+[data-sonner-toast] [data-close-button] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 4px;
+  color: inherit;
+  opacity: 0.8;
+  font-size: 10px;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.14);
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Arc Button — Cyan glow CTA
    ═══════════════════════════════════════════════════════════════════════════ */
 
