@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useMemo, useRef } from "react";
 import ShieldDefendModal from "@/components/ShieldDefendModal";
 import { useAuth } from "./AuthContext";
-import { toast } from "sonner";
+import { customToast as toast } from "@/components/ToastProvider";
 import * as api from "@/services/api";
 import { io, Socket } from "socket.io-client";
 import { API_BASE } from "../services/api";
