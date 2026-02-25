@@ -69,6 +69,7 @@ export const customToast = Object.assign(
 export const AppToastContainer = () => {
     return (
         <ToastContainer
+            stacked
             position="top-right"
             autoClose={2500}
             hideProgressBar
@@ -78,7 +79,7 @@ export const AppToastContainer = () => {
             pauseOnFocusLoss={false}
             draggable
             pauseOnHover
-            toastClassName="relative flex !p-0 !min-h-0 mb-3 justify-between overflow-hidden cursor-pointer w-auto"
+            toastClassName="relative flex !p-0 !min-h-0 !mb-[5px] justify-between overflow-hidden cursor-pointer w-auto"
             className="!w-auto sm:min-w-[320px] max-w-[90vw]"
             style={{
                 top: '72px', // Below the 64px navbar, plus 8px gap

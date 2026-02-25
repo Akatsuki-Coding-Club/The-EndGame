@@ -26,21 +26,14 @@ const HEROES = [
   // --- NEW GIFS ADDED BELOW ---
   {
     id: 'Spider-man-trio',
-    src: 'https://media.tenor.com/bWnCK.gif',
-    animation: 'fade-float', // You can change this to fly-across or drop-swing
+    src: 'https://media.tenor.com/HJFF4GpZ9hUAAAAj/spider-man-no-way-home-marvel-studios.gif',
+    animation: 'corner-drop', // You can change this to fly-across or drop-swing
     duration: 6000,
     baseWidth: '160px'
   },
   {
-    id: 'Spider-man',
-    src: 'https://media.tenor.com/bTTJi.gif',
-    animation: 'fly-across',
-    duration: 5000,
-    baseWidth: '150px'
-  },
-  {
     id: 'Wanda',
-    src: 'https://media.tenor.com/bWnCF.gif',
+    src: 'https://media.tenor.com/CHlNMOGAqp4AAAAj/mom-powerful.gif',
     animation: 'corner-drop',
     duration: 5000,
     baseWidth: '140px'
