@@ -55,7 +55,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     name: "ASGARD",
     primary: "text-amber-400",
     secondary: "bg-amber-500 hover:bg-amber-400",
-    font: "font-sans tracking-normal uppercase",
+    font: "font-sans tracking-normal",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
     videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771870884/asgard_gd52ji.mp4",
     shadow: "shadow-[0_0_30px_rgba(245,158,11,0.1)]", // Added missing property

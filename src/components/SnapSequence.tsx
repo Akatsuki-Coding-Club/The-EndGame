@@ -49,7 +49,7 @@ export const SnapSequence = () => {
         }
     }, [isSnapping, phase, snapWinner, team?._id, hasPlayedRivalSnap, isAdmin]);
 
-    const isOtherTeamSnap = snapWinner && snapWinner.teamId !== team?._id;
+    // const isOtherTeamSnap = snapWinner && snapWinner.teamId !== team?._id;
 
     useEffect(() => {
         if (phase === "buildup") {

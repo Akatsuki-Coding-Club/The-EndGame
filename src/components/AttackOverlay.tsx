@@ -214,7 +214,7 @@ const AttackOverlay = () => {
               <div className="relative">
                 <input
                   type="text"
-                  className="w-full h-12 bg-black/40 border border-white/10 rounded-xl px-4 text-center text-white font-bold tracking-[0.2em] placeholder:text-slate-800 outline-none focus:border-red-500/50 transition-all uppercase text-sm"
+                  className="w-full h-12 bg-black/40 border border-white/10 rounded-xl px-4 text-center text-white font-bold tracking-[0.2em] placeholder:text-slate-800 outline-none focus:border-red-500/50 transition-all text-sm"
                   placeholder="SOLVE PATTERN"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
