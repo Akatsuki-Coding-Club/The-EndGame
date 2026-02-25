@@ -106,7 +106,7 @@ const GameCompletion: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center relative overflow-hidden font-mono">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center relative overflow-hidden font-sans">
       {/* Liquid Background Accents */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/20 blur-[120px] rounded-full" />
@@ -135,7 +135,7 @@ const GameCompletion: React.FC = () => {
             >
               <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
               <p className="text-xs text-slate-400 mb-1 uppercase tracking-widest">Final Integrity Score</p>
-              <p className="text-5xl font-bold text-white tracking-tighter">{teamRank.score.toLocaleString()}</p>
+              <p className="text-5xl  text-white tracking-tighter">{teamRank.score.toLocaleString()}</p>
             </motion.div>
 
             <motion.div 
@@ -145,7 +145,7 @@ const GameCompletion: React.FC = () => {
               <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500" />
               <p className="text-xs text-slate-400 mb-1 uppercase tracking-widest">Global Ranking</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-5xl font-bold text-white tracking-tighter">#{teamRank.rank}</p>
+                <p className="text-5xl  text-white tracking-tighter">#{teamRank.rank}</p>
                 <p className="text-slate-500">/ {allTeamsState.length}</p>
               </div>
             </motion.div>

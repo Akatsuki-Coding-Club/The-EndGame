@@ -6,7 +6,7 @@ const Landing = () => {
 
   const handleStartRound = () => {
     if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().catch(() => { });
     }
     navigate("/login", { replace: true });
   };
@@ -56,8 +56,8 @@ const Landing = () => {
             {/* Skewed background box */}
             <div className="absolute inset-0 bg-red-600 skew-x-[-15deg] shadow-[0_0_20px_rgba(220,38,38,0.3)]" />
 
-            {/* Added 'font-avengers' class here */}
-            <h2 className="relative px-10 py-2 text-2xl md:text-4xl font-black tracking-widest uppercase text-white font-vengers">
+            {/* Added 'font-sans' class here */}
+            <h2 className="relative px-10 py-2 text-2xl md:text-4xl font-black tracking-widest uppercase text-white font-sans">
               The Endgame
             </h2>
           </div>
@@ -67,7 +67,7 @@ const Landing = () => {
         <div className="mt-12 mb-10 p-6 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl text-center max-w-md shadow-2xl">
           <p className="text-white/80 text-sm md:text-base leading-relaxed tracking-wide">
             The timelines have merged. Your final challenge begins now. Are you
-            ready for <span className="text-red-500 font-bold">Round 3</span>?
+            ready for <span className="text-red-500 ">Round 3</span>?
           </p>
         </div>
 
@@ -100,7 +100,7 @@ const Landing = () => {
       </div>
 
       {/* Subtle Footer Decor */}
-      
+
 
       {/* Scanline Effect */}
       <div className="pointer-events-none absolute inset-0 z-20 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />

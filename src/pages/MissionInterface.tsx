@@ -45,7 +45,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     name: "MORAG",
     primary: "text-blue-400",
     secondary: "bg-blue-600 hover:bg-blue-500",
-    font: "font-mono tracking-tight",
+    font: "font-sans tracking-normal",
     glow: "shadow-[0_0_50px_rgba(29,78,216,0.15)]",
     videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771871022/morag_ejxr9z.mp4",
     shadow: "shadow-[0_0_30px_rgba(29,78,216,0.1)]", // Added missing property
@@ -55,7 +55,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     name: "ASGARD",
     primary: "text-amber-400",
     secondary: "bg-amber-500 hover:bg-amber-400",
-    font: "font-serif tracking-wide uppercase",
+    font: "font-sans tracking-normal uppercase",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
     videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771870884/asgard_gd52ji.mp4",
     shadow: "shadow-[0_0_30px_rgba(245,158,11,0.1)]", // Added missing property
@@ -65,7 +65,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     name: "DOMAIN OF VORMIR",
     primary: "text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]",
     secondary: "bg-orange-700 hover:bg-orange-500 text-white shadow-[0_0_20px_rgba(194,65,12,0.5)] transition-all duration-300",
-    font: "font-serif tracking-[0.4em]",
+    font: "font-sans tracking-normal",
     glow: "shadow-[0_0_80px_rgba(234,88,12,0.15)] border border-orange-900/40",
     videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771870962/vormir_uqk02g.mp4",
     shadow: "shadow-[0_0_40px_rgba(234,88,12,0.1)]", // Added missing property
@@ -75,7 +75,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     name: "NEW YORK CITY",
     primary: "text-cyan-400",
     secondary: "bg-cyan-600 hover:bg-cyan-500",
-    font: "font-sans font-bold tracking-normal",
+    font: "font-sans tracking-normal",
     glow: "shadow-[0_0_50px_rgba(6,182,212,0.15)]",
     // IF YOU HAVE A VIDEO, PUT THE URL HERE:
     videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771871346/grok-video-2a30ee02-773c-4f57-8d26-d68965ddcbd9_zqvf7w.mp4",
@@ -168,10 +168,7 @@ const MissionInterface = () => {
   /* ─── Snap Protection & Ending Sequence ─── */
   const { team } = useAuth();
   useEffect(() => {
-    // Only force return to dashboard if WE are the ones who snapped
-    if (team?.snapActivated) {
-      navigate("/dashboard");
-    }
+    // Redirection removed to allow continued play
   }, [team?.snapActivated, navigate]);
 
   useEffect(() => {
@@ -300,7 +297,7 @@ const MissionInterface = () => {
 
   /* ─── Loading Screen ─── */
   if (loading) return (
-    <div className="h-screen bg-black flex flex-col items-center justify-center font-mono text-cyan-500">
+    <div className="h-screen bg-black flex flex-col items-center justify-center font-sans text-cyan-500">
       <Loader2 className="animate-spin mb-4" size={32} />
       <p className="tracking-[0.4em] text-[10px] animate-in fade-in">DECRYPTING_OBJECTIVES...</p>
     </div>
@@ -403,7 +400,7 @@ const MissionInterface = () => {
         {/* Not acquired badge */}
         {!owned && (
           <div className="absolute inset-0 rounded-2xl flex items-end justify-center pb-2">
-            <span className="text-[7px] text-white/20 uppercase tracking-widest font-bold">Locked</span>
+            <span className="text-[7px] text-white/20 uppercase tracking-widest ">Locked</span>
           </div>
         )}
 
@@ -412,7 +409,7 @@ const MissionInterface = () => {
           <div className="absolute bottom-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 w-64">
             <div className="bg-[#08080f] border border-white/10 border-b-2 rounded-xl p-4 text-center shadow-[0_20px_50px_rgba(0,0,0,1)]" style={{ borderBottomColor: cfg.color }}>
               <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: cfg.color }}>{cfg.label} Stone</p>
-              <p className="text-[10px] text-slate-300 font-mono uppercase tracking-widest leading-relaxed">
+              <p className="text-[10px] text-slate-300 font-sans uppercase tracking-widest leading-relaxed">
                 {isDisabled ? (isSpace ? "Use from Dashboard to re-enter timelines." : "Symmetry unstable. Cooldown phase active.") : cfg.desc}
               </p>
             </div>
@@ -425,7 +422,7 @@ const MissionInterface = () => {
 
   /* ─── Render ─── */
   return (
-    <div className="h-screen bg-[#05050c] flex flex-col font-mono text-slate-300 overflow-hidden relative">
+    <div className="h-screen bg-[#05050c] flex flex-col font-sans text-slate-300 overflow-hidden relative">
       <HeroManager />
       <Navbar />
       <style>
@@ -470,7 +467,7 @@ const MissionInterface = () => {
           <div className={`flex-1 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col relative overflow-hidden backdrop-blur-sm shadow-2xl ${theme.shadow}`}>
             {/* Question Header */}
             <div className="p-3 border-b border-white/5 flex justify-between bg-black/20">
-              <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme.primary}`}>
+              <span className={`text-[10px]  uppercase tracking-widest flex items-center gap-2 ${theme.primary}`}>
                 <Zap size={12} /> {activeMission?.difficulty || "UNKNOWN"} // {theme.name}_PROTOCOL
               </span>
               <span className="text-[10px] text-white/40 uppercase animate-in fade-in">
@@ -487,7 +484,7 @@ const MissionInterface = () => {
                 {/* Hint Display */}
                 {activeHint && (
                   <div className="mt-6 pt-4 border-t border-yellow-500/20 animate-in fade-in zoom-in duration-300">
-                    <p className="text-yellow-400/80 text-sm font-mono flex items-start gap-2">
+                    <p className="text-yellow-400/80 text-sm font-sans flex items-start gap-2">
                       <Brain size={14} className="mt-1 shrink-0" />
                       <span className="uppercase tracking-widest text-[10px] text-yellow-500/50 mr-2">Hint Decrypted:</span>
                       {activeHint}
@@ -568,11 +565,11 @@ const MissionInterface = () => {
             <div className="py-6 min-h-[160px] flex justify-center items-center relative">
               {isCooldown ? (
                 <div className="flex flex-col items-center justify-center animate-in zoom-in duration-500">
-                  <div className="text-xl md:text-2xl font-mono font-bold text-red-400 tracking-widest bg-red-900/20 px-6 py-3 rounded-xl border border-red-500/30 shadow-[inset_0_0_10px_rgba(239,68,68,0.2)] flex items-center gap-3">
+                  <div className="text-xl md:text-2xl font-sans  text-red-400 tracking-widest bg-red-900/20 px-6 py-3 rounded-xl border border-red-500/30 shadow-[inset_0_0_10px_rgba(239,68,68,0.2)] flex items-center gap-3">
                     <span className="uppercase text-red-500/80 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">Cooldown:</span>
                     <span>{formatTime(timeLeft)}</span>
                   </div>
-                  <p className="mt-4 text-[9px] text-red-500/50 uppercase tracking-widest font-mono">All stones are currently unstable</p>
+                  <p className="mt-4 text-[9px] text-red-500/50 uppercase tracking-widest font-sans">All stones are currently unstable</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto w-full">
@@ -623,11 +620,11 @@ const MissionInterface = () => {
                   </div>
 
                   <div>
-                    <p className="text-[8px] font-mono tracking-[0.4em] mb-1" style={{ color: `${cfg.color}80` }}>INFINITY STONE</p>
+                    <p className="text-[8px] font-sans tracking-[0.4em] mb-1" style={{ color: `${cfg.color}80` }}>INFINITY STONE</p>
                     <h3 className="text-xl font-black uppercase tracking-widest text-white">{cfg.label} Stone</h3>
                   </div>
 
-                  <p className="text-xs text-white/50 leading-relaxed font-mono">{cfg.desc}</p>
+                  <p className="text-xs text-white/50 leading-relaxed font-sans">{cfg.desc}</p>
 
                   <div className="flex items-center gap-2 text-[9px] bg-red-500/10 text-red-400 px-3 py-2 rounded-xl border border-red-500/20 w-full justify-center">
                     <AlertTriangle size={10} />
@@ -679,7 +676,7 @@ const MissionInterface = () => {
                       : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white"
                       }`}
                   >
-                    <span className="font-bold tracking-wider text-sm">{team.teamName}</span>
+                    <span className=" tracking-wider text-sm">{team.teamName}</span>
                     {targetTeam === team._id && <Target size={16} className="text-purple-400" />}
                   </button>
                 ))}
@@ -707,7 +704,7 @@ const MissionInterface = () => {
               <h3 className="text-orange-400 font-black uppercase tracking-widest mb-3 flex items-center gap-3 text-base">
                 <Skull size={18} /> Select Sacrifice
               </h3>
-              <p className="text-white/40 text-[10px] mb-6 font-mono border-l-2 border-orange-500/50 pl-3 uppercase tracking-wider leading-relaxed">
+              <p className="text-white/40 text-[10px] mb-6 font-sans border-l-2 border-orange-500/50 pl-3 uppercase tracking-wider leading-relaxed">
                 Warning: Sacrificed stones are permanently lost. You will receive bonus points immediately.
               </p>
 
@@ -732,7 +729,7 @@ const MissionInterface = () => {
                   );
                 })}
                 {!hasStone("space") && !hasStone("power") && !hasStone("reality") && (
-                  <div className="col-span-3 text-center py-6 text-white/30 text-xs font-mono">
+                  <div className="col-span-3 text-center py-6 text-white/30 text-xs font-sans">
                     No sacrificial stones available.
                   </div>
                 )}

@@ -68,7 +68,7 @@ const SpaceStonePicker = ({ escapedTimelines, onSelect, onClose }: SpaceStonePic
               <Sparkles size={18} className="text-blue-400 animate-pulse" />
             </div>
             <div>
-              <p className="text-[9px] font-mono tracking-[0.4em] text-blue-400 uppercase">Tesseract Protocol</p>
+              <p className="text-[9px] font-sans tracking-[0.4em] text-blue-400 uppercase">Tesseract Protocol</p>
               <h3 className="text-lg font-black uppercase text-white tracking-tight">Select Target</h3>
             </div>
           </div>
@@ -77,7 +77,7 @@ const SpaceStonePicker = ({ escapedTimelines, onSelect, onClose }: SpaceStonePic
           </button>
         </div>
         <div className="p-6 space-y-3">
-          <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <p className="text-[10px] font-sans text-white/40 uppercase tracking-widest mb-4 flex items-center gap-2">
             <Crosshair size={12} className="text-blue-500" /> Choose escape vector to re-enter
           </p>
           {escapedTimelines.map(id => {
@@ -146,15 +146,15 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
                 <div className="absolute -inset-2 rounded-3xl border border-cyan-400/30 animate-ping z-0" style={{ animationDuration: "2.5s" }} />
               </div>
               <div>
-                {/* <p className="text-[10px] font-mono tracking-[0.5em] text-cyan-400/80 uppercase mb-1">Class-S Artifact</p> */}
+                {/* <p className="text-[10px] font-sans tracking-[0.5em] text-cyan-400/80 uppercase mb-1">Class-S Artifact</p> */}
                 <h2 className="text-3xl font-black uppercase text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Space Stone</h2>
-                <p className="text-[10px] text-blue-300/50 font-mono mt-1 tracking-widest animate-pulse">TESSERACT_PROTOCOL_READY</p>
+                <p className="text-[10px] text-blue-300/50 font-sans mt-1 tracking-widest animate-pulse">TESSERACT_PROTOCOL_READY</p>
               </div>
             </div>
 
             {/* <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-5 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
-              <p className="text-[11px] font-mono text-blue-200/90 uppercase tracking-[0.2em] leading-relaxed pl-2">
+              <p className="text-[11px] font-sans text-blue-200/90 uppercase tracking-[0.2em] leading-relaxed pl-2">
                   Temporal re-entry sequence initiated. The Space Stone will fold reality to return your unit to previously escaped coordinates.
                 </p>
             </div> */}
@@ -162,7 +162,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
 
           <div className="p-10 pt-8 space-y-8 bg-black/40">
             <div>
-              <p className="text-[9px] font-mono uppercase tracking-[0.4em] text-cyan-500/50 mb-3 flex items-center gap-2">
+              <p className="text-[9px] font-sans uppercase tracking-[0.4em] text-cyan-500/50 mb-3 flex items-center gap-2">
                 <RotateCcw size={12} /> Target Coordinates Locked
               </p>
               <div className="flex items-center gap-5 p-5 rounded-2xl border" style={{ borderColor: `${meta.color}40`, backgroundColor: `${meta.color}10` }}>
@@ -175,7 +175,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
                 </div>
                 <div>
                   <p className="text-lg font-black uppercase text-white tracking-widest">{meta.label}</p>
-                  <p className="text-[10px] font-mono mt-1 tracking-[0.2em]" style={{ color: `${meta.color}90` }}>
+                  <p className="text-[10px] font-sans mt-1 tracking-[0.2em]" style={{ color: `${meta.color}90` }}>
                     TARGET LOCKED
                   </p>
                 </div>
@@ -184,7 +184,7 @@ const SpaceStoneModal = ({ timeline, onConfirm, onCancel, loading }: SpaceStoneM
 
             {/* <div className="flex items-start gap-4 p-4 rounded-xl bg-red-950/30 border border-red-500/30">
               <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0 animate-pulse" />
-              <p className="text-[10px] font-mono text-red-400/80 leading-relaxed uppercase tracking-widest">
+              <p className="text-[10px] font-sans text-red-400/80 leading-relaxed uppercase tracking-widest">
                 WARNING: The Space Stone will be consumed upon activation. This action is irreversible during the current phase.
               </p>
             </div> */}
@@ -324,7 +324,7 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick, onSoulStoneClick }
             <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               Quantum <span className="text-cyan-400">Portal</span>
             </h2>
-            <p className="text-[9px] md:text-[10px] text-cyan-500/80 uppercase tracking-[0.5em] font-mono flex items-center gap-3">
+            <p className="text-[9px] md:text-[10px] text-cyan-500/80 uppercase tracking-[0.5em] font-sans flex items-center gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               Select Timelines /  Collect Stones
             </p>
@@ -381,7 +381,7 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick, onSoulStoneClick }
           <div className="mb-8 flex items-center gap-3 px-5 py-4 rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-900/20 to-transparent relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,1)]" />
             <img src="/space-stone.png" alt="Space Stone" className="w-5 h-5 object-cover rounded-full animate-pulse drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] shrink-0" />
-            <p className="text-[10px] font-mono text-blue-200/80 uppercase tracking-widest leading-relaxed">
+            <p className="text-[10px] font-sans text-blue-200/80 uppercase tracking-widest leading-relaxed">
               <strong className="text-blue-300 font-black">Tesseract Available:</strong> Timelines marked with <RotateCcw size={10} className="inline mx-1 mb-0.5" /> can be re-entered.
             </p>
           </div>

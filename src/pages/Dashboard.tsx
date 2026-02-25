@@ -195,7 +195,7 @@ const Dashboard = () => {
 
   if (loading || !data) {
     return (
-      <div className="h-screen bg-[#05050c] flex flex-col items-center justify-center font-mono text-cyan-500">
+      <div className="h-screen bg-[#05050c] flex flex-col items-center justify-center font-sans text-cyan-500">
         <div className="w-12 h-12 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4" />
         <p className="animate-pulse uppercase tracking-[0.4em] text-[10px]">Syncing Heist Progress...</p>
       </div>
@@ -255,7 +255,7 @@ const Dashboard = () => {
                 />
 
                 {/* HUD Overlay for Model */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-30 font-mono text-[8px] tracking-[0.2em] uppercase">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-30 font-sans text-[8px] tracking-[0.2em] uppercase">
                   <span>Rotation: Synchronized</span>
                   <span className="w-1 h-1 bg-yellow-500 rounded-full animate-ping" />
                   <span>Resonance: Maximum</span>
@@ -267,7 +267,7 @@ const Dashboard = () => {
                 {!isSnapActive ? (
                   <div className="space-y-8">
                     <div className="text-center space-y-2">
-                      <p className="text-yellow-500 font-mono text-[10px] tracking-[0.6em] uppercase animate-pulse">Artifact Synergy 100%</p>
+                      <p className="text-yellow-500 font-sans text-[10px] tracking-[0.6em] uppercase animate-pulse">Artifact Synergy 100%</p>
                       <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Supreme Snap Ready</h2>
                     </div>
 
@@ -287,7 +287,7 @@ const Dashboard = () => {
                       </div>
                     </button>
 
-                    <p className="text-center text-white/40 font-mono text-[9px] tracking-widest uppercase mt-4">Warning: Reality reconfiguration is irreversible</p>
+                    <p className="text-center text-white/40 font-sans text-[9px] tracking-widest uppercase mt-4">Warning: Reality reconfiguration is irreversible</p>
                   </div>
                 ) : (
                   <div className="text-center space-y-8 animate-in slide-in-from-bottom-5 duration-1000 relative">
@@ -307,14 +307,14 @@ const Dashboard = () => {
                         <div className="h-px w-32 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
                         <div className="inline-flex items-center gap-4 bg-yellow-500/5 px-8 py-3 rounded-full border border-yellow-500/20 backdrop-blur-md">
                           <Sparkles className="text-yellow-500 animate-pulse" size={16} />
-                          <p className="text-yellow-500 font-mono tracking-[0.4em] font-black uppercase text-[10px]">
+                          <p className="text-yellow-500 font-sans tracking-[0.4em] font-black uppercase text-[10px]">
                             Ascended Status Active
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <p className="text-white/30 font-mono text-[8px] tracking-[0.5em] uppercase max-w-[250px] mx-auto leading-relaxed pt-4">
+                    <p className="text-white/30 font-sans text-[8px] tracking-[0.5em] uppercase max-w-[250px] mx-auto leading-relaxed pt-4">
                       Protocol fulfilled. Temporal stability maintained at 100% capacity.
                     </p>
                   </div>
@@ -324,7 +324,7 @@ const Dashboard = () => {
               {/* HUD Perimeter */}
               <div className="absolute inset-12 border border-white/5 pointer-events-none rounded-[40px]">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-1 bg-[#020205] border border-white/10 rounded-full">
-                  <span className="text-[8px] font-mono text-white/30 tracking-[0.5em] uppercase">Singularity Point</span>
+                  <span className="text-[8px] font-sans text-white/30 tracking-[0.5em] uppercase">Singularity Point</span>
                 </div>
               </div>
             </div>
@@ -355,7 +355,7 @@ const Dashboard = () => {
               <div className="text-center space-y-10 animate-in fade-in zoom-in-95 duration-1000 relative z-10 w-full max-w-4xl">
                 <div className="space-y-4">
                   <div className="flex flex-col items-center gap-3">
-                    <p className="font-mono text-[10px] tracking-[0.6em] uppercase animate-pulse" style={{ color: timelineMeta?.color }}>
+                    <p className="font-sans text-[10px] tracking-[0.6em] uppercase animate-pulse" style={{ color: timelineMeta?.color }}>
                       Temporal Link Active
                     </p>
                     <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -367,7 +367,7 @@ const Dashboard = () => {
                     </h2>
                     <div className="flex items-center justify-center gap-3 bg-black/40 border py-2 px-6 rounded-full w-fit mx-auto backdrop-blur-md" style={{ borderColor: `${timelineMeta?.color}30` }}>
                       <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: timelineMeta?.color }} />
-                      <p className="font-mono text-[10px] tracking-[0.3em] font-bold uppercase text-white/80">
+                      <p className="font-sans text-[10px] tracking-[0.3em]  uppercase text-white/80">
                         LOCATION: {timelineMeta?.label}
                       </p>
                     </div>
@@ -403,7 +403,7 @@ const Dashboard = () => {
         {/* ─── TACTICAL SIDEBAR ─── */}
         <aside className="w-80 border-l border-white/5 bg-black/40 custom-scrollbar backdrop-blur-md p-6 flex flex-col gap-8 shadow-[-10px_0_30_px_rgba(0,0,0,0.5)]">
           <section className="p-5 bg-white/[0.03] border border-white/5 rounded-2xl relative overflow-hidden">
-            <h3 className="text-[9px] font-bold uppercase tracking-widest text-cyan-500 mb-4 flex items-center gap-2">
+            <h3 className="text-[9px]  uppercase tracking-widest text-cyan-500 mb-4 flex items-center gap-2">
               <Swords size={14} /> Collected Artifacts
             </h3>
 
@@ -423,14 +423,14 @@ const Dashboard = () => {
               <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-transparent to-yellow-500/10 pointer-events-none rounded-xl" />
               <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 rounded bg-black/60 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
-                <span className="text-[7px] text-white/50 font-mono uppercase tracking-widest">3D Preview</span>
+                <span className="text-[7px] text-white/50 font-sans uppercase tracking-widest">3D Preview</span>
               </div>
             </div>
 
             {/* LIVE LEADERBOARD (Simple) */}
             <div className="mb-6 shrink-0 flex flex-col min-h-0">
               <div className="mb-3 flex items-center justify-between shrink-0">
-                <h3 className="text-[9px] font-bold uppercase tracking-widest text-cyan-500 flex items-center gap-1.5">
+                <h3 className="text-[9px]  uppercase tracking-widest text-cyan-500 flex items-center gap-1.5">
                   <Trophy size={12} /> Live Standings
                 </h3>
               </div>
@@ -454,13 +454,13 @@ const Dashboard = () => {
                           }`}
                       >
                         <div className="flex items-center gap-2 overflow-hidden flex-1">
-                          <span className={`font-mono w-4 shrink-0 font-bold ${isMe ? "text-green-400" : "opacity-50"}`}>
+                          <span className={`font-sans w-4 shrink-0  ${isMe ? "text-green-400" : "opacity-50"}`}>
                             {idx + 1}.
                           </span>
-                          <span className="uppercase font-bold truncate tracking-wider">{team.teamName}</span>
+                          <span className="uppercase  truncate tracking-wider">{team.teamName}</span>
                         </div>
                         <div className="flex flex-col items-end shrink-0 pl-2">
-                          <span className={`font-mono shrink-0 font-bold ${isMe ? "text-green-400" : ""}`}>
+                          <span className={`font-sans shrink-0  ${isMe ? "text-green-400" : ""}`}>
                             {team.score}
                           </span>
                         </div>
@@ -503,11 +503,11 @@ const Dashboard = () => {
                   </div>
 
                   <div>
-                    <p className="text-[8px] font-mono tracking-[0.4em] mb-1" style={{ color: `${cfg.color}80` }}>RESTRICTED ARTIFACT</p>
+                    <p className="text-[8px] font-sans tracking-[0.4em] mb-1" style={{ color: `${cfg.color}80` }}>RESTRICTED ARTIFACT</p>
                     <h3 className="text-xl font-black uppercase tracking-widest text-white">{cfg.label} Stone</h3>
                   </div>
 
-                  <p className="text-xs text-white/50 leading-relaxed font-mono">{cfg.desc}</p>
+                  <p className="text-xs text-white/50 leading-relaxed font-sans">{cfg.desc}</p>
 
                   <div className="flex items-center gap-2 text-[9px] bg-red-500/10 text-red-400 px-3 py-2 rounded-xl border border-red-500/20 w-full justify-center">
                     <AlertTriangle size={10} />
@@ -545,7 +545,7 @@ const Dashboard = () => {
 
               <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar mb-8 pr-2 text-left">
                 {leaderboard.filter(t => t.teamId !== me?._id && t.role !== "admin").length === 0 && (
-                  <p className="text-white/30 text-center py-4 text-xs font-mono">NO_VALID_TARGET_SIGNATURES</p>
+                  <p className="text-white/30 text-center py-4 text-xs font-sans">NO_VALID_TARGET_SIGNATURES</p>
                 )}
                 {leaderboard
                   .filter(t => t.teamId !== me?._id && t.role !== "admin")
@@ -559,8 +559,8 @@ const Dashboard = () => {
                         }`}
                     >
                       <div className="flex flex-col">
-                        <span className="font-bold tracking-wider text-sm uppercase">{target.teamName}</span>
-                        <span className="text-[9px] text-white/30 font-mono">CURRENT_SCORE: {target.score}</span>
+                        <span className=" tracking-wider text-sm uppercase">{target.teamName}</span>
+                        <span className="text-[9px] text-white/30 font-sans">CURRENT_SCORE: {target.score}</span>
                       </div>
                       {targetTeam === target.teamId && <Target size={16} className="text-purple-400" />}
                     </button>
@@ -593,13 +593,13 @@ const Dashboard = () => {
               </h3>
 
               <div className="space-y-4 mb-8">
-                <p className="text-[11px] text-white/40 font-mono uppercase tracking-[0.2em] leading-relaxed">
+                <p className="text-[11px] text-white/40 font-sans uppercase tracking-[0.2em] leading-relaxed">
                   To obtain the Soul Stone's blessing, you must sacrifice another artifact. Choose wisely.
                 </p>
 
                 <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
                   {(me?.stones || []).filter(s => s !== "soul").length === 0 && (
-                    <p className="text-white/30 text-center py-4 text-xs font-mono">NO_STONES_AVAILABLE_FOR_SACRIFICE</p>
+                    <p className="text-white/30 text-center py-4 text-xs font-sans">NO_STONES_AVAILABLE_FOR_SACRIFICE</p>
                   )}
                   {(me?.stones || [])
                     .filter(s => s !== "soul")
@@ -620,8 +620,8 @@ const Dashboard = () => {
                               <img src={cfg.image} alt={cfg.label} className="w-6 h-6 object-contain" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-bold tracking-wider text-sm uppercase">{cfg.label} Stone</span>
-                              <span className="text-[9px] text-white/30 font-mono italic">Sacrifice for Soul energy</span>
+                              <span className=" tracking-wider text-sm uppercase">{cfg.label} Stone</span>
+                              <span className="text-[9px] text-white/30 font-sans italic">Sacrifice for Soul energy</span>
                             </div>
                           </div>
                           {sacrificedStone === stoneKey && <Sparkles size={16} className="text-orange-400 animate-pulse" />}

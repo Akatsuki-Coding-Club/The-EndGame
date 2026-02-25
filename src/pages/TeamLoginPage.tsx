@@ -134,7 +134,7 @@ const TeamLoginPage = () => {
                   value={teamId}
                   disabled={isLoading}
                   onChange={(e) => setTeamId(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/10 outline-none focus:border-[#e62429] focus:bg-black/60 transition-all text-sm font-bold disabled:opacity-50"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/10 outline-none focus:border-[#e62429] focus:bg-black/60 transition-all text-sm  disabled:opacity-50"
                   placeholder="ENTER NAME"
                   required
                 />
@@ -155,7 +155,7 @@ const TeamLoginPage = () => {
                   value={password}
                   disabled={isLoading}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/10 outline-none focus:border-[#e62429] focus:bg-black/60 transition-all text-sm font-bold disabled:opacity-50"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/10 outline-none focus:border-[#e62429] focus:bg-black/60 transition-all text-sm  disabled:opacity-50"
                   placeholder="••••••••"
                   required
                 />

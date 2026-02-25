@@ -30,8 +30,6 @@ const AdminDashboard = () => {
     // New State for Team Management
     const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
     const [dbGameId, setDbGameId] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
     // New State for Question Management
     const [adminQuestions, setAdminQuestions] = useState<any[]>([]);
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
@@ -44,7 +42,8 @@ const AdminDashboard = () => {
     const [qAnswer, setQAnswer] = useState("");
     const [qPoints, setQPoints] = useState(100);
     const [qTimeline, setQTimeline] = useState("1");
-
+    const [jsonBulkInput, setJsonBulkInput] = useState("");
+    const [showJsonInput, setShowJsonInput] = useState(false);
 
     // Fetch Active Game ID on Mount
     useEffect(() => {
@@ -270,28 +269,27 @@ const AdminDashboard = () => {
         return Object.values(groups).sort((a, b) => a.year - b.year);
     };
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const json = JSON.parse(e.target?.result as string);
-                if (!Array.isArray(json)) {
-                    showToast("INVALID JSON", "error", "MUST BE AN ARRAY OF QUESTIONS");
-                    return;
-                }
-                const res = await createQuestionsBulk(json);
-                showToast("SUCCESS", "success", `UPLOADED ${res.createdCount} INTEL ITEMS`);
-                refreshQuestions();
-            } catch (err: any) {
-                showToast("UPLOAD FAILED", "error", err.message);
+    const handleJsonSubmit = async () => {
+        try {
+            if (!jsonBulkInput.trim()) {
+                showToast("INPUT REQUIRED", "error", "PLEASE PASTE VALID JSON");
+                return;
             }
-        };
-        reader.readAsText(file);
-        // Reset input
-        event.target.value = "";
+            // Strip out single and multi-line comments while preserving contents inside strings
+            const cleanedInput = jsonBulkInput.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
+            const json = JSON.parse(cleanedInput);
+            if (!Array.isArray(json)) {
+                showToast("INVALID JSON", "error", "MUST BE AN ARRAY OF QUESTIONS");
+                return;
+            }
+            const res = await createQuestionsBulk(json);
+            showToast("SUCCESS", "success", `UPLOADED ${res.createdCount} INTEL ITEMS`);
+            refreshQuestions();
+            setJsonBulkInput("");
+            setShowJsonInput(false);
+        } catch (err: any) {
+            showToast("UPLOAD FAILED", "error", err.message);
+        }
     };
 
     const navItems = [
@@ -303,7 +301,7 @@ const AdminDashboard = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black text-cyan-500 font-mono relative overflow-hidden selection:bg-cyan-500/30 selection:text-white">
+        <div className="min-h-screen bg-black text-cyan-500 font-sans relative overflow-hidden selection:bg-cyan-500/30 selection:text-white">
 
             {/* ════════════ BACKGROUND LAYERS () ════════════ */}
             {/* Background elements removed as per request */}
@@ -314,10 +312,10 @@ const AdminDashboard = () => {
                 <div className="flex items-center gap-3">
                     <img src="/akatsukilogo.png" alt="Akatsuki Logo" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(0,255,255,0.5)]" />
                     <div className="hidden md:block">
-                        <h1 className="text-xs font-bold tracking-[0.2em] text-white uppercase drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]">
+                        <h1 className="text-xs  tracking-[0.2em] text-white uppercase drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]">
                             AKATSUKI CODING CLUB
                         </h1>
-                        <div className="flex items-center gap-2 text-[8px] text-cyan-400 font-bold uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-[8px] text-cyan-400  uppercase tracking-widest">
                             <Globe size={10} className={gameStarted ? "animate-pulse text-green-500" : "text-cyan-500"} />
                             <span>SYS: {gameStarted ? "ONLINE" : "STANDBY"}</span>
                         </div>
@@ -330,7 +328,7 @@ const AdminDashboard = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2 text-[10px] uppercase font-bold tracking-widest transition-all border border-transparent rounded-sm whitespace-nowrap ${activeTab === tab.id
+                            className={`flex items-center gap-2 px-4 py-2 text-[10px] uppercase  tracking-widest transition-all border border-transparent rounded-sm whitespace-nowrap ${activeTab === tab.id
                                 ? "bg-cyan-500/10 border-b-2 border-b-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(0,255,255,0.2)]"
                                 : "text-slate-500 hover:text-cyan-300 hover:bg-cyan-950/20"
                                 }`}
@@ -344,7 +342,7 @@ const AdminDashboard = () => {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate("/leaderboard")}
-                        className="hidden md:flex items-center gap-2 px-4 py-2 border border-cyan-500/30 text-[9px] uppercase font-bold tracking-widest text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all group"
+                        className="hidden md:flex items-center gap-2 px-4 py-2 border border-cyan-500/30 text-[9px] uppercase  tracking-widest text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all group"
                     >
                         <Activity size={12} className="group-hover:animate-pulse" /> Live Leaderboard
                     </button>
@@ -370,16 +368,16 @@ const AdminDashboard = () => {
                             <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-500" />
                             <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500" />
 
-                            <h3 className="text-xl font-bold mb-8 flex items-center gap-3 tracking-[0.2em] text-white">
+                            <h3 className="text-xl  mb-8 flex items-center gap-3 tracking-[0.2em] text-white">
                                 <Shield className="text-cyan-500" /> MISSION INITIALIZATION PROTOCOL
                             </h3>
 
                             <div className="mb-8">
-                                <label className="text-[10px] uppercase text-cyan-600 font-bold tracking-widest block mb-2">
+                                <label className="text-[10px] uppercase text-cyan-600  tracking-widest block mb-2">
                                     Target Game Instance
                                 </label>
                                 <select
-                                    className="w-full bg-cyan-950/10 border border-cyan-500/30 p-3 text-cyan-400 font-mono text-xs outline-none focus:border-cyan-400"
+                                    className="w-full bg-cyan-950/10 border border-cyan-500/30 p-3 text-cyan-400 font-sans text-xs outline-none focus:border-cyan-400"
                                     value={dbGameId || ""}
                                     onChange={(e) => setDbGameId(e.target.value)}
                                 >
@@ -397,7 +395,7 @@ const AdminDashboard = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] uppercase text-cyan-600 font-bold tracking-widest">
+                                    <label className="text-[10px] uppercase text-cyan-600  tracking-widest">
                                         Mission Time (Minutes)
                                     </label>
                                     <div className="relative group/input">
@@ -406,17 +404,17 @@ const AdminDashboard = () => {
                                             value={localDuration}
                                             disabled={gameStarted}
                                             onChange={handleDurationChange}
-                                            className="w-full bg-cyan-950/10 border-b border-cyan-800 py-3 px-4 text-2xl font-bold text-cyan-400 focus:border-cyan-400 outline-none transition-all disabled:opacity-50"
+                                            className="w-full bg-cyan-950/10 border-b border-cyan-800 py-3 px-4 text-2xl  text-cyan-400 focus:border-cyan-400 outline-none transition-all disabled:opacity-50"
                                         />
                                         <div className="absolute bottom-0 left-0 h-[1px] w-0 bg-cyan-500 transition-all duration-300 group-hover/input:w-full" />
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] uppercase text-cyan-600 font-bold tracking-widest">
+                                    <label className="text-[10px] uppercase text-cyan-600  tracking-widest">
                                         System State
                                     </label>
-                                    <div className={`p-4 border ${gameStarted ? "border-green-500/30 bg-green-950/10 text-green-400" : "border-red-500/30 bg-red-950/10 text-red-400"} font-bold tracking-[0.2em] text-center uppercase`}>
+                                    <div className={`p-4 border ${gameStarted ? "border-green-500/30 bg-green-950/10 text-green-400" : "border-red-500/30 bg-red-950/10 text-red-400"}  tracking-[0.2em] text-center uppercase`}>
                                         {gameStarted ? "• ACTIVE_OPERATIONS •" : "• STANDBY_MODE •"}
                                     </div>
                                 </div>
@@ -432,7 +430,7 @@ const AdminDashboard = () => {
                                             showToast("ERROR", "error", "NO ACTIVE GAME INSTANCE TO START");
                                         }
                                     }}
-                                    className={`relative overflow-hidden group bg-cyan-900/20 border border-cyan-500/50 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_30px_cyan] text-cyan-400 px-10 py-4 font-bold uppercase text-xs tracking-[0.3em] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${gameStarted && !dbGameId ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    className={`relative overflow-hidden group bg-cyan-900/20 border border-cyan-500/50 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_30px_cyan] text-cyan-400 px-10 py-4  uppercase text-xs tracking-[0.3em] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${gameStarted && !dbGameId ? "opacity-50 cursor-not-allowed" : ""}`}
                                 >
                                     <span className="relative z-10 flex items-center gap-3">
                                         <Play size={16} className={gameStarted && !dbGameId ? "" : "group-hover:fill-current"} />
@@ -449,7 +447,7 @@ const AdminDashboard = () => {
                     <div className="flex justify-center animate-fade-in-up pb-24 pt-10">
                         {/* Create Instance */}
                         <div className="w-full max-w-lg p-8 relative">
-                            <h3 className="text-xs font-bold uppercase text-cyan-600 mb-6 tracking-widest border-b border-cyan-900/50 pb-2">
+                            <h3 className="text-xs  uppercase text-cyan-600 mb-6 tracking-widest border-b border-cyan-900/50 pb-2">
                                 Create Game Instance
                             </h3>
                             <input
@@ -470,7 +468,7 @@ const AdminDashboard = () => {
                                         showToast("INIT FAILED", "error", e.message);
                                     }
                                 }}
-                                className="w-full border border-cyan-500/30 text-cyan-400 py-3 text-[10px] uppercase font-bold hover:bg-cyan-500 hover:text-black transition-all tracking-widest"
+                                className="w-full border border-cyan-500/30 text-cyan-400 py-3 text-[10px] uppercase  hover:bg-cyan-500 hover:text-black transition-all tracking-widest"
                             >
                                 Initialize Instance
                             </button>
@@ -478,12 +476,12 @@ const AdminDashboard = () => {
 
                         {/* Config Instance */}
                         {/* <div className="border border-cyan-500/30 bg-black/60 backdrop-blur-md p-6 relative">
-                            <h3 className="text-xs font-bold uppercase text-cyan-600 mb-6 tracking-widest border-b border-cyan-900/50 pb-2">
+                            <h3 className="text-xs  uppercase text-cyan-600 mb-6 tracking-widest border-b border-cyan-900/50 pb-2">
                                 Instance Configuration
                             </h3>
                             <div className="space-y-6">
                                 <div>
-                                    <label className="text-[9px] uppercase text-cyan-700 mb-2 block font-bold tracking-widest">
+                                    <label className="text-[9px] uppercase text-cyan-700 mb-2 block  tracking-widest">
                                         Attach Units
                                     </label>
                                     <select className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-400 uppercase">
@@ -492,10 +490,10 @@ const AdminDashboard = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-[9px] uppercase text-cyan-700 mb-2 block font-bold tracking-widest">
+                                    <label className="text-[9px] uppercase text-cyan-700 mb-2 block  tracking-widest">
                                         Assign Intel
                                     </label>
-                                    <select multiple className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs h-32 outline-none focus:border-cyan-500/50 text-cyan-400 uppercase font-mono scrollbar-thin">
+                                    <select multiple className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs h-32 outline-none focus:border-cyan-500/50 text-cyan-400 uppercase font-sans scrollbar-thin">
                                         {puzzles.map(p => (
                                             <option key={p.id} value={p.id} className="p-1 hover:bg-cyan-900/30 cursor-pointer">
                                                 {p.title}
@@ -514,23 +512,23 @@ const AdminDashboard = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             {/* Form */}
                             <div className="lg:col-span-1 border border-cyan-500/30 bg-black/60 backdrop-blur-md p-6 h-fit sticky top-24">
-                                <h4 className="text-[10px] font-bold uppercase text-cyan-600 mb-6 tracking-widest border-b border-cyan-900/50 pb-2">
+                                <h4 className="text-[10px]  uppercase text-cyan-600 mb-6 tracking-widest border-b border-cyan-900/50 pb-2">
                                     New Intel Form
                                 </h4>
                                 <div className="space-y-4">
-                                    <select className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-400 uppercase font-bold">
+                                    <select className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-400 uppercase ">
                                         <option>Standard Mission</option>
                                         <option>Blip Puzzle</option>
                                     </select>
                                     <input
-                                        className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 font-bold tracking-wider"
+                                        className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900  tracking-wider"
                                         placeholder="TIMELINE ID (e.g. 1, 2)..."
                                         type="number"
                                         value={qTimeline}
                                         onChange={e => setQTimeline(e.target.value)}
                                     />
                                     <textarea
-                                        className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs h-24 outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 font-mono"
+                                        className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs h-24 outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 font-sans"
                                         placeholder="ENCRYPTED DATA (QUESTION)..."
                                         value={qContent}
                                         onChange={e => setQContent(e.target.value)}
@@ -551,7 +549,7 @@ const AdminDashboard = () => {
 
                                     <button
                                         onClick={handleCreateQuestion}
-                                        className="w-full bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black py-4 font-bold text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 mt-4"
+                                        className="w-full bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black py-4  text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 mt-4"
                                     >
                                         <PlusCircle size={14} /> Upload to Server
                                     </button>
@@ -563,11 +561,11 @@ const AdminDashboard = () => {
                                 {/* Toolbar */}
                                 <div className="flex justify-between items-center mb-4 px-2">
                                     <div className="flex items-center gap-4">
-                                        <h4 className="text-[10px] font-bold uppercase text-cyan-600 tracking-widest">Active Intel Database ({adminQuestions.length})</h4>
+                                        <h4 className="text-[10px]  uppercase text-cyan-600 tracking-widest">Active Intel Database ({adminQuestions.length})</h4>
                                         {/* Select All */}
                                         <button
                                             onClick={handleSelectAllQuestions}
-                                            className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest border px-3 py-1 transition-all
+                                            className="flex items-center gap-2 text-[8px]  uppercase tracking-widest border px-3 py-1 transition-all
                                                        border-cyan-700/50 text-cyan-500 hover:bg-cyan-500 hover:text-black"
                                         >
                                             <CheckSquare size={10} />
@@ -577,24 +575,35 @@ const AdminDashboard = () => {
                                         </button>
                                     </div>
                                     <div className="flex gap-2">
-                                        <input
-                                            type="file"
-                                            accept=".json"
-                                            ref={fileInputRef}
-                                            className="hidden"
-                                            onChange={handleFileUpload}
-                                        />
                                         <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="text-[8px] text-cyan-500 hover:text-cyan-400 border border-cyan-700/50 px-3 py-1 uppercase font-bold tracking-widest hover:bg-cyan-950/30 transition-all flex items-center gap-2"
+                                            onClick={() => setShowJsonInput(!showJsonInput)}
+                                            className="text-[8px] text-cyan-500 hover:text-cyan-400 border border-cyan-700/50 px-3 py-1 uppercase  tracking-widest hover:bg-cyan-950/30 transition-all flex items-center gap-2"
                                         >
-                                            <Database size={10} /> IMPORT JSON
+                                            <Database size={10} /> {showJsonInput ? "CANCEL IMPORT" : "IMPORT JSON"}
                                         </button>
-                                        <button onClick={handleCleanupQuestions} className="text-[8px] text-red-500 hover:text-red-400 border border-red-900/50 px-3 py-1 uppercase font-bold tracking-widest hover:bg-red-950/30 transition-all flex items-center gap-2">
+                                        <button onClick={handleCleanupQuestions} className="text-[8px] text-red-500 hover:text-red-400 border border-red-900/50 px-3 py-1 uppercase  tracking-widest hover:bg-red-950/30 transition-all flex items-center gap-2">
                                             <Trash2 size={10} /> PURGE DATABASE
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* JSON Input Area */}
+                                {showJsonInput && (
+                                    <div className="mb-4 p-4 border border-cyan-500/30 bg-cyan-950/20">
+                                        <textarea
+                                            value={jsonBulkInput}
+                                            onChange={(e) => setJsonBulkInput(e.target.value)}
+                                            className="w-full h-32 bg-black/50 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900/50 font-sans mb-2"
+                                            placeholder={`[\n  {\n    "timeline": {\n      "key": "newyork",\n      "name": "New York"\n    },\n    "difficulty": "medium",\n    "question": "What happens?",\n    "answer": "answer here",\n    "points": 100\n  }\n]`}
+                                        />
+                                        <button
+                                            onClick={handleJsonSubmit}
+                                            className="w-full bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black py-2  text-[10px] uppercase tracking-[0.2em] transition-all"
+                                        >
+                                            Submit JSON Data
+                                        </button>
+                                    </div>
+                                )}
 
                                 {/* Grouped Question List */}
                                 <div className="space-y-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin">
@@ -608,10 +617,10 @@ const AdminDashboard = () => {
                                             {/* Timeline Header */}
                                             <div className="flex items-center gap-4 mb-3">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-cyan-400 bg-cyan-950/60 border border-cyan-500/40 px-3 py-1">
+                                                    <span className="text-[9px]  uppercase tracking-[0.25em] text-cyan-400 bg-cyan-950/60 border border-cyan-500/40 px-3 py-1">
                                                         {group.name}
                                                     </span>
-                                                    <span className="text-[8px] font-bold text-cyan-700 uppercase tracking-widest">• {group.year}</span>
+                                                    <span className="text-[8px]  text-cyan-700 uppercase tracking-widest">• {group.year}</span>
                                                     <span className="text-[8px] text-cyan-800 uppercase">({group.questions.length} questions)</span>
                                                 </div>
                                                 <div className="flex-1 h-[1px] bg-gradient-to-r from-cyan-500/30 to-transparent" />
@@ -636,7 +645,7 @@ const AdminDashboard = () => {
                                                         {/* Difficulty label */}
                                                         <div className="flex items-center gap-2 mb-2 pl-1">
                                                             <span className={`w-[6px] h-[6px] rounded-full ${diffDot[diff]}`} />
-                                                            <span className={`text-[8px] font-bold uppercase tracking-[0.3em] ${diffColors[diff].split(' ')[0]}`}>
+                                                            <span className={`text-[8px]  uppercase tracking-[0.3em] ${diffColors[diff].split(' ')[0]}`}>
                                                                 {diff}
                                                             </span>
                                                         </div>
@@ -664,22 +673,22 @@ const AdminDashboard = () => {
 
                                                                     <div className="flex-1 mr-4 min-w-0">
                                                                         <div className="flex items-center gap-2 mb-1">
-                                                                            <span className={`text-[8px] font-bold uppercase px-2 py-0.5 border rounded-sm ${diffColors[diff]}`}>
+                                                                            <span className={`text-[8px]  uppercase px-2 py-0.5 border rounded-sm ${diffColors[diff]}`}>
                                                                                 {diff}
                                                                             </span>
-                                                                            <span className="text-[10px] font-mono text-cyan-400 font-bold drop-shadow-[0_0_5px_cyan]">
+                                                                            <span className="text-[10px] font-sans text-cyan-400  drop-shadow-[0_0_5px_cyan]">
                                                                                 {q.points} PTS
                                                                             </span>
                                                                         </div>
-                                                                        <p className="text-[10px] text-cyan-200/80 max-w-md truncate font-mono">{q.question}</p>
-                                                                        <p className="text-[8px] text-cyan-900 mt-1 font-mono uppercase">
+                                                                        <p className="text-[10px] text-cyan-200/80 max-w-md truncate font-sans">{q.question}</p>
+                                                                        <p className="text-[8px] text-cyan-900 mt-1 font-sans uppercase">
                                                                             Key: <span className="text-cyan-700">{q.answer}</span>
                                                                         </p>
                                                                     </div>
                                                                     <div className="text-right flex items-center gap-2 flex-shrink-0">
                                                                         <button
                                                                             onClick={(e) => { e.stopPropagation(); handleAddQuestionToGame(q._id); }}
-                                                                            className="text-[9px] border border-cyan-700/50 px-3 py-2 text-cyan-500 hover:bg-cyan-500 hover:text-black uppercase font-bold tracking-widest transition-all flex items-center gap-2"
+                                                                            className="text-[9px] border border-cyan-700/50 px-3 py-2 text-cyan-500 hover:bg-cyan-500 hover:text-black uppercase  tracking-widest transition-all flex items-center gap-2"
                                                                         >
                                                                             <Zap size={10} /> LINK
                                                                         </button>
@@ -697,19 +706,19 @@ const AdminDashboard = () => {
                                 {/* Floating bulk-action toolbar for questions */}
                                 {selectedQuestionIds.length > 0 && (
                                     <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#050a10]/95 backdrop-blur-xl border border-cyan-500 p-4 shadow-[0_0_50px_rgba(0,255,255,0.3)] flex items-center gap-6 animate-fade-in-up rounded-none">
-                                        <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest border-r border-cyan-800 pr-6">
+                                        <div className="text-xs  text-cyan-400 uppercase tracking-widest border-r border-cyan-800 pr-6">
                                             {selectedQuestionIds.length} INTEL SELECTED
                                         </div>
                                         <div className="flex gap-4">
                                             <button
                                                 onClick={handleBulkAddQuestionsToGame}
-                                                className="flex items-center gap-2 px-4 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500 hover:text-black text-[10px] uppercase font-bold tracking-wider transition-all"
+                                                className="flex items-center gap-2 px-4 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500 hover:text-black text-[10px] uppercase  tracking-wider transition-all"
                                             >
                                                 <Zap size={14} /> Link All to Game
                                             </button>
                                             <button
                                                 onClick={() => setSelectedQuestionIds([])}
-                                                className="flex items-center gap-2 px-4 py-2 bg-slate-900/30 border border-slate-600/50 text-slate-400 hover:bg-slate-700 hover:text-white text-[10px] uppercase font-bold tracking-wider transition-all"
+                                                className="flex items-center gap-2 px-4 py-2 bg-slate-900/30 border border-slate-600/50 text-slate-400 hover:bg-slate-700 hover:text-white text-[10px] uppercase  tracking-wider transition-all"
                                             >
                                                 Clear Selection
                                             </button>
@@ -725,14 +734,14 @@ const AdminDashboard = () => {
                 {activeTab === "teams" && (
                     <div className="space-y-8 animate-fade-in-up pb-24">
                         <div className="flex justify-between items-center mb-8 pb-4 border-b border-cyan-900/30">
-                            <h3 className="text-xl font-bold uppercase tracking-[0.2em] text-white">
+                            <h3 className="text-xl  uppercase tracking-[0.2em] text-white">
                                 <Users className="inline mr-2 text-cyan-500" size={20} /> Field Units Status
                             </h3>
                             <div className="flex gap-4">
-                                <button onClick={handleSelectAll} className="text-[10px] border border-cyan-700/50 px-4 py-2 text-cyan-500 hover:bg-cyan-500/10 uppercase font-bold tracking-widest transition-all">
+                                <button onClick={handleSelectAll} className="text-[10px] border border-cyan-700/50 px-4 py-2 text-cyan-500 hover:bg-cyan-500/10 uppercase  tracking-widest transition-all">
                                     {selectedTeamIds.length === allTeamsState.length ? "Deselect All" : "Select All"}
                                 </button>
-                                <button className="text-[10px] border border-cyan-700/50 px-6 py-2 text-cyan-500 hover:bg-cyan-500 hover:text-black uppercase font-bold tracking-widest transition-all">
+                                <button className="text-[10px] border border-cyan-700/50 px-6 py-2 text-cyan-500 hover:bg-cyan-500 hover:text-black uppercase  tracking-widest transition-all">
                                     Import Personnel (CSV)
                                 </button>
                             </div>
@@ -740,26 +749,26 @@ const AdminDashboard = () => {
 
                         {/* Create Team Form */}
                         <div className="border border-cyan-500/30 bg-black/60 backdrop-blur-md p-6 mb-8 relative">
-                            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600 mb-6 border-b border-cyan-900/50 pb-2">
+                            <h4 className="text-xs  uppercase tracking-[0.2em] text-cyan-600 mb-6 border-b border-cyan-900/50 pb-2">
                                 <PlusCircle className="inline mr-2" size={14} /> Register New Unit
                             </h4>
                             <div className="flex gap-4">
                                 <input
                                     value={newTeamName}
                                     onChange={(e) => setNewTeamName(e.target.value)}
-                                    className="flex-1 bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 font-bold"
+                                    className="flex-1 bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 "
                                     placeholder="UNIT DESIGNATION (NAME)..."
                                 />
                                 <input
                                     type="password"
                                     value={newTeamPassword}
                                     onChange={(e) => setNewTeamPassword(e.target.value)}
-                                    className="flex-1 bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 font-bold"
+                                    className="flex-1 bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 "
                                     placeholder="ACCESS CODE (PASSWORD)..."
                                 />
                                 <button
                                     onClick={handleCreateTeam}
-                                    className="bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black px-6 font-bold text-[10px] uppercase tracking-[0.2em] transition-all"
+                                    className="bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black px-6  text-[10px] uppercase tracking-[0.2em] transition-all"
                                 >
                                     DEPLOY
                                 </button>
@@ -769,13 +778,13 @@ const AdminDashboard = () => {
                         {/* Floating Selection Toolbar */}
                         {selectedTeamIds.length > 0 && (
                             <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#050a10]/95 backdrop-blur-xl border border-cyan-500 p-4 shadow-[0_0_50px_rgba(0,255,255,0.3)] flex items-center gap-6 animate-fade-in-up w-auto rounded-none">
-                                <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest border-r border-cyan-800 pr-6">
+                                <div className="text-xs  text-cyan-400 uppercase tracking-widest border-r border-cyan-800 pr-6">
                                     {selectedTeamIds.length} UNITS SELECTED
                                 </div>
                                 <div className="flex gap-4">
                                     <button
                                         onClick={handleBulkAddToGame}
-                                        className="flex items-center gap-2 px-4 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500 hover:text-black text-[10px] uppercase font-bold tracking-wider transition-all"
+                                        className="flex items-center gap-2 px-4 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500 hover:text-black text-[10px] uppercase  tracking-wider transition-all"
                                     >
                                         <ArrowUpRight size={14} /> Add to Active Protocol
                                     </button>
@@ -784,7 +793,7 @@ const AdminDashboard = () => {
                                             selectedTeamIds.forEach(id => freezeTeam(id));
                                             setSelectedTeamIds([]);
                                         }}
-                                        className="flex items-center gap-2 px-4 py-2 bg-blue-900/30 border border-blue-500/50 text-blue-300 hover:bg-blue-500 hover:text-black text-[10px] uppercase font-bold tracking-wider transition-all"
+                                        className="flex items-center gap-2 px-4 py-2 bg-blue-900/30 border border-blue-500/50 text-blue-300 hover:bg-blue-500 hover:text-black text-[10px] uppercase  tracking-wider transition-all"
                                     >
                                         <Lock size={14} /> FREEZE
                                     </button>
@@ -793,13 +802,13 @@ const AdminDashboard = () => {
                                             selectedTeamIds.forEach(id => unfreezeTeam(id));
                                             setSelectedTeamIds([]);
                                         }}
-                                        className="flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-500/50 text-green-300 hover:bg-green-500 hover:text-black text-[10px] uppercase font-bold tracking-wider transition-all"
+                                        className="flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-500/50 text-green-300 hover:bg-green-500 hover:text-black text-[10px] uppercase  tracking-wider transition-all"
                                     >
                                         <Unlock size={14} /> UNFREEZE
                                     </button>
                                     <button
                                         onClick={handleCleanupTeams}
-                                        className="flex items-center gap-2 px-4 py-2 bg-red-900/20 border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] uppercase font-bold tracking-wider transition-all"
+                                        className="flex items-center gap-2 px-4 py-2 bg-red-900/20 border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] uppercase  tracking-wider transition-all"
                                     >
                                         <Trash2 size={14} /> TERMINATE / CLEANUP
                                     </button>
@@ -828,24 +837,24 @@ const AdminDashboard = () => {
                                         <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-cyan-500 opacity-50 group-hover:opacity-100 transition-opacity" />
 
                                         <div>
-                                            <div className="absolute top-0 right-0 p-2 text-[8px] text-cyan-500/70 font-mono font-bold tracking-widest uppercase">
+                                            <div className="absolute top-0 right-0 p-2 text-[8px] text-cyan-500/70 font-sans  tracking-widest uppercase">
                                                 UID: {t.teamId.slice(-6)}
                                             </div>
 
-                                            <h4 className="font-bold text-cyan-400 mb-1 text-sm drop-shadow-[0_0_5px_rgba(0,255,255,0.5)] truncate pr-16 bg-transparent pl-6">
+                                            <h4 className=" text-cyan-400 mb-1 text-sm drop-shadow-[0_0_5px_rgba(0,255,255,0.5)] truncate pr-16 bg-transparent pl-6">
                                                 {t.teamName}
                                             </h4>
 
-                                            <p className="text-[9px] text-cyan-600 font-bold tracking-wider pl-6">
+                                            <p className="text-[9px] text-cyan-600  tracking-wider pl-6">
                                                 <span className="uppercase">ASSIGNMENT:</span> M-{t.currentLevel.toString().padStart(2, "0")}
                                             </p>
                                         </div>
 
                                         {/* Status Line */}
                                         <div className="flex gap-2 mt-2 pl-6">
-                                            {t.isFrozen && <span className="text-[8px] font-bold text-black bg-cyan-500 px-1 uppercase">FROZEN</span>}
-                                            {t.isBlocked && <span className="text-[8px] font-bold text-white bg-red-600 px-1 uppercase">BLOCKED</span>}
-                                            {t.snapActivated && <span className="text-[8px] font-bold text-white bg-purple-600 px-1 uppercase animate-pulse">SNAP</span>}
+                                            {t.isFrozen && <span className="text-[8px]  text-black bg-cyan-500 px-1 uppercase">FROZEN</span>}
+                                            {t.isBlocked && <span className="text-[8px]  text-white bg-red-600 px-1 uppercase">BLOCKED</span>}
+                                            {t.snapActivated && <span className="text-[8px]  text-white bg-purple-600 px-1 uppercase animate-pulse">SNAP</span>}
                                         </div>
 
                                         {/* Scan Line Effect */}
@@ -854,29 +863,29 @@ const AdminDashboard = () => {
 
                                     {/* HOVER DIALOG BOX (Absolute Overlay) */}
                                     <div className="absolute top-0 left-full ml-4 w-64 bg-black/95 border border-cyan-500/50 p-4 shadow-[0_0_30px_rgba(0,255,255,0.2)] backdrop-blur-xl opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 z-50 pointer-events-none group-hover:pointer-events-auto">
-                                        <h5 className="text-xs font-bold text-cyan-400 border-b border-cyan-900/50 pb-2 mb-3 uppercase tracking-widest">
+                                        <h5 className="text-xs  text-cyan-400 border-b border-cyan-900/50 pb-2 mb-3 uppercase tracking-widest">
                                             UNIT DATA SHEET
                                         </h5>
 
-                                        <div className="space-y-3 font-mono">
+                                        <div className="space-y-3 font-sans">
                                             <div>
-                                                <label className="text-[8px] text-cyan-600 uppercase font-bold block">FULL ID</label>
+                                                <label className="text-[8px] text-cyan-600 uppercase  block">FULL ID</label>
                                                 <div className="text-[9px] text-cyan-100 break-all">{t.teamId}</div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
-                                                    <label className="text-[8px] text-cyan-600 uppercase font-bold block">SCORE</label>
+                                                    <label className="text-[8px] text-cyan-600 uppercase  block">SCORE</label>
                                                     <div className="text-[10px] text-cyan-100">{t.score}</div>
                                                 </div>
                                                 <div>
-                                                    <label className="text-[8px] text-cyan-600 uppercase font-bold block">ROLE</label>
+                                                    <label className="text-[8px] text-cyan-600 uppercase  block">ROLE</label>
                                                     <div className="text-[10px] text-cyan-100">{t.role}</div>
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <label className="text-[8px] text-cyan-600 uppercase font-bold block mb-1">INFINITY STONES</label>
+                                                <label className="text-[8px] text-cyan-600 uppercase  block mb-1">INFINITY STONES</label>
                                                 <div className="flex gap-1 flex-wrap">
                                                     {['space', 'mind', 'reality', 'power', 'time', 'soul'].map(stone => {
                                                         const hasStone = t.stones?.includes(stone);
@@ -900,14 +909,14 @@ const AdminDashboard = () => {
                                             </div>
 
                                             <div>
-                                                <label className="text-[8px] text-cyan-600 uppercase font-bold block">COMPLETED TIMELINES</label>
+                                                <label className="text-[8px] text-cyan-600 uppercase  block">COMPLETED TIMELINES</label>
                                                 <div className="text-[9px] text-cyan-100 leading-tight">
                                                     {t.completedTimelines?.length > 0 ? t.completedTimelines.join(", ") : "None"}
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <label className="text-[8px] text-cyan-600 uppercase font-bold block">STATUS</label>
+                                                <label className="text-[8px] text-cyan-600 uppercase  block">STATUS</label>
                                                 <div className="text-[9px] text-white">
                                                     {t.isFrozen ? "FROZEN " : ""}{t.isBlocked ? "BLOCKED " : ""}{t.snapActivated ? "SNAP_ACTIVE" : ""}{(!t.isFrozen && !t.isBlocked && !t.snapActivated) ? "NORMAL" : ""}
                                                 </div>
@@ -919,7 +928,7 @@ const AdminDashboard = () => {
                                                             e.stopPropagation();
                                                             unfreezeTeam(t.teamId);
                                                         }}
-                                                        className="flex-1 bg-green-900/20 border border-green-500/30 text-green-400 hover:bg-green-500 hover:text-black py-2 font-bold text-[8px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                                        className="flex-1 bg-green-900/20 border border-green-500/30 text-green-400 hover:bg-green-500 hover:text-black py-2  text-[8px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                                                     >
                                                         <Unlock size={10} /> UNFREEZE UNIT
                                                     </button>
@@ -929,7 +938,7 @@ const AdminDashboard = () => {
                                                             e.stopPropagation();
                                                             freezeTeam(t.teamId);
                                                         }}
-                                                        className="flex-1 bg-blue-900/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-black py-2 font-bold text-[8px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                                        className="flex-1 bg-blue-900/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-black py-2  text-[8px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                                                     >
                                                         <Lock size={10} /> FREEZE UNIT
                                                     </button>
@@ -953,12 +962,12 @@ const AdminDashboard = () => {
                         {/* Red Alert Section for Override */}
                         <div className="bg-red-950/10 border border-red-500/30 p-8 flex justify-between items-center relative overflow-hidden">
                             <div className="relative z-10">
-                                <h3 className="text-2xl font-bold text-red-500 tracking-[0.2em] uppercase mb-1 drop-shadow-[0_0_10px_red]">Live System Override</h3>
-                                <p className="text-[10px] text-red-700 font-bold uppercase tracking-[0.3em]">Priority Alpha Level Clearance</p>
+                                <h3 className="text-2xl  text-red-500 tracking-[0.2em] uppercase mb-1 drop-shadow-[0_0_10px_red]">Live System Override</h3>
+                                <p className="text-[10px] text-red-700  uppercase tracking-[0.3em]">Priority Alpha Level Clearance</p>
                             </div>
                             <div className="flex items-center gap-4 relative z-10">
                                 <span className="flex h-3 w-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_red]" />
-                                <span className="text-xs font-mono text-red-500 font-bold tracking-widest">SYSTEM_LIVE</span>
+                                <span className="text-xs font-sans text-red-500  tracking-widest">SYSTEM_LIVE</span>
                             </div>
                             {/* Background Pattern */}
                             <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,red_1px,transparent_1px)] bg-[size:10px_10px]" />
@@ -967,7 +976,7 @@ const AdminDashboard = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Blip Control */}
                             <div className="border border-cyan-500/30 bg-black/60 backdrop-blur-md p-8 relative">
-                                <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white mb-8 border-b border-cyan-900/50 pb-2">
+                                <h4 className="text-xs  uppercase tracking-[0.2em] text-white mb-8 border-b border-cyan-900/50 pb-2">
                                     <Zap className="inline mr-2 text-cyan-500" size={14} /> Global Blip Protocol
                                 </h4>
 
@@ -977,9 +986,9 @@ const AdminDashboard = () => {
                                         className="w-full group relative flex items-center justify-between p-6 bg-cyan-950/10 border border-cyan-500/30 hover:bg-cyan-900/20 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,255,255,0.2)] transition-all overflow-hidden"
                                     >
                                         <div className="text-left z-10">
-                                            <span className="text-[9px] font-bold text-cyan-500 uppercase tracking-[0.3em]">Phase 01</span>
-                                            <h5 className="text-lg font-bold text-white uppercase tracking-wider mt-1">Initiate Initial Blip</h5>
-                                            <p className="text-[8px] text-cyan-700 uppercase mt-2 font-bold">Targets: 15 Randomized Units</p>
+                                            <span className="text-[9px]  text-cyan-500 uppercase tracking-[0.3em]">Phase 01</span>
+                                            <h5 className="text-lg  text-white uppercase tracking-wider mt-1">Initiate Initial Blip</h5>
+                                            <p className="text-[8px] text-cyan-700 uppercase mt-2 ">Targets: 15 Randomized Units</p>
                                         </div>
                                         <Zap className="text-cyan-600 group-hover:text-cyan-400 group-hover:scale-125 transition-transform" size={40} />
                                     </button>
@@ -989,9 +998,9 @@ const AdminDashboard = () => {
                                         className="w-full group relative flex items-center justify-between p-6 bg-purple-950/10 border border-purple-500/30 hover:bg-purple-900/20 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.2)] transition-all overflow-hidden"
                                     >
                                         <div className="text-left z-10">
-                                            <span className="text-[9px] font-bold text-purple-500 uppercase tracking-[0.3em]">Phase 02</span>
-                                            <h5 className="text-lg font-bold text-white uppercase tracking-wider mt-1">Initiate Final Blip</h5>
-                                            <p className="text-[8px] text-purple-700 uppercase mt-2 font-bold">Targets: All Remaining Units</p>
+                                            <span className="text-[9px]  text-purple-500 uppercase tracking-[0.3em]">Phase 02</span>
+                                            <h5 className="text-lg  text-white uppercase tracking-wider mt-1">Initiate Final Blip</h5>
+                                            <p className="text-[8px] text-purple-700 uppercase mt-2 ">Targets: All Remaining Units</p>
                                         </div>
                                         <Zap className="text-purple-600 group-hover:text-purple-400 group-hover:scale-125 transition-transform" size={40} />
                                     </button>
@@ -1000,7 +1009,7 @@ const AdminDashboard = () => {
 
                             {/* Unit Status Monitor */}
                             <div className="border border-cyan-500/30 bg-black/60 backdrop-blur-md p-8 flex flex-col h-[500px]">
-                                <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white mb-6 border-b border-cyan-900/50 pb-2">
+                                <h4 className="text-xs  uppercase tracking-[0.2em] text-white mb-6 border-b border-cyan-900/50 pb-2">
                                     <Activity className="inline mr-2 text-green-500" size={14} /> Tactical Unit Status
                                 </h4>
 
@@ -1008,11 +1017,11 @@ const AdminDashboard = () => {
                                     {allTeamsState.map(t => (
                                         <div key={t.teamId} className="flex items-center justify-between p-3 bg-black/40 border border-cyan-900/30 hover:border-cyan-500/30 transition-all">
                                             <div>
-                                                <span className="text-xs font-bold text-cyan-100 uppercase tracking-wider">{t.teamName}</span>
+                                                <span className="text-xs  text-cyan-100 uppercase tracking-wider">{t.teamName}</span>
                                                 <div className="flex gap-2 mt-1">
-                                                    {t.isFrozen && <span className="text-[8px] font-bold text-cyan-400 bg-cyan-950/50 px-1 border border-cyan-500/30 uppercase">[FROZEN]</span>}
-                                                    {t.isBlocked && <span className="text-[8px] font-bold text-red-500 bg-red-950/50 px-1 border border-red-500/30 uppercase">[BLOCKED]</span>}
-                                                    {!t.isFrozen && !t.isBlocked && <span className="text-[8px] font-bold text-green-500 bg-green-950/50 px-1 border border-green-500/30 uppercase">[ACTIVE]</span>}
+                                                    {t.isFrozen && <span className="text-[8px]  text-cyan-400 bg-cyan-950/50 px-1 border border-cyan-500/30 uppercase">[FROZEN]</span>}
+                                                    {t.isBlocked && <span className="text-[8px]  text-red-500 bg-red-950/50 px-1 border border-red-500/30 uppercase">[BLOCKED]</span>}
+                                                    {!t.isFrozen && !t.isBlocked && <span className="text-[8px]  text-green-500 bg-green-950/50 px-1 border border-green-500/30 uppercase">[ACTIVE]</span>}
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">

@@ -12,9 +12,8 @@ const GameTimerDisplay = () => {
   const isLow = remainingSeconds < 20 * 60; // last 20 minutes
 
   return (
-    <div className={`flex items-center gap-2 font-display font-bold text-sm tracking-wider ${
-      isLow ? "text-destructive animate-neon-pulse" : "text-primary"
-    }`}>
+    <div className={`flex items-center gap-2 font-sans font-bold text-sm tracking-wider ${isLow ? "text-destructive animate-neon-pulse" : "text-primary"
+      }`}>
       <Clock size={16} />
       <span>{formatted}</span>
       {isLow && <span className="text-xs text-destructive">(FINAL)</span>}

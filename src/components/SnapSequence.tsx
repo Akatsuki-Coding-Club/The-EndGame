@@ -16,32 +16,38 @@ const STONES_ORDER = ["time", "mind", "space", "power", "reality", "soul"] as co
 
 export const SnapSequence = () => {
     const { isSnapping, snapWinner } = useGame();
-    const { team } = useAuth();
-    const [phase, setPhase] = useState<"idle" | "buildup" | "snap" | "dissolve" | "victory">("idle");
+    const { team, isAdmin } = useAuth();
+    if (isAdmin) return null;
+
+    const [phase, setPhase] = useState<"idle" | "buildup" | "snap" | "dissolve">("idle");
     const [activeStoneIndex, setActiveStoneIndex] = useState(-1);
     const [showNotification, setShowNotification] = useState(true);
     const [hasPlayedRivalSnap, setHasPlayedRivalSnap] = useState(false);
 
     useEffect(() => {
-        if (snapWinner && snapWinner.teamId !== team?._id && !hasPlayedRivalSnap) {
+        if (snapWinner && !hasPlayedRivalSnap) {
             setShowNotification(true);
-            const timer = setTimeout(() => setShowNotification(false), 8000);
-            return () => clearTimeout(timer);
         }
-    }, [snapWinner?.teamId, team?._id, hasPlayedRivalSnap]);
+    }, [snapWinner, hasPlayedRivalSnap]);
 
     useEffect(() => {
+        if (phase === "idle" && (hasPlayedRivalSnap || phase === "idle") && showNotification && snapWinner) {
+            const timer = setTimeout(() => setShowNotification(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [phase, hasPlayedRivalSnap, showNotification, snapWinner]);
+
+    useEffect(() => {
+        if (isAdmin) return;
         if (isSnapping && phase === "idle") {
             setPhase("buildup");
-        } else if (team?.snapActivated && phase === "idle") {
-            setPhase("victory");
         } else if (snapWinner && snapWinner.teamId !== team?._id && phase === "idle" && !hasPlayedRivalSnap) {
             // Rival snap detected - show a brief white flash before the notification
             setHasPlayedRivalSnap(true);
             setPhase("snap");
             setTimeout(() => setPhase("idle"), 1000); // Return to idle so notification shows
         }
-    }, [isSnapping, team?.snapActivated, phase, snapWinner, team?._id, hasPlayedRivalSnap]);
+    }, [isSnapping, phase, snapWinner, team?._id, hasPlayedRivalSnap, isAdmin]);
 
     const isOtherTeamSnap = snapWinner && snapWinner.teamId !== team?._id;
 
@@ -67,12 +73,12 @@ export const SnapSequence = () => {
         }
 
         if (phase === "dissolve") {
-            setTimeout(() => setPhase("victory"), 3000);
+            setTimeout(() => setPhase("idle"), 3000);
         }
     }, [phase]);
 
-    // If someone else snapped — Non-blocking notification
-    if (snapWinner && !isSnapping && phase === "idle" && snapWinner.teamId !== team?._id && showNotification) {
+    // Non-blocking notification for everyone
+    if (snapWinner && !isSnapping && phase === "idle" && showNotification) {
         return (
             <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xl animate-in fade-in slide-in-from-top-10 duration-1000 pointer-events-none">
                 <div className="bg-red-950/40 backdrop-blur-xl border border-red-500/50 p-6 rounded-2xl shadow-[0_0_80px_rgba(239,68,68,0.3)] flex items-center gap-6 animate-pulse">
@@ -83,10 +89,12 @@ export const SnapSequence = () => {
                         <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">Timeline Breach</h2>
                         <div className="space-y-1">
                             <p className="text-red-400 font-mono text-[10px] tracking-widest leading-relaxed uppercase">
-                                Reality Rewrite Initiated by <span className="text-white font-black">{snapWinner.teamName}</span>
+                                Snap Executed by <span className="text-white font-black">{snapWinner.teamId === team?._id ? "YOUR TEAM" : snapWinner.teamName}</span>
                             </p>
                             <p className="text-white/60 font-mono text-[9px] tracking-widest leading-relaxed uppercase animate-pulse">
-                                Stabilize your timeline before the game timer expires.
+                                {snapWinner.teamId === team?._id
+                                    ? "Reality reconfiguration complete. Continue stabilization."
+                                    : "Stabilize your timeline before the game timer expires."}
                             </p>
                         </div>
                     </div>
@@ -137,7 +145,7 @@ export const SnapSequence = () => {
                         </svg>
                     </div>
                     <div className="mt-8 text-center space-y-2 relative z-10">
-                        <p className="text-yellow-500 font-mono text-[10px] tracking-[0.6em] uppercase animate-pulse">Neural Synchronization 100%</p>
+                        <p className="text-yellow-500 font-sans text-[10px] tracking-[0.6em] uppercase animate-pulse">Neural Synchronization 100%</p>
                         <h1 className="text-4xl font-black italic tracking-tighter text-white uppercase [text-shadow:0_0_20px_rgba(255,255,255,0.2)]">Supreme Snap Imminent</h1>
                     </div>
                 </div>
@@ -193,48 +201,6 @@ export const SnapSequence = () => {
                 </div>
             )}
 
-            {/* PHASE 4: Victory Screen */}
-            {phase === "victory" && (
-                <div className="absolute inset-0 bg-black flex flex-col items-center justify-center p-12 text-center animate-in zoom-in-95 fade-in duration-1000 pointer-events-auto">
-                    <div className="relative mb-12">
-                        <div className="absolute inset-0 bg-yellow-500/20 blur-[120px] rounded-full animate-pulse" />
-                        <Trophy size={140} className="text-yellow-500 relative z-10 drop-shadow-[0_0_60px_rgba(255,215,0,0.6)]" />
-                        <div className="absolute -inset-4 border border-yellow-500/20 rounded-full animate-spin-slow" />
-                    </div>
-
-                    <div className="space-y-6 max-w-3xl">
-                        <h1 className="text-6xl font-black italic tracking-tighter victory-text-gold uppercase leading-none drop-shadow-2xl">Absolute Victory</h1>
-                        <p className="text-yellow-500/80 font-mono text-[10px] tracking-[0.6em] uppercase border-y border-yellow-500/20 py-4 inline-block">Universe Status: Restored</p>
-
-                        <div className="mt-16 grid grid-cols-2 gap-12 max-w-xl mx-auto">
-                            <div className="space-y-2 group">
-                                <p className="text-white/40 text-[10px] uppercase tracking-[0.4em]">Final Designation</p>
-                                <p className="text-5xl font-black text-white italic group-hover:text-yellow-500 transition-colors">RANK #1</p>
-                            </div>
-                            <div className="space-y-2 group">
-                                <p className="text-white/40 text-[10px] uppercase tracking-[0.4em]">Team Authority</p>
-                                <p className="text-5xl font-black text-white italic truncate group-hover:text-yellow-500 transition-colors">{snapWinner?.teamName || team?.name}</p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-6 mt-16 animate-in slide-in-from-bottom-10 duration-1000 delay-500">
-                            <p className="text-white/40 font-mono text-[9px] tracking-widest uppercase">The game will conclude for all teams when the temporal clock reaches zero.</p>
-                            <button
-                                onClick={() => window.location.href = "/dashboard"}
-                                className="px-20 py-5 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-black uppercase tracking-[0.4em] text-xs rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_50px_rgba(234,179,8,0.3)]"
-                            >
-                                Return to Command Center
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* HUD Flourish */}
-                    <div className="absolute bottom-12 left-12 text-left opacity-20 font-mono space-y-2">
-                        <p className="text-[10px] tracking-[0.4em] uppercase">Status: OMNIPOTENT</p>
-                        <p className="text-[10px] tracking-[0.4em] uppercase">Timelines: CONVERGED</p>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

@@ -65,7 +65,7 @@ const BlipOverlay = () => {
             </div>
 
             {/* Timer */}
-            <div className="text-amber-500 font-bold text-xl mb-8 font-mono">
+            <div className="text-amber-500 font-bold text-xl mb-8 font-sans">
               {timeLeft}s
             </div>
 

@@ -139,7 +139,7 @@ const CompletionPage: React.FC = () => {
           {/* Footer text */}
           <div className="text-center text-[11px] md:text-xs text-slate-400 uppercase tracking-[0.25em]">
             Thank you for entering the{" "}
-            <span className="text-red-500 font-bold">Endgame Protocol</span>.
+            <span className="text-red-500 ">Endgame Protocol</span>.
           </div>
         </div>
       </div>

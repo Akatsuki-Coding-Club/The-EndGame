@@ -36,7 +36,7 @@ const PowerStonesPanel = () => {
             <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-1">Shield Matrix</h4>
             <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Auto-Defense Protocol</p>
           </div>
-          <div className="px-2 py-1 bg-black border border-primary/30 text-[10px] text-primary font-mono">
+          <div className="px-2 py-1 bg-black border border-primary/30 text-[10px] text-primary font-sans">
             ×{stones.shieldCount}
           </div>
         </div>
@@ -61,7 +61,7 @@ const PowerStonesPanel = () => {
             <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-1">Power Surge</h4>
             <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Offensive Neural Block</p>
           </div>
-          <div className="px-2 py-1 bg-black border border-primary/30 text-[10px] text-primary font-mono">
+          <div className="px-2 py-1 bg-black border border-primary/30 text-[10px] text-primary font-sans">
             ×{stones.blockCount}
           </div>
         </div>
@@ -103,7 +103,7 @@ const PowerStonesPanel = () => {
       </div>
 
       {/* Footer System Specs */}
-      <div className="pt-6 border-t border-primary/10 text-[8px] text-primary/30 font-mono space-y-1">
+      <div className="pt-6 border-t border-primary/10 text-[8px] text-primary/30 font-sans space-y-1">
         <p>INTEGRITY: 100%</p>
         <p>FORGE_STATUS: CONNECTED</p>
       </div>
