@@ -38,7 +38,7 @@ const AdminLoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-cyan-500 font-mono overflow-hidden relative selection:bg-cyan-500/30 selection:text-white">
+    <div className="min-h-screen bg-black text-cyan-500 font-sans overflow-hidden relative selection:bg-cyan-500/30 selection:text-white">
 
       {/* ════════════ BACKGROUND LAYERS ════════════ */}
 
@@ -62,7 +62,7 @@ const AdminLoginPage = () => {
         <div className="flex items-center gap-4">
           <img src="/akatsukilogo.png" alt="Akatsuki Logo" className="w-16 h-16 object-contain drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]" />
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold tracking-[0.2em] text-white drop-shadow-[0_0_10px_rgba(0,255,255,0.8)] uppercase">
+            <h1 className="text-xl  tracking-[0.2em] text-white drop-shadow-[0_0_10px_rgba(0,255,255,0.8)] uppercase">
               AKATSUKI CODING CLUB
             </h1>
             <div className="flex items-center gap-2 text-[10px] mt-1 text-cyan-400">
@@ -72,7 +72,7 @@ const AdminLoginPage = () => {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xs font-bold tracking-widest text-cyan-300 mb-1">SYSTEM STATUS</div>
+          <div className="text-xs  tracking-widest text-cyan-300 mb-1">SYSTEM STATUS</div>
           <div className="flex items-center justify-end gap-2 text-[10px] text-green-400">
             <Activity size={12} />
             <span>OPTIMAL</span>
@@ -81,13 +81,13 @@ const AdminLoginPage = () => {
       </div>
 
       {/* Corner Data Blocks */}
-      <div className="absolute bottom-10 left-10 text-[8px] text-cyan-800 space-y-1 font-bold tracking-widest pointer-events-none hidden md:block">
+      <div className="absolute bottom-10 left-10 text-[8px] text-cyan-800 space-y-1  tracking-widest pointer-events-none hidden md:block">
         <div>MEMORY: 64TB / 128TB</div>
         <div>CPU: 12% LOAD</div>
         <div>NET: 10GBPS (ENCRYPTED)</div>
       </div>
 
-      <div className="absolute bottom-10 right-10 text-[8px] text-cyan-800 space-y-1 font-bold tracking-widest pointer-events-none text-right hidden md:block">
+      <div className="absolute bottom-10 right-10 text-[8px] text-cyan-800 space-y-1  tracking-widest pointer-events-none text-right hidden md:block">
         <div>LAT: 40.7128° N</div>
         <div>LNG: 74.0060° W</div>
         <div>ALT: 350M</div>
@@ -125,7 +125,7 @@ const AdminLoginPage = () => {
                   <Fingerprint size={48} className={`text-cyan-400 ${loading ? "animate-pulse" : ""}`} />
                 </div>
 
-                <h2 className="text-xl font-bold tracking-[0.3em] text-white mb-2">
+                <h2 className="text-xl  tracking-[0.3em] text-white mb-2">
                   J.A.R.V.I.S
                 </h2>
                 <p className="text-[9px] uppercase tracking-[0.4em] text-cyan-600">
@@ -146,7 +146,7 @@ const AdminLoginPage = () => {
                       type="text"
                       value={adminId}
                       onChange={e => setAdminId(e.target.value)}
-                      className="w-full bg-cyan-950/10 border-b border-cyan-900/50 py-3 px-4 text-sm text-cyan-100 placeholder-cyan-900/30 focus:border-cyan-400/80 focus:bg-cyan-900/10 outline-none transition-all font-bold"
+                      className="w-full bg-cyan-950/10 border-b border-cyan-900/50 py-3 px-4 text-sm text-cyan-100 placeholder-cyan-900/30 focus:border-cyan-400/80 focus:bg-cyan-900/10 outline-none transition-all "
                       placeholder="ENTER ID..."
                     />
                     <div className="absolute right-0 bottom-0 w-2 h-2 border-b border-r border-cyan-700/50 group-focus-within:border-cyan-400" />
@@ -164,7 +164,7 @@ const AdminLoginPage = () => {
                       type="password"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full bg-cyan-950/10 border-b border-cyan-900/50 py-3 px-4 text-sm text-cyan-100 placeholder-cyan-900/30 focus:border-cyan-400/80 focus:bg-cyan-900/10 outline-none transition-all font-bold"
+                      className="w-full bg-cyan-950/10 border-b border-cyan-900/50 py-3 px-4 text-sm text-cyan-100 placeholder-cyan-900/30 focus:border-cyan-400/80 focus:bg-cyan-900/10 outline-none transition-all "
                       placeholder="••••••••"
                     />
                     <div className="absolute right-0 bottom-0 w-2 h-2 border-b border-r border-cyan-700/50 group-focus-within:border-cyan-400" />
@@ -176,7 +176,7 @@ const AdminLoginPage = () => {
                   {error ? (
                     <div className="w-full bg-red-950/20 border-l-2 border-red-500 p-2 flex items-center gap-3 animate-shake">
                       <Zap size={14} className="text-red-500" />
-                      <span className="text-[10px] text-red-400 font-bold uppercase tracking-wider">{error}</span>
+                      <span className="text-[10px] text-red-400  uppercase tracking-wider">{error}</span>
                     </div>
                   ) : (
                     <div className="flex gap-1 opacity-30">
@@ -196,7 +196,7 @@ const AdminLoginPage = () => {
                     <div className="w-full h-full bg-cyan-400 blur-xl opacity-20" />
                   </div>
 
-                  <span className="relative z-10 flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-[0.3em]">
+                  <span className="relative z-10 flex items-center justify-center gap-3  text-xs uppercase tracking-[0.3em]">
                     {loading ? "VERIFYING IDENTITY..." : (
                       <>
                         <Scan size={16} /> INITIATE ACCESS
@@ -210,7 +210,7 @@ const AdminLoginPage = () => {
             {/* Bottom Decoration */}
             <div className="h-1 w-full bg-gradient-to-r from-transparent via-cyan-500 to-transparent mt-1" />
 
-            <div className="flex justify-between px-4 py-2 bg-cyan-950/30 text-[8px] text-cyan-600 uppercase tracking-widest font-bold">
+            <div className="flex justify-between px-4 py-2 bg-cyan-950/30 text-[8px] text-cyan-600 uppercase tracking-widest ">
               <span>ENCRYPTION: QUANTUM-256</span>
               <span>BIOMETRICS: ACTIVE</span>
             </div>

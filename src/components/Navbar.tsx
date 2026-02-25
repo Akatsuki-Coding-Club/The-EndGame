@@ -69,7 +69,7 @@ const Navbar = () => {
                     </h1>
                     {/* <div className="flex items-center gap-2 mt-0.5">
                         <span className={`w-1.5 h-1.5 rounded-full ${isFrozen ? "bg-red-500 animate-pulse shadow-[0_0_5px_red]" : "bg-green-500 shadow-[0_0_5px_lime]"}`} />
-                        <p className="text-[8px] md:text-[9px] font-mono text-cyan-400 uppercase tracking-[0.2em] leading-none opacity-80">
+                        <p className="text-[8px] md:text-[9px] font-sans text-cyan-400 uppercase tracking-[0.2em] leading-none opacity-80">
                             {isFrozen ? "System_Locked" : "Neural_Link_Stable"}
                         </p>
                     </div> */}
@@ -111,7 +111,7 @@ const Navbar = () => {
                                         {/* Custom Tooltip */}
                                         <div className="absolute top-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 w-72 bg-[#05050a] border border-white/10 border-t-2 rounded-xl p-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-[100] shadow-[0_25px_50px_rgba(0,0,0,1)]" style={{ borderTopColor: stone.color }}>
                                             <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: stone.color }}>{stone.label} Stone</p>
-                                            <p className="text-[10px] text-slate-300 font-mono uppercase tracking-widest leading-relaxed">
+                                            <p className="text-[10px] text-slate-300 font-sans uppercase tracking-widest leading-relaxed">
                                                 {isBlocked ? "System frozen by Power Surge. Artifact inaccessible." : isCooldown ? "Temporal instability detected. Cooldown phase active." : stone.desc}
                                             </p>
                                             <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#05050a] border-t border-l border-white/10 rotate-45" />
@@ -122,7 +122,7 @@ const Navbar = () => {
                                 {!isUnlocked && (
                                     <div className="absolute top-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 w-64 bg-black border border-white/5 border-t-2 border-white/20 rounded-xl p-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-[100] shadow-2xl">
                                         <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-1 text-white/30">Empty Socket</p>
-                                        <p className="text-[9px] text-white/10 font-mono uppercase tracking-widest leading-relaxed">Artifact signature not detected in local continuum.</p>
+                                        <p className="text-[9px] text-white/10 font-sans uppercase tracking-widest leading-relaxed">Artifact signature not detected in local continuum.</p>
                                         <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-black border-t border-l border-white/5 rotate-45" />
                                     </div>
                                 )}
@@ -138,7 +138,7 @@ const Navbar = () => {
                     <span className="text-[8px] uppercase text-white/30 block tracking-[0.2em] leading-none mb-1">
                         Remaining Time
                     </span>
-                    <span className={`text-lg font-bold font-mono leading-none drop-shadow-md ${gameStarted ? 'text-red-500' : 'text-slate-500'}`}>
+                    <span className={`text-lg font-bold font-sans leading-none drop-shadow-md ${gameStarted ? 'text-red-500' : 'text-slate-500'}`}>
                         {gameStarted ? formatted : "02:00:00"}
                     </span>
                 </div>

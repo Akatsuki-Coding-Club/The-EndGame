@@ -82,10 +82,10 @@ export const SnapSequence = () => {
                     <div className="text-left">
                         <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">Timeline Breach</h2>
                         <div className="space-y-1">
-                            <p className="text-red-400 font-mono text-[10px] tracking-widest leading-relaxed uppercase">
+                            <p className="text-red-400 font-sans text-[10px] tracking-widest leading-relaxed uppercase">
                                 Reality Rewrite Initiated by <span className="text-white font-black">{snapWinner.teamName}</span>
                             </p>
-                            <p className="text-white/60 font-mono text-[9px] tracking-widest leading-relaxed uppercase animate-pulse">
+                            <p className="text-white/60 font-sans text-[9px] tracking-widest leading-relaxed uppercase animate-pulse">
                                 Stabilize your timeline before the game timer expires.
                             </p>
                         </div>
@@ -137,7 +137,7 @@ export const SnapSequence = () => {
                         </svg>
                     </div>
                     <div className="mt-8 text-center space-y-2 relative z-10">
-                        <p className="text-yellow-500 font-mono text-[10px] tracking-[0.6em] uppercase animate-pulse">Neural Synchronization 100%</p>
+                        <p className="text-yellow-500 font-sans text-[10px] tracking-[0.6em] uppercase animate-pulse">Neural Synchronization 100%</p>
                         <h1 className="text-4xl font-black italic tracking-tighter text-white uppercase [text-shadow:0_0_20px_rgba(255,255,255,0.2)]">Supreme Snap Imminent</h1>
                     </div>
                 </div>
@@ -204,7 +204,7 @@ export const SnapSequence = () => {
 
                     <div className="space-y-6 max-w-3xl">
                         <h1 className="text-6xl font-black italic tracking-tighter victory-text-gold uppercase leading-none drop-shadow-2xl">Absolute Victory</h1>
-                        <p className="text-yellow-500/80 font-mono text-[10px] tracking-[0.6em] uppercase border-y border-yellow-500/20 py-4 inline-block">Universe Status: Restored</p>
+                        <p className="text-yellow-500/80 font-sans text-[10px] tracking-[0.6em] uppercase border-y border-yellow-500/20 py-4 inline-block">Universe Status: Restored</p>
 
                         <div className="mt-16 grid grid-cols-2 gap-12 max-w-xl mx-auto">
                             <div className="space-y-2 group">
@@ -218,7 +218,7 @@ export const SnapSequence = () => {
                         </div>
 
                         <div className="flex flex-col items-center gap-6 mt-16 animate-in slide-in-from-bottom-10 duration-1000 delay-500">
-                            <p className="text-white/40 font-mono text-[9px] tracking-widest uppercase">The game will conclude for all teams when the temporal clock reaches zero.</p>
+                            <p className="text-white/40 font-sans text-[9px] tracking-widest uppercase">The game will conclude for all teams when the temporal clock reaches zero.</p>
                             <button
                                 onClick={() => window.location.href = "/dashboard"}
                                 className="px-20 py-5 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-black uppercase tracking-[0.4em] text-xs rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_50px_rgba(234,179,8,0.3)]"
@@ -229,7 +229,7 @@ export const SnapSequence = () => {
                     </div>
 
                     {/* HUD Flourish */}
-                    <div className="absolute bottom-12 left-12 text-left opacity-20 font-mono space-y-2">
+                    <div className="absolute bottom-12 left-12 text-left opacity-20 font-sans space-y-2">
                         <p className="text-[10px] tracking-[0.4em] uppercase">Status: OMNIPOTENT</p>
                         <p className="text-[10px] tracking-[0.4em] uppercase">Timelines: CONVERGED</p>
                     </div>

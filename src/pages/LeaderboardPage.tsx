@@ -134,7 +134,7 @@ const ListRow = ({ team, index, maxLevel, topScore }: { team: TeamGameState, ind
       <div className="flex-1 p-2 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10 min-w-0">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 sm:gap-3">
-            <h3 className="text-base sm:text-lg font-bold uppercase tracking-tight truncate text-slate-200 group-hover:text-white transition-colors">
+            <h3 className="text-base sm:text-lg  uppercase tracking-tight truncate text-slate-200 group-hover:text-white transition-colors">
               {team.teamName}
             </h3>
             {team.snapActivated && (
@@ -142,7 +142,7 @@ const ListRow = ({ team, index, maxLevel, topScore }: { team: TeamGameState, ind
             )}
           </div>
           <div className="flex flex-wrap gap-3 mt-1.5">
-            <span className="text-[10px] font-mono text-slate-400 uppercase flex items-center gap-1.5">
+            <span className="text-[10px] font-sans text-slate-400 uppercase flex items-center gap-1.5">
               <Activity size={10} className="text-cyan-500 group-hover:animate-pulse" /> LVL {team.currentLevel}/{maxLevel}
             </span>
           </div>
@@ -226,8 +226,8 @@ const LeaderboardPage = () => {
         <div className="absolute -bottom-px left-0 w-1/3 h-[2px] bg-gradient-to-r from-cyan-400 to-transparent shadow-[0_0_15px_rgba(34,211,238,1)]" />
 
         <div className="flex items-center gap-3 md:gap-4">
-          <img src="/akatsukilogo.png" alt="Akatsuki" className="h-10 md:h-14 object-contain" />
-          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
+          <img src="https://i.ibb.co/LXwJLXBp/akatsukilogo-removebg-preview.png" alt="Akatsuki" className="h-20 md:h-24 object-contain" />
+          <h1 className="text-2xl md:text-3xl  text-white tracking-wide">
             Leaderboard
           </h1>
         </div>
@@ -239,7 +239,7 @@ const LeaderboardPage = () => {
             className="ml-4 h-12 px-4 rounded-xl border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/50 hover:border-cyan-400/60 transition-all duration-300 flex items-center gap-2 group shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] backdrop-blur-md"
           >
             {isFeedVisible ? <EyeOff size={18} className="text-cyan-400" /> : <Eye size={18} className="text-cyan-400" />}
-            <span className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider">
+            <span className="text-xs font-sans  text-cyan-300 uppercase tracking-wider">
               {isFeedVisible ? "Hide J.A.R.V.I.S." : "Show J.A.R.V.I.S."}
             </span>
           </button>
@@ -306,7 +306,7 @@ const LeaderboardPage = () => {
                         className="h-full flex flex-col items-center justify-center text-center p-6 opacity-60"
                       >
                         <Radio size={36} className="text-cyan-500 mb-4 animate-[ping_3s_infinite]" />
-                        <p className="text-[10px] text-cyan-400 font-mono uppercase tracking-widest leading-loose">Monitoring live sockets...<br />Awaiting tactical feedback.</p>
+                        <p className="text-[10px] text-cyan-400 font-sans uppercase tracking-widest leading-loose">Monitoring live sockets...<br />Awaiting tactical feedback.</p>
                       </motion.div>
                     ) : (
                       activeLogs.map((notif, i) => (
@@ -317,7 +317,7 @@ const LeaderboardPage = () => {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ type: "spring", stiffness: 400, damping: 30 }}
                           className={cn(
-                            "p-3.5 rounded-xl text-[10px] font-mono flex flex-col gap-2 relative overflow-hidden group border backdrop-blur-sm",
+                            "p-3.5 rounded-xl text-[10px] font-sans flex flex-col gap-2 relative overflow-hidden group border backdrop-blur-sm",
                             notif.type === 'attack' ? "bg-red-950/30 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]" :
                               notif.type === 'success' ? "bg-cyan-950/40 border-cyan-400/40 shadow-[0_0_15px_rgba(34,211,238,0.1)]" :
                                 "bg-slate-900/40 border-slate-700/50"
@@ -336,9 +336,9 @@ const LeaderboardPage = () => {
                                 notif.type === 'success' ? "text-cyan-300" :
                                   "text-slate-300"
                             )}>{notif.type}</span>
-                            <span className="text-cyan-600/80 font-mono tracking-wider">{notif.timestamp}</span>
+                            <span className="text-cyan-600/80 font-sans tracking-wider">{notif.timestamp}</span>
                           </div>
-                          <p className="text-slate-200 font-bold leading-relaxed pl-2">{notif.message}</p>
+                          <p className="text-slate-200  leading-relaxed pl-2">{notif.message}</p>
                         </motion.div>
                       ))
                     )}
@@ -347,7 +347,7 @@ const LeaderboardPage = () => {
 
                 <div className="p-3 bg-cyan-950/30 border-t border-cyan-500/20 text-center relative pointer-events-none">
                   <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/20 to-transparent pointer-events-none" />
-                  <p className="text-[9px] text-cyan-500 font-mono uppercase tracking-widest flex items-center justify-center gap-2 relative z-10 drop-shadow-md">
+                  <p className="text-[9px] text-cyan-500 font-sans uppercase tracking-widest flex items-center justify-center gap-2 relative z-10 drop-shadow-md">
                     <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse" /> TONY STARK NETWORK
                   </p>
                 </div>

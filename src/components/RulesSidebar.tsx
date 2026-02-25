@@ -44,7 +44,7 @@ const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
         {/* Top Internal Glow */}
         <div className="absolute top-0 right-0 w-[2px] h-full bg-gradient-to-b from-cyan-500/0 via-cyan-500/40 to-cyan-500/0" />
 
-        <div className="flex flex-col h-full font-mono">
+        <div className="flex flex-col h-full font-sans">
           {/* Header */}
           <div className="p-6 pt-10 border-b border-white/5 flex justify-between items-center bg-black/40">
             <div>

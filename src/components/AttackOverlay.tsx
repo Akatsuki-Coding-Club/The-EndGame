@@ -175,7 +175,7 @@ const AttackOverlay = () => {
               <h1 className="text-xl font-black text-white uppercase tracking-tighter mb-1">
                 Interface <span className="text-red-500">Restrained</span>
               </h1>
-              <p className="text-[9px] text-slate-500 font-mono uppercase tracking-widest leading-tight opacity-70">
+              <p className="text-[9px] text-slate-500 font-sans uppercase tracking-widest leading-tight opacity-70">
                 Strategic block initiated by rival unit.
               </p>
             </div>
@@ -185,9 +185,9 @@ const AttackOverlay = () => {
               <div className="relative bg-black/40 border border-white/5 rounded-xl p-4 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Zap size={8} className="text-red-500" />
-                  <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest font-mono">Decryption_Challenge</span>
+                  <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest font-sans">Decryption_Challenge</span>
                 </div>
-                <p className="text-xs font-bold text-white font-mono tracking-wide text-center selection:bg-red-500/30">
+                <p className="text-xs font-bold text-white font-sans tracking-wide text-center selection:bg-red-500/30">
                   {blockPuzzleQuestion || "ANALYZING_SECURITY_PATTERN..."}
                 </p>
               </div>
@@ -198,7 +198,7 @@ const AttackOverlay = () => {
               <div className="relative">
                 <input
                   type="text"
-                  className="w-full h-11 bg-black/30 border border-white/10 rounded-xl px-4 text-center text-white font-mono font-bold tracking-[0.2em] placeholder:text-slate-800 outline-none focus:border-red-500/40 focus:ring-1 focus:ring-red-500/10 transition-all uppercase text-sm"
+                  className="w-full h-11 bg-black/30 border border-white/10 rounded-xl px-4 text-center text-white font-sans font-bold tracking-[0.2em] placeholder:text-slate-800 outline-none focus:border-red-500/40 focus:ring-1 focus:ring-red-500/10 transition-all uppercase text-sm"
                   placeholder="SOLVE_PATTERN"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
@@ -225,11 +225,11 @@ const AttackOverlay = () => {
             {/* Timer HUD */}
             <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-center">
               <div className="flex flex-col items-center gap-1.5">
-                <span className="text-[8px] text-slate-600 font-mono tracking-widest uppercase">
+                <span className="text-[8px] text-slate-600 font-sans tracking-widest uppercase">
                   System Dissipation
                 </span>
                 <div className="h-8 w-24 bg-red-950/10 border border-red-500/10 rounded-full flex items-center justify-center relative overflow-hidden">
-                  <span className="text-sm font-black font-mono text-red-500/80 tracking-[0.1em]">
+                  <span className="text-sm font-black font-sans text-red-500/80 tracking-[0.1em]">
                     {timeLeft}s
                   </span>
                 </div>

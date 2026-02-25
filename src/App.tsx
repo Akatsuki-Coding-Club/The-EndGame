@@ -78,10 +78,10 @@ const App = () => (
         richColors
         offset={8}
         toastOptions={{
-          className: "font-display",
+          className: "font-sans",
           classNames: {
             title: "text-[11px] font-bold tracking-[0.15em] uppercase",
-            description: "text-[10px] font-body tracking-wider opacity-90 mt-0.5 uppercase",
+            description: "text-[10px] font-sans tracking-wider opacity-90 mt-0.5 uppercase",
           },
         }}
       />
