@@ -168,10 +168,7 @@ const MissionInterface = () => {
   /* ─── Snap Protection & Ending Sequence ─── */
   const { team } = useAuth();
   useEffect(() => {
-    // Only force return to dashboard if WE are the ones who snapped
-    if (team?.snapActivated) {
-      navigate("/dashboard");
-    }
+    // Redirection removed to allow continued play
   }, [team?.snapActivated, navigate]);
 
   useEffect(() => {
