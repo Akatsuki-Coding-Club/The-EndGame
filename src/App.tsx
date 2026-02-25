@@ -1,4 +1,4 @@
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { AppToastContainer } from "@/components/ToastProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -72,19 +72,7 @@ const GlobalOverlays = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Sonner
-        position="top-right"
-        theme="dark"
-        richColors
-        offset={8}
-        toastOptions={{
-          className: "font-sans",
-          classNames: {
-            title: "text-[11px] font-bold tracking-[0.15em] uppercase",
-            description: "text-[10px] font-sans tracking-wider opacity-90 mt-0.5 uppercase",
-          },
-        }}
-      />
+      <AppToastContainer />
       <BrowserRouter>
         {/* <ThemeDecorations /> */}
 

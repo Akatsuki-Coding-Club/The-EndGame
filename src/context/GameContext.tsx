@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useMemo, useRef } from "react";
 import ShieldDefendModal from "@/components/ShieldDefendModal";
 import { useAuth } from "./AuthContext";
-import { toast } from "sonner";
+import { customToast as toast } from "@/components/ToastProvider";
 import * as api from "@/services/api";
 import { io, Socket } from "socket.io-client";
 import { API_BASE } from "../services/api";
@@ -403,10 +403,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       setSnapWinner({ teamId: data.teamId, teamName: data.teamName, score: 0, currentLevel: 0, isFrozen: false, isBlocked: false, stones: [], completedTimelines: [], snapActivated: true });
       setPowersDisabled(true);
       // Removed setGameEnded(true) to allow other teams to continue until time runs out
-      showToast("[SUPREME_SNAP_DETECTED]", "error", data.message || `${data.teamName} has initiated the final reconfiguration.`);
-      if (team?.id === data.teamId) {
-        navigate("/dashboard");
-      }
     });
 
     s.on("GAME_STARTED", async () => {
