@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
-import { Shield, Zap, Loader2 } from "lucide-react";
+import { Shield, Zap, Loader2, Lock } from "lucide-react";
 import * as api from "@/services/api";
 
 const BlipOverlay = () => {
@@ -8,6 +8,7 @@ const BlipOverlay = () => {
   const [answer, setAnswer] = useState("");
   const [timeLeft, setTimeLeft] = useState(0);
   const [fetchedQuestion, setFetchedQuestion] = useState<string | null>(null);
+  const [isAdminFreeze, setIsAdminFreeze] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -25,12 +26,14 @@ const BlipOverlay = () => {
   useEffect(() => {
     if (blipPuzzleQuestion) {
       setFetchedQuestion(blipPuzzleQuestion);
-    } else if (frozenUntil && !fetchedQuestion) {
+    } else if (frozenUntil && !fetchedQuestion && !isAdminFreeze) {
       api.getBlipPuzzle().then((res) => {
         if (res?.question) setFetchedQuestion(res.question);
-      }).catch(() => { });
+      }).catch(() => {
+        setIsAdminFreeze(true);
+      });
     }
-  }, [blipPuzzleQuestion, frozenUntil, fetchedQuestion]);
+  }, [blipPuzzleQuestion, frozenUntil, fetchedQuestion, isAdminFreeze]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-6">
@@ -71,7 +74,14 @@ const BlipOverlay = () => {
 
             {/* Question Display - Fixed Fetching Logic */}
             <div className="w-full bg-black/40 border-y border-white/10 min-h-[140px] flex items-center justify-center px-6 mb-8">
-              {fetchedQuestion ? (
+              {isAdminFreeze ? (
+                <div className="flex flex-col items-center gap-4">
+                  <Lock className="text-red-500 animate-pulse" size={32} />
+                  <p className="text-lg md:text-xl text-red-500 font-black tracking-[0.2em] uppercase">
+                    SYSTEM LOCKED BY COMMANDER
+                  </p>
+                </div>
+              ) : fetchedQuestion ? (
                 <p className="text-xl text-white font-medium leading-relaxed">
                   {fetchedQuestion}
                 </p>
@@ -84,33 +94,35 @@ const BlipOverlay = () => {
             </div>
 
             {/* Form */}
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!answer.trim()) return;
-                const ok = await submitBlipAnswer(answer);
-                if (ok) setAnswer("");
-              }}
-              className="w-full space-y-4"
-            >
-              <input
-                type="text"
-                autoFocus
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Enter Code"
-                className="w-full bg-black/20 border border-white/10 focus:border-red-500 px-6 py-4 text-white text-center text-xl outline-none transition-all placeholder:text-white/10 rounded-lg"
-              />
-
-              <button
-                type="submit"
-                disabled={!answer.trim() || !fetchedQuestion}
-                className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-[0.3em] transition-all 
-                         disabled:bg-zinc-800 disabled:opacity-50 flex items-center justify-center gap-3 rounded-lg shadow-lg"
+            {!isAdminFreeze && (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!answer.trim()) return;
+                  const ok = await submitBlipAnswer(answer);
+                  if (ok) setAnswer("");
+                }}
+                className="w-full space-y-4"
               >
-                Execute <Zap size={18} fill="currentColor" />
-              </button>
-            </form>
+                <input
+                  type="text"
+                  autoFocus
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Enter Code"
+                  className="w-full bg-black/20 border border-white/10 focus:border-red-500 px-6 py-4 text-white text-center text-xl outline-none transition-all placeholder:text-white/10 rounded-lg"
+                />
+
+                <button
+                  type="submit"
+                  disabled={!answer.trim() || !fetchedQuestion}
+                  className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-[0.3em] transition-all 
+                           disabled:bg-zinc-800 disabled:opacity-50 flex items-center justify-center gap-3 rounded-lg shadow-lg"
+                >
+                  Execute <Zap size={18} fill="currentColor" />
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
