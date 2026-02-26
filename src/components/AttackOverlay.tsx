@@ -39,7 +39,7 @@ const AttackOverlay = () => {
 
     try {
       setLoading(true);
-      const res = await api.submitBlockUnlock(answer);
+      const res = await api.submitBlockUnlock(answer.toLowerCase());
 
       if (res.success) {
         showToast("Access Restored", "success");
@@ -215,9 +215,9 @@ const AttackOverlay = () => {
                 <input
                   type="text"
                   className="w-full h-12 bg-black/40 border border-white/10 rounded-xl px-4 text-center text-white font-bold tracking-[0.2em] placeholder:text-slate-800 outline-none focus:border-red-500/50 transition-all text-sm"
-                  placeholder="SOLVE PATTERN"
+                  placeholder="solve pattern"
                   value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
+                  onChange={(e) => setAnswer(e.target.value.toLowerCase())}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                 />
               </div>

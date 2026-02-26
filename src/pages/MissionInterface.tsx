@@ -8,7 +8,7 @@ import {
   submitAnswer,
   getStoneStatus,
   getMe,
-  getAllTeams,
+  getMyGameTeams,
   useTimeStone,
   useMindStone,
   usePowerStone,
@@ -158,8 +158,8 @@ const MissionInterface = () => {
 
   const fetchTeams = async () => {
     try {
-      const allTeams = await getAllTeams();
-      setTeams(allTeams);
+      const gameTeams = await getMyGameTeams();
+      setTeams(gameTeams);
     } catch {
       console.error("Failed to fetch teams");
     }
@@ -381,7 +381,7 @@ const MissionInterface = () => {
 
         {/* Label */}
         <span
-          className="text-[9px] font-black uppercase tracking-[0.25em] transition-colors"
+          className="text-[9px] font-black uppercase tracking-[0.3em] transition-colors"
           style={{ color: owned && !isDisabled ? cfg.color : "#555" }}
         >
           {cfg.label}
@@ -640,12 +640,19 @@ const MissionInterface = () => {
                     </button>
                     <button
                       onClick={handleConfirmAction}
-                      className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 text-black shadow-lg"
-                      style={{ backgroundColor: cfg.color, boxShadow: `0 0 20px ${cfg.glow}` }}
+                      disabled={isCooldown}
+                      className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 text-black shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: isCooldown ? "#555" : cfg.color, boxShadow: isCooldown ? "none" : `0 0 20px ${cfg.glow}` }}
                     >
-                      Activate
+                      {isCooldown ? `Wait ${formatTime(timeLeft)}` : "Activate"}
                     </button>
                   </div>
+                  {isCooldown && (
+                    <div className="mt-4 flex items-center justify-center gap-2 text-[9px] bg-red-500/10 text-red-400 px-3 py-2 rounded-xl border border-red-500/20">
+                      <AlertTriangle size={12} />
+                      <span>Cooldown active. Please wait {formatTime(timeLeft)}.</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -666,28 +673,36 @@ const MissionInterface = () => {
               </h3>
 
               <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar mb-8 pr-2">
-                {teams.length === 0 && <p className="text-white/30 text-center py-4 text-xs">Scanning for targets...</p>}
-                {teams.map(team => (
-                  <button
-                    key={team._id}
-                    onClick={() => setTargetTeam(team._id)}
-                    className={`w-full text-left px-5 py-4 rounded-xl border transition-all flex justify-between items-center group ${targetTeam === team._id
-                      ? "bg-purple-900/20 border-purple-500/50 text-white shadow-[0_0_20px_rgba(192,132,252,0.1)]"
-                      : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white"
-                      }`}
-                  >
-                    <span className=" tracking-wider text-sm">{team.teamName}</span>
-                    {targetTeam === team._id && <Target size={16} className="text-purple-400" />}
-                  </button>
-                ))}
+                {teams.filter(t => t._id !== team?._id && t.role !== "admin").length === 0 && <p className="text-white/30 text-center py-4 text-xs">Scanning for targets...</p>}
+                {teams
+                  .filter(t => t._id !== team?._id && t.role !== "admin")
+                  .map(team => (
+                    <button
+                      key={team._id}
+                      onClick={() => setTargetTeam(team._id)}
+                      className={`w-full text-left px-5 py-4 rounded-xl border transition-all flex justify-between items-center group ${targetTeam === team._id
+                        ? "bg-purple-900/20 border-purple-500/50 text-white shadow-[0_0_20px_rgba(192,132,252,0.1)]"
+                        : "bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                        }`}
+                    >
+                      <span className="text-xs font-black uppercase tracking-[0.2em]">{team.teamName}</span>
+                      {targetTeam === team._id && <Target size={16} className="text-purple-400" />}
+                    </button>
+                  ))}
               </div>
 
               <div className="flex gap-4">
                 <button onClick={() => setShowPowerModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 hover:bg-white/10 font-black uppercase tracking-widest text-xs transition-colors">Abort</button>
-                <button disabled={!targetTeam} onClick={executePower} className="flex-1 py-4 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(192,132,252,0.4)] transition-all">
-                  Launch Strike
+                <button disabled={!targetTeam || isCooldown} onClick={executePower} className="flex-1 py-4 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(192,132,252,0.4)] transition-all">
+                  {isCooldown ? `Wait ${formatTime(timeLeft)}` : "Launch Strike"}
                 </button>
               </div>
+              {isCooldown && (
+                <div className="mt-6 flex items-center justify-center gap-2 text-[10px] bg-red-500/10 text-red-400 px-4 py-3 rounded-xl border border-red-500/20">
+                  <AlertTriangle size={14} />
+                  <span className="uppercase tracking-widest">Temporal instability. Cooldown ends in {formatTime(timeLeft)}.</span>
+                </div>
+              )}
             </div>
           </div>
         )
@@ -737,10 +752,16 @@ const MissionInterface = () => {
 
               <div className="flex gap-4">
                 <button onClick={() => setShowSoulModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 hover:bg-white/10 font-black uppercase tracking-widest text-xs transition-colors">Cancel</button>
-                <button disabled={!sacrificeStone} onClick={executeSoul} className="flex-1 py-4 bg-orange-500 hover:bg-orange-400 text-black font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(251,146,60,0.4)] transition-all">
-                  Sacrifice
+                <button disabled={!sacrificeStone || isCooldown} onClick={executeSoul} className="flex-1 py-4 bg-orange-500 hover:bg-orange-400 text-black font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(251,146,60,0.4)] transition-all">
+                  {isCooldown ? `Wait ${formatTime(timeLeft)}` : "Sacrifice"}
                 </button>
               </div>
+              {isCooldown && (
+                <div className="mt-6 flex items-center justify-center gap-2 text-[10px] bg-red-500/10 text-red-400 px-4 py-3 rounded-xl border border-red-500/20">
+                  <AlertTriangle size={14} />
+                  <span className="uppercase tracking-widest">Soul resonance unstable. {formatTime(timeLeft)} remaining.</span>
+                </div>
+              )}
             </div>
           </div>
         )
@@ -793,7 +814,7 @@ const MissionInterface = () => {
         setIsOpen={setIsRulesOpen}
       />
 
-    </div >
+    </div>
   );
 };
 

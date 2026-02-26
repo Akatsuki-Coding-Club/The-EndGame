@@ -62,7 +62,19 @@ const Dashboard = () => {
   const [showSoulModal, setShowSoulModal] = useState(false);
   const [sacrificedStone, setSacrificedStone] = useState("");
   const [confirmStone, setConfirmStone] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
+  const [gameTimeLeft, setGameTimeLeft] = useState<string>("00:00:00");
+  const [stonesTimeLeft, setStonesTimeLeft] = useState<number>(0);
+
+  useEffect(() => {
+    if (!data?.me?.cooldownUntil) { setStonesTimeLeft(0); return; }
+    const updateTime = () => {
+      const diff = Math.max(0, Math.floor((new Date(data.me.cooldownUntil!).getTime() - Date.now()) / 1000));
+      setStonesTimeLeft(diff);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, [data?.me?.cooldownUntil]);
 
   useEffect(() => {
     if (!data?.gameState?.endTime) return;
@@ -71,14 +83,14 @@ const Dashboard = () => {
       const now = Date.now();
       const diff = end - now;
       if (diff <= 0) {
-        setTimeLeft("00:00:00");
+        setGameTimeLeft("00:00:00");
         clearInterval(interval);
         return;
       }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
-      setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+      setGameTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
     }, 1000);
     return () => clearInterval(interval);
   }, [data?.gameState?.endTime]);
@@ -509,12 +521,19 @@ const Dashboard = () => {
                     <button onClick={() => setConfirmStone(null)} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60">Abort</button>
                     <button
                       onClick={handleConfirmAction}
-                      className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-black shadow-lg"
-                      style={{ backgroundColor: cfg.color }}
+                      disabled={stonesTimeLeft > 0}
+                      className="flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-black shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: stonesTimeLeft > 0 ? "#555" : cfg.color }}
                     >
-                      Authorize
+                      {stonesTimeLeft > 0 ? `Wait ${stonesTimeLeft}s` : "Authorize"}
                     </button>
                   </div>
+                  {stonesTimeLeft > 0 && (
+                    <div className="flex items-center gap-2 text-[9px] bg-red-500/10 text-red-400 px-3 py-2 rounded-xl border border-red-500/20 w-full justify-center mt-2">
+                      <AlertTriangle size={10} />
+                      <span>Cooldown is active. Please wait {stonesTimeLeft}s.</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -550,8 +569,7 @@ const Dashboard = () => {
                         }`}
                     >
                       <div className="flex flex-col">
-                        <span className=" tracking-wider text-sm uppercase">{target.teamName}</span>
-                        <span className="text-[9px] text-white/30 font-sans">CURRENT_SCORE: {target.score}</span>
+                        <span className="text-xs font-black uppercase tracking-[0.2em]">{target.teamName}</span>
                       </div>
                       {targetTeam === target.teamId && <Target size={16} className="text-purple-400" />}
                     </button>
@@ -561,13 +579,19 @@ const Dashboard = () => {
               <div className="flex gap-4">
                 <button onClick={() => setShowPowerModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 font-black uppercase tracking-widest text-xs">Abort</button>
                 <button
-                  disabled={!targetTeam}
+                  disabled={!targetTeam || stonesTimeLeft > 0}
                   onClick={executePower}
                   className="flex-1 py-4 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs transition-all shadow-lg shadow-purple-900/40"
                 >
-                  Confirm Strike
+                  {stonesTimeLeft > 0 ? `Cooldown: ${stonesTimeLeft}s` : "Confirm Strike"}
                 </button>
               </div>
+              {stonesTimeLeft > 0 && (
+                <div className="flex items-center gap-2 text-[10px] bg-red-500/10 text-red-400 px-4 py-3 rounded-xl border border-red-500/20 w-full justify-center mt-6">
+                  <AlertTriangle size={14} />
+                  <span className="font-sans uppercase tracking-widest">Cooldown active. Please wait {stonesTimeLeft}s.</span>
+                </div>
+              )}
             </div>
           </div>
         )
@@ -625,13 +649,19 @@ const Dashboard = () => {
               <div className="flex gap-4">
                 <button onClick={() => setShowSoulModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl border border-white/10 text-white/60 font-black uppercase tracking-widest text-xs">Abort</button>
                 <button
-                  disabled={!sacrificedStone}
+                  disabled={!sacrificedStone || stonesTimeLeft > 0}
                   onClick={executeSoul}
                   className="flex-1 py-4 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-xl disabled:opacity-30 uppercase tracking-widest text-xs transition-all shadow-lg shadow-orange-900/40"
                 >
-                  Sacrifice Artifact
+                  {stonesTimeLeft > 0 ? `Wait ${stonesTimeLeft}s` : "Sacrifice Artifact"}
                 </button>
               </div>
+              {stonesTimeLeft > 0 && (
+                <div className="flex items-center gap-2 text-[10px] bg-red-500/10 text-red-400 px-4 py-3 rounded-xl border border-red-500/20 w-full justify-center mt-6">
+                  <AlertTriangle size={14} />
+                  <span className="font-sans uppercase tracking-widest">Cooldown Active: {stonesTimeLeft}s</span>
+                </div>
+              )}
             </div>
           </div>
         )
