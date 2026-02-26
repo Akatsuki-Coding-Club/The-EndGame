@@ -39,6 +39,7 @@ export interface TeamGameState {
   completedTimelines: string[];
   snapActivated: boolean;
   currentTimeline?: string | null;
+  gameStarted?: boolean;
 }
 
 export interface GameState {
@@ -87,6 +88,7 @@ export interface GameState {
   isSnapping: boolean;
   snapWinner: TeamGameState | null;
   initiateSupremeSnap: () => Promise<void>;
+  endGameSession: (gameId?: string) => Promise<void>;
   isSocketConnected: boolean;
   showToast: (message: string, type?: "success" | "error" | "info", description?: string) => void;
 }
@@ -118,6 +120,7 @@ function teamToGameState(t: {
   cooldownUntil?: string | null;
   snapActivated?: boolean;
   currentTimeline?: string | null;
+  gameStarted?: boolean;
 }): TeamGameState {
   const now = Date.now();
   const frozenUntil = t.frozenUntil ? new Date(t.frozenUntil).getTime() : null;
@@ -135,6 +138,7 @@ function teamToGameState(t: {
     completedTimelines: t.completedTimelines || [],
     snapActivated: t.snapActivated || false,
     currentTimeline: t.currentTimeline || null,
+    gameStarted: t.gameStarted || false,
   };
 }
 
@@ -225,12 +229,19 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     lastStateFetchRef.current = now;
 
     try {
-      const list = await api.getAllTeams();
+      let list;
+      if (isAdmin) {
+        list = await api.getAllTeams();
+      } else if (team) {
+        list = await api.getMyGameTeams();
+      } else {
+        list = await api.getActiveGameTeams();
+      }
       setAllTeamsState(list.map(teamToGameState));
     } catch {
       setAllTeamsState([]);
     }
-  }, []);
+  }, [team, isAdmin]);
 
   const isSnapReady = stones.ownedStones.length === 6 && !isSnapping && !snapWinner;
 
@@ -432,6 +443,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         showToast("[DEFENSE_SUCCESSFUL]", "success", "Shield blocked the incoming attack.");
       });
 
+      s.on("ADMIN_FREEZE", (data: any) => {
+        setIsFrozen(true);
+        const freezeDurationMs = 5 * 60 * 1000;
+        setFrozenUntil(Date.now() + freezeDurationMs);
+        showToast("[FROZEN]", "error", data.message || "You are frozen by the commander");
+        addNotification(data.message || "You are frozen by the commander", "attack");
+      });
+
       s.on("ATTACK_OFFER_SHIELD", (data: { attackerId: string; attackerName?: string; message?: string }) => {
         setPendingAttackerId(data?.attackerId || null);
         setShowShieldOffer(true);
@@ -537,6 +556,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       await api.startGame(gameId);
       setGameStarted(true);
       toast.success("GAME_START");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }, []);
+
+  const endGameSession = useCallback(async (gameId?: string) => {
+    try {
+      await api.endActiveGame(gameId);
+      setGameStarted(false);
+      setGameEnded(true);
+      toast.success("GAME_ENDED");
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -776,6 +806,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     powersDisabled,
     allTeamsState,
     startGame,
+    endGameSession,
     submitAnswer,
     activateShield,
     deactivateShield,

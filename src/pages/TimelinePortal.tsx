@@ -302,7 +302,7 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick, onSoulStoneClick }
     }
   };
 
-  const displayTimelines = timelines.length > 0 ? timelines : Object.keys(TIMELINE_META);
+  const displayTimelines = timelines.length > 0 ? timelines.map((t: any) => typeof t === 'string' ? t : t.id) : Object.keys(TIMELINE_META);
 
   return (
     <>

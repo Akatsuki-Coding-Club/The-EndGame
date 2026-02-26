@@ -207,7 +207,9 @@ const Dashboard = () => {
   const timelines = Array.isArray(data.timelines) ? data.timelines : [];
 
   // Use real-time state for ranking
-  const leaderboard = [...allTeamsState].sort((a, b) => b.score - a.score);
+  const leaderboard = [...allTeamsState]
+    .filter(t => t.gameStarted && t.role !== "admin")
+    .sort((a, b) => b.score - a.score);
 
   // Safely calculate rank to prevent crashes
   const myRankIndex = leaderboard.findIndex(t => t.teamId === me?._id);

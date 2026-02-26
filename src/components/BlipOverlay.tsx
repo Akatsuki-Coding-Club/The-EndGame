@@ -25,12 +25,12 @@ const BlipOverlay = () => {
   useEffect(() => {
     if (blipPuzzleQuestion) {
       setFetchedQuestion(blipPuzzleQuestion);
-    } else if (frozenUntil) {
+    } else if (frozenUntil && !fetchedQuestion) {
       api.getBlipPuzzle().then((res) => {
         if (res?.question) setFetchedQuestion(res.question);
       }).catch(() => { });
     }
-  }, [blipPuzzleQuestion, frozenUntil]);
+  }, [blipPuzzleQuestion, frozenUntil, fetchedQuestion]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-6">

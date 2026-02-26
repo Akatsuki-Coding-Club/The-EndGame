@@ -3,6 +3,8 @@ import { useGame, TeamGameState } from "@/context/GameContext";
 import { Trophy, Activity, Terminal, Radio, Cpu, Medal, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion";
+import { io } from "socket.io-client";
+import { API_BASE } from "@/services/api";
 
 const STONE_IMAGES: Record<string, string> = {
   space: "/space-stone.png",
@@ -177,8 +179,38 @@ const LeaderboardPage = () => {
 
   // Local state for toggling the JARVIS feed
   const [isFeedVisible, setIsFeedVisible] = useState(false);
+  const [remainingTime, setRemainingTime] = useState<number | null>(null);
+  const [socketLeaderboard, setSocketLeaderboard] = useState<any[]>([]);
 
-  const sortedTeams = [...allTeamsState].sort((a, b) => b.score - a.score);
+  useEffect(() => {
+    const s = io(API_BASE, { transports: ["websocket"] });
+    s.on("connect", () => {
+      s.emit("JOIN_DASHBOARD");
+    });
+    s.on("TIME_UPDATE", (data: any) => {
+      setRemainingTime(data.remainingTime);
+      if (data.activeLeaderboard) {
+        setSocketLeaderboard(data.activeLeaderboard);
+      }
+    });
+    return () => {
+      s.disconnect();
+    };
+  }, []);
+
+  const formatTime = (timeInSeconds: number | null) => {
+    if (timeInSeconds === null) return "00:00:00";
+    const h = Math.floor(timeInSeconds / 3600);
+    const m = Math.floor((timeInSeconds % 3600) / 60);
+    const s = Math.floor(timeInSeconds % 60);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const sortedTeams = socketLeaderboard.length > 0
+    ? socketLeaderboard
+    : [...allTeamsState]
+      .filter(t => t.gameStarted && t.role !== "admin")
+      .sort((a, b) => b.score - a.score);
   const maxLevel = puzzles.length || 15;
   const topScore = sortedTeams[0]?.score || 0;
 
@@ -227,9 +259,14 @@ const LeaderboardPage = () => {
 
         <div className="flex items-center gap-3 md:gap-4">
           <img src="https://i.ibb.co/LXwJLXBp/akatsukilogo-removebg-preview.png" alt="Akatsuki" className="h-20 md:h-24 object-contain" />
-          <h1 className="text-2xl md:text-3xl  text-white tracking-wide">
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
             Leaderboard
           </h1>
+          {remainingTime !== null && (
+            <div className="text-xl font-bold text-cyan-400 bg-cyan-900/30 px-3 py-1 rounded ml-4 border border-cyan-500/50">
+              {formatTime(remainingTime)}
+            </div>
+          )}
         </div>
 
         <div className="hidden md:flex items-center gap-6 text-right">
