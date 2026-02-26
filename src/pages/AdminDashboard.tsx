@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { useGame } from "@/context/GameContext";
 import { Shield, Users, Play, Database, Zap, PlusCircle, LayoutList, Activity, Unlock, Lock, ExternalLink, LogOut, Globe, CheckSquare, Trash2, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { createTeam, addTeamsToGame, cleanupTeams, getGameState, getAllQuestions, createQuestion, addQuestionToGame, cleanupQuestions, createQuestionsBulk, createGame, getWaitingGames } from "@/services/api";
+import { createTeam, addTeamsToGame, cleanupTeams, getGameState, getAllQuestions, createQuestion, addQuestionToGame, cleanupQuestions, createQuestionsBulk, createGame, getFilteredGames, getAllMissionsAdmin, API_BASE } from "@/services/api";
+import { io } from "socket.io-client";
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const {
         puzzles,
         startGame,
+        endGameSession,
         gameStarted,
         allTeamsState,
         freezeTeam,
@@ -44,6 +46,8 @@ const AdminDashboard = () => {
     const [qTimeline, setQTimeline] = useState("1");
     const [jsonBulkInput, setJsonBulkInput] = useState("");
     const [showJsonInput, setShowJsonInput] = useState(false);
+    const [adminMissions, setAdminMissions] = useState<any[]>([]);
+    const [intelTab, setIntelTab] = useState("questions");
 
     // Fetch Active Game ID on Mount
     useEffect(() => {
@@ -51,6 +55,29 @@ const AdminDashboard = () => {
             if (g && g._id) setDbGameId(g._id);
         }).catch(() => console.log("No active game found"));
     }, []);
+
+    const [remainingTime, setRemainingTime] = useState<number | null>(null);
+
+    useEffect(() => {
+        const s = io(API_BASE, { transports: ["websocket"] });
+        s.on("connect", () => {
+            s.emit("JOIN_DASHBOARD");
+        });
+        s.on("TIME_UPDATE", (data: any) => {
+            setRemainingTime(data.remainingTime);
+        });
+        return () => {
+            s.disconnect();
+        };
+    }, []);
+
+    const formatTime = (timeInSeconds: number | null) => {
+        if (timeInSeconds === null) return "00:00:00";
+        const h = Math.floor(timeInSeconds / 3600);
+        const m = Math.floor((timeInSeconds % 3600) / 60);
+        const s = Math.floor(timeInSeconds % 60);
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
 
     // Fetch Questions when tab is active
     useEffect(() => {
@@ -64,12 +91,12 @@ const AdminDashboard = () => {
 
     const loadWaitingGames = async () => {
         try {
-            const data = await getWaitingGames();
+            const data = await getFilteredGames("waiting,active");
             if (data && data.games) {
                 setWaitingGames(data.games);
             }
         } catch (e) {
-            console.error("Failed to load waiting games", e);
+            console.error("Failed to load games", e);
         }
     };
 
@@ -78,6 +105,10 @@ const AdminDashboard = () => {
             const data = await getAllQuestions();
             if (data && data.questions) {
                 setAdminQuestions(data.questions);
+            }
+            const missionData = await getAllMissionsAdmin();
+            if (missionData && missionData.missions) {
+                setAdminMissions(missionData.missions);
             }
         } catch (e) {
             console.error(e);
@@ -315,9 +346,14 @@ const AdminDashboard = () => {
                         <h1 className="text-xs  tracking-[0.2em] text-white uppercase drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]">
                             AKATSUKI CODING CLUB
                         </h1>
-                        <div className="flex items-center gap-2 text-[8px] text-cyan-400  uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-[8px] uppercase tracking-widest mt-1">
                             <Globe size={10} className={gameStarted ? "animate-pulse text-green-500" : "text-cyan-500"} />
-                            <span>SYS: {gameStarted ? "ONLINE" : "STANDBY"}</span>
+                            <span className="text-cyan-400">SYS: {gameStarted ? "ONLINE" : "STANDBY"}</span>
+                            {gameStarted && remainingTime !== null && (
+                                <span className={`ml-2 px-2 py-0.5 rounded border transition-colors ${remainingTime < 600 ? "text-red-500 bg-red-900/30 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.5)]" : "text-cyan-400 border-cyan-500/50 bg-cyan-900/30 font-bold"}`}>
+                                    {formatTime(remainingTime)}
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -420,8 +456,24 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-12 flex justify-end">
+                            <div className="mt-12 flex justify-end gap-4">
+                                {(gameStarted || waitingGames.find(g => g._id === dbGameId)?.status === "active") && (
+                                    <button
+                                        onClick={() => {
+                                            if (dbGameId) {
+                                                endGameSession(dbGameId);
+                                                showToast("SYSTEM_OFFLINE", "info", "Mission clock stopped.");
+                                            }
+                                        }}
+                                        className="relative overflow-hidden group bg-red-900/20 border border-red-500/50 hover:bg-red-500 hover:text-white hover:shadow-[0_0_30px_red] text-red-400 px-10 py-4 uppercase text-xs tracking-[0.3em] transition-all"
+                                    >
+                                        <span className="relative z-10 flex items-center gap-3">
+                                            END ROUND
+                                        </span>
+                                    </button>
+                                )}
                                 <button
+                                    disabled={gameStarted || waitingGames.find(g => g._id === dbGameId)?.status === "active"}
                                     onClick={() => {
                                         if (dbGameId) {
                                             startGame(dbGameId);
@@ -430,11 +482,11 @@ const AdminDashboard = () => {
                                             showToast("ERROR", "error", "NO ACTIVE GAME INSTANCE TO START");
                                         }
                                     }}
-                                    className={`relative overflow-hidden group bg-cyan-900/20 border border-cyan-500/50 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_30px_cyan] text-cyan-400 px-10 py-4  uppercase text-xs tracking-[0.3em] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${gameStarted && !dbGameId ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    className={`relative overflow-hidden group bg-cyan-900/20 border border-cyan-500/50 hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_30px_cyan] text-cyan-400 px-10 py-4  uppercase text-xs tracking-[0.3em] transition-all disabled:opacity-30 disabled:cursor-not-allowed`}
                                 >
                                     <span className="relative z-10 flex items-center gap-3">
-                                        <Play size={16} className={gameStarted && !dbGameId ? "" : "group-hover:fill-current"} />
-                                        {gameStarted && !dbGameId ? "PROTOCOL ENGAGED" : "INITIATE LAUNCH"}
+                                        <Play size={16} className={(gameStarted || waitingGames.find(g => g._id === dbGameId)?.status === "active") ? "" : "group-hover:fill-current"} />
+                                        {(gameStarted || waitingGames.find(g => g._id === dbGameId)?.status === "active") ? "PROTOCOL ENGAGED" : "INITIATE LAUNCH"}
                                     </span>
                                 </button>
                             </div>
@@ -561,7 +613,20 @@ const AdminDashboard = () => {
                                 {/* Toolbar */}
                                 <div className="flex justify-between items-center mb-4 px-2">
                                     <div className="flex items-center gap-4">
-                                        <h4 className="text-[10px]  uppercase text-cyan-600 tracking-widest">Active Intel Database ({adminQuestions.length})</h4>
+                                        <div className="flex bg-cyan-950/30 border border-cyan-800 rounded p-1">
+                                            <button
+                                                onClick={() => setIntelTab("questions")}
+                                                className={`text-[9px] uppercase tracking-widest px-3 py-1 transition-all ${intelTab === "questions" ? "bg-cyan-500 text-black" : "text-cyan-600 hover:text-cyan-400"}`}
+                                            >
+                                                Standard Intel ({adminQuestions.length})
+                                            </button>
+                                            <button
+                                                onClick={() => setIntelTab("missions")}
+                                                className={`text-[9px] uppercase tracking-widest px-3 py-1 transition-all ${intelTab === "missions" ? "bg-cyan-500 text-black" : "text-cyan-600 hover:text-cyan-400"}`}
+                                            >
+                                                Bulk Missions ({adminMissions.length})
+                                            </button>
+                                        </div>
                                         {/* Select All */}
                                         <button
                                             onClick={handleSelectAllQuestions}
@@ -605,105 +670,123 @@ const AdminDashboard = () => {
                                     </div>
                                 )}
 
-                                {/* Grouped Question List */}
-                                <div className="space-y-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin">
-                                    {adminQuestions.length === 0 && (
-                                        <div className="text-center py-10 text-cyan-900 text-xs uppercase tracking-widest">
-                                            NO INTEL FOUND IN SERVER
-                                        </div>
-                                    )}
-                                    {getGroupedQuestions().map((group) => (
-                                        <div key={group.key}>
-                                            {/* Timeline Header */}
-                                            <div className="flex items-center gap-4 mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px]  uppercase tracking-[0.25em] text-cyan-400 bg-cyan-950/60 border border-cyan-500/40 px-3 py-1">
-                                                        {group.name}
-                                                    </span>
-                                                    <span className="text-[8px]  text-cyan-700 uppercase tracking-widest">• {group.year}</span>
-                                                    <span className="text-[8px] text-cyan-800 uppercase">({group.questions.length} questions)</span>
-                                                </div>
-                                                <div className="flex-1 h-[1px] bg-gradient-to-r from-cyan-500/30 to-transparent" />
+                                {/* Grouped Question List - Conditional Rendering */}
+                                {intelTab === "questions" ? (
+                                    <div className="space-y-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin">
+                                        {adminQuestions.length === 0 && (
+                                            <div className="text-center py-10 text-cyan-900 text-xs uppercase tracking-widest">
+                                                NO INTEL FOUND IN SERVER
                                             </div>
+                                        )}
+                                        {getGroupedQuestions().map((group) => (
+                                            <div key={group.key}>
+                                                {/* Timeline Header */}
+                                                <div className="flex items-center gap-4 mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[9px]  uppercase tracking-[0.25em] text-cyan-400 bg-cyan-950/60 border border-cyan-500/40 px-3 py-1">
+                                                            {group.name}
+                                                        </span>
+                                                        <span className="text-[8px]  text-cyan-700 uppercase tracking-widest">• {group.year}</span>
+                                                        <span className="text-[8px] text-cyan-800 uppercase">({group.questions.length} questions)</span>
+                                                    </div>
+                                                    <div className="flex-1 h-[1px] bg-gradient-to-r from-cyan-500/30 to-transparent" />
+                                                </div>
 
-                                            {/* Difficulty sub-groups */}
-                                            {(['easy', 'medium', 'hard'] as const).map(diff => {
-                                                const dqs = group.questions.filter(q => q.difficulty === diff);
-                                                if (dqs.length === 0) return null;
-                                                const diffColors: Record<string, string> = {
-                                                    easy: 'text-green-400  border-green-500/30  bg-green-950/10',
-                                                    medium: 'text-yellow-400 border-yellow-500/30 bg-yellow-950/10',
-                                                    hard: 'text-red-400    border-red-500/30    bg-red-950/10',
-                                                };
-                                                const diffDot: Record<string, string> = {
-                                                    easy: 'bg-green-500',
-                                                    medium: 'bg-yellow-500',
-                                                    hard: 'bg-red-500',
-                                                };
-                                                return (
-                                                    <div key={diff} className="mb-4">
-                                                        {/* Difficulty label */}
-                                                        <div className="flex items-center gap-2 mb-2 pl-1">
-                                                            <span className={`w-[6px] h-[6px] rounded-full ${diffDot[diff]}`} />
-                                                            <span className={`text-[8px]  uppercase tracking-[0.3em] ${diffColors[diff].split(' ')[0]}`}>
-                                                                {diff}
-                                                            </span>
-                                                        </div>
-                                                        <div className="space-y-2 pl-3">
-                                                            {dqs.map((q) => (
-                                                                <div
-                                                                    key={q._id}
-                                                                    onClick={() => toggleQuestionSelection(q._id)}
-                                                                    className={`bg-black/40 border p-4 flex justify-between items-center group
+                                                {/* Difficulty sub-groups */}
+                                                {(['easy', 'medium', 'hard'] as const).map(diff => {
+                                                    const dqs = group.questions.filter(q => q.difficulty === diff);
+                                                    if (dqs.length === 0) return null;
+                                                    const diffColors: Record<string, string> = {
+                                                        easy: 'text-green-400  border-green-500/30  bg-green-950/10',
+                                                        medium: 'text-yellow-400 border-yellow-500/30 bg-yellow-950/10',
+                                                        hard: 'text-red-400    border-red-500/30    bg-red-950/10',
+                                                    };
+                                                    const diffDot: Record<string, string> = {
+                                                        easy: 'bg-green-500',
+                                                        medium: 'bg-yellow-500',
+                                                        hard: 'bg-red-500',
+                                                    };
+                                                    return (
+                                                        <div key={diff} className="mb-4">
+                                                            {/* Difficulty label */}
+                                                            <div className="flex items-center gap-2 mb-2 pl-1">
+                                                                <span className={`w-[6px] h-[6px] rounded-full ${diffDot[diff]}`} />
+                                                                <span className={`text-[8px]  uppercase tracking-[0.3em] ${diffColors[diff].split(' ')[0]}`}>
+                                                                    {diff}
+                                                                </span>
+                                                            </div>
+                                                            <div className="space-y-2 pl-3">
+                                                                {dqs.map((q) => (
+                                                                    <div
+                                                                        key={q._id}
+                                                                        onClick={() => toggleQuestionSelection(q._id)}
+                                                                        className={`bg-black/40 border p-4 flex justify-between items-center group
                                                                         hover:bg-cyan-950/10 transition-all backdrop-blur-sm cursor-pointer
                                                                         ${selectedQuestionIds.includes(q._id)
-                                                                            ? 'border-cyan-400 shadow-[0_0_12px_rgba(0,255,255,0.15)]'
-                                                                            : 'border-cyan-900/30 hover:border-cyan-500/50'
-                                                                        }`}
-                                                                >
-                                                                    {/* Checkbox */}
-                                                                    <div className="mr-3 flex-shrink-0">
-                                                                        <div className={`w-4 h-4 border flex items-center justify-center transition-all ${selectedQuestionIds.includes(q._id)
-                                                                            ? 'bg-cyan-500 border-cyan-500'
-                                                                            : 'border-cyan-700/50 bg-black/50'
-                                                                            }`}>
-                                                                            {selectedQuestionIds.includes(q._id) && <CheckSquare size={10} className="text-black" />}
+                                                                                ? 'border-cyan-400 shadow-[0_0_12px_rgba(0,255,255,0.15)]'
+                                                                                : 'border-cyan-900/30 hover:border-cyan-500/50'
+                                                                            }`}
+                                                                    >
+                                                                        {/* Checkbox */}
+                                                                        <div className="mr-3 flex-shrink-0">
+                                                                            <div className={`w-4 h-4 border flex items-center justify-center transition-all ${selectedQuestionIds.includes(q._id)
+                                                                                ? 'bg-cyan-500 border-cyan-500'
+                                                                                : 'border-cyan-700/50 bg-black/50'
+                                                                                }`}>
+                                                                                {selectedQuestionIds.includes(q._id) && <CheckSquare size={10} className="text-black" />}
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
 
-                                                                    <div className="flex-1 mr-4 min-w-0">
-                                                                        <div className="flex items-center gap-2 mb-1">
-                                                                            <span className={`text-[8px]  uppercase px-2 py-0.5 border rounded-sm ${diffColors[diff]}`}>
-                                                                                {diff}
-                                                                            </span>
-                                                                            <span className="text-[10px] font-sans text-cyan-400  drop-shadow-[0_0_5px_cyan]">
-                                                                                {q.points} PTS
-                                                                            </span>
+                                                                        <div className="flex-1 mr-4 min-w-0">
+                                                                            <div className="flex items-center gap-2 mb-1">
+                                                                                <span className={`text-[8px]  uppercase px-2 py-0.5 border rounded-sm ${diffColors[diff]}`}>
+                                                                                    {diff}
+                                                                                </span>
+                                                                                <span className="text-[10px] font-sans text-cyan-400  drop-shadow-[0_0_5px_cyan]">
+                                                                                    {q.points} PTS
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="text-[10px] text-cyan-200/80 max-w-md truncate font-sans">{q.question}</p>
+                                                                            <p className="text-[8px] text-cyan-900 mt-1 font-sans uppercase">
+                                                                                Key: <span className="text-cyan-700">{q.answer}</span>
+                                                                            </p>
                                                                         </div>
-                                                                        <p className="text-[10px] text-cyan-200/80 max-w-md truncate font-sans">{q.question}</p>
-                                                                        <p className="text-[8px] text-cyan-900 mt-1 font-sans uppercase">
-                                                                            Key: <span className="text-cyan-700">{q.answer}</span>
-                                                                        </p>
+                                                                        <div className="text-right flex items-center gap-2 flex-shrink-0">
+                                                                            <button
+                                                                                onClick={(e) => { e.stopPropagation(); handleAddQuestionToGame(q._id); }}
+                                                                                className="text-[9px] border border-cyan-700/50 px-3 py-2 text-cyan-500 hover:bg-cyan-500 hover:text-black uppercase  tracking-widest transition-all flex items-center gap-2"
+                                                                            >
+                                                                                <Zap size={10} /> LINK
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="text-right flex items-center gap-2 flex-shrink-0">
-                                                                        <button
-                                                                            onClick={(e) => { e.stopPropagation(); handleAddQuestionToGame(q._id); }}
-                                                                            className="text-[9px] border border-cyan-700/50 px-3 py-2 text-cyan-500 hover:bg-cyan-500 hover:text-black uppercase  tracking-widest transition-all flex items-center gap-2"
-                                                                        >
-                                                                            <Zap size={10} /> LINK
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
+                                                                ))}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Floating bulk-action toolbar for questions */}
+                                                    );
+                                                })}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin">
+                                        {adminMissions.length === 0 && (
+                                            <div className="text-center py-10 text-cyan-900 text-xs uppercase tracking-widest">
+                                                NO MISSIONS FOUND
+                                            </div>
+                                        )}
+                                        {adminMissions.map((m, idx) => (
+                                            <div key={idx} className="bg-black/60 border border-cyan-500/30 p-4">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <p className="text-[10px] text-cyan-400 font-sans">{m.timeline?.name || m.timeline} - {m.difficulty}</p>
+                                                    <p className="text-[10px] text-cyan-500 font-sans">{m.points} PTS</p>
+                                                </div>
+                                                <p className="text-xs text-cyan-100 font-sans mb-2">{m.question}</p>
+                                                <p className="text-[10px] text-cyan-700 font-sans uppercase">Key: {m.answer}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                                 {selectedQuestionIds.length > 0 && (
                                     <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#050a10]/95 backdrop-blur-xl border border-cyan-500 p-4 shadow-[0_0_50px_rgba(0,255,255,0.3)] flex items-center gap-6 animate-fade-in-up rounded-none">
                                         <div className="text-xs  text-cyan-400 uppercase tracking-widest border-r border-cyan-800 pr-6">

@@ -127,6 +127,46 @@ export async function getAllTeams() {
   >("/api/auth/teams", { skipAuth: true });
 }
 
+export async function getActiveGameTeams() {
+  return request<
+    Array<{
+      _id: string;
+      teamName: string;
+      role: string;
+      score: number;
+      frozenUntil?: string | null;
+      blockedUntil?: string | null;
+      cooldownUntil?: string | null;
+      missionsCompleted?: number;
+      buildMissionsCompleted?: number;
+      activeEffects?: string[];
+      stones?: string[];
+      completedTimelines?: string[];
+      snapActivated?: boolean;
+    }>
+  >("/api/auth/active-game-teams", { skipAuth: true });
+}
+
+export async function getMyGameTeams() {
+  return request<
+    Array<{
+      _id: string;
+      teamName: string;
+      role: string;
+      score: number;
+      frozenUntil?: string | null;
+      blockedUntil?: string | null;
+      cooldownUntil?: string | null;
+      missionsCompleted?: number;
+      buildMissionsCompleted?: number;
+      activeEffects?: string[];
+      stones?: string[];
+      completedTimelines?: string[];
+      snapActivated?: boolean;
+    }>
+  >("/api/auth/my-game-teams");
+}
+
 export async function createTeam(teamName: string, password: string, role: string = "team") {
   return request<{ success: boolean; team: any }>("/api/admin/team/create", {
     method: "POST",
@@ -151,8 +191,13 @@ export interface Mission {
 // Deprecated or Modified: The backend no longer exposes GET /api/missions list.
 // New flow uses Timelines.
 
+export interface TimelineStatus {
+  id: string;
+  status: 'pending' | 'completed';
+}
+
 export async function getTimelines() {
-  return request<{ timelines: string[] }>("/api/missions/timelines");
+  return request<{ timelines: TimelineStatus[] }>("/api/missions/timelines");
 }
 
 export async function enterTimeline(timeline: string) {
@@ -266,6 +311,10 @@ export async function getAllQuestions() {
   return request<{ questions: any[] }>("/api/admin/questions");
 }
 
+export async function getAllMissionsAdmin() {
+  return request<{ missions: any[] }>("/api/missions/admin/all");
+}
+
 export async function createQuestion(data: any) {
   return request<{ question: any }>("/api/admin/question/create", {
     method: "POST",
@@ -313,8 +362,9 @@ export async function createGame(name: string) {
   });
 }
 
-export async function getWaitingGames() {
-  return request<{ games: any[] }>("/api/game/waiting");
+export async function getFilteredGames(status?: string) {
+  const query = status ? `?status=${status}` : "";
+  return request<{ games: any[] }>(`/api/game/filter${query}`);
 }
 
 export async function getEventLogs() {
@@ -323,6 +373,13 @@ export async function getEventLogs() {
 
 export async function startGame(gameId: string) {
   return request<{ message: string }>(`/api/game/start/${gameId}`, { method: "POST" });
+}
+
+export async function endActiveGame(gameId?: string) {
+  return request<{ message: string }>("/api/game/end", {
+    method: "POST",
+    body: JSON.stringify({ gameId }),
+  });
 }
 
 export async function triggerBlip(phase: 1 | 2) {
@@ -524,7 +581,7 @@ export interface DashboardData {
   leaderboard: LeaderboardEntry[];
   gameState: GameState;
   me: UserMe;
-  timelines: TimelineName[];
+  timelines: TimelineStatus[];
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -557,6 +614,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     leaderboard,
     gameState,
     me,
-    timelines: (timelinesRes.timelines as TimelineName[]) || []
+    timelines: timelinesRes.timelines || []
   };
 }
