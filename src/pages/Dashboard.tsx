@@ -10,6 +10,7 @@ import { SnapSequence } from "@/components/SnapSequence";
 import Navbar from "@/components/Navbar";
 import { STONE_PROPERTIES } from "@/lib/stoneConfig";
 import { motion, AnimatePresence } from "framer-motion";
+import RulesSidebar from "@/components/RulesSidebar";
 
 declare global {
   namespace JSX {
@@ -63,6 +64,7 @@ const Dashboard = () => {
   const [sacrificedStone, setSacrificedStone] = useState("");
   const [confirmStone, setConfirmStone] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
 
   useEffect(() => {
     if (!data?.gameState?.endTime) return;
@@ -86,7 +88,7 @@ const Dashboard = () => {
   const handleStoneClick = (stoneId: string) => {
     const isCooldown = data?.me?.cooldownUntil ? new Date(data.me.cooldownUntil).getTime() > Date.now() : false;
     if (isCooldown && stoneId !== "space") {
-      showToast("COOLDOWN_ACTIVE", "error", "Quantum systems are currently unstable.");
+      showToast("COOLDOWN_ACTIVE", "error", "Try again later.");
       return;
     }
 
@@ -101,10 +103,10 @@ const Dashboard = () => {
 
   const executePower = async () => {
     if (!targetTeam) return;
-    showToast("Power Stone", "info", "Priming orbital cannon...");
+    showToast("Power Stone", "info", "You can't use the Power Stone on the selected team");
     try {
       await usePowerStone(targetTeam);
-      showToast("POWER STONE ACTIVE", "success", "Orbital Strike Launched");
+      showToast("POWER STONE ACTIVE", "success", "Attack Initiated");
       setShowPowerModal(false);
       setTargetTeam("");
       loadTacticalData();
@@ -115,10 +117,10 @@ const Dashboard = () => {
 
   const executeSoul = async () => {
     if (!sacrificedStone) return;
-    showToast("Soul Stone", "info", "Commencing ritual...");
+    showToast("Soul Stone", "info", "No Stone sacrificed");
     try {
       await useSoulStone(sacrificedStone);
-      showToast("SOUL STONE ACTIVE", "success", "Sacrifice accepted. Reality enriched.");
+      showToast("SOUL STONE ACTIVE", "success", "Sacrifice accepted. Reward granted.");
       setShowSoulModal(false);
       setSacrificedStone("");
       loadTacticalData();
@@ -230,6 +232,7 @@ const Dashboard = () => {
     <div className="h-screen flex flex-col bg-[#05050c] text-slate-200 font-sans overflow-hidden select-none">
       <HeroManager />
       <Navbar />
+      <RulesSidebar isOpen={isRulesOpen} setIsOpen={setIsRulesOpen} />
       <div className="flex flex-1 overflow-hidden">
         {/* ─── DYNAMIC MISSION AREA ─── */}
         <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]">

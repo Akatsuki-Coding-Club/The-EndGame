@@ -221,7 +221,7 @@ const MissionInterface = () => {
           await fetchProgress();
         }
       } else {
-        showToast("KEY_REJECTED", "error", "Unauthorized decryption code");
+        showToast("INCORRECT_ANSWER", "error", "Try again");
         setAnswer("");
       }
     } catch {
@@ -235,7 +235,7 @@ const MissionInterface = () => {
   const executeTime = async () => {
     try {
       await useTimeStone();
-      showToast("TIME STONE ACTIVATED", "success", "Temporal Shift Initiated");
+      showToast("TIME STONE ACTIVATED", "success", "Time escaped");
       navigate("/dashboard");
     } catch (e: any) { showToast("Failed to activate Time Stone", "error", e.message); }
   };
@@ -244,7 +244,7 @@ const MissionInterface = () => {
     try {
       const res = await useMindStone();
       setActiveHint(res.hint);
-      showToast("MIND STONE ACTIVE", "success", "Neural Pathway Illuminated");
+      showToast("MIND STONE ACTIVE", "success", "Hint revealed");
       fetchStones();
     } catch (e: any) { showToast("Mind Stone activation failed", "error", e.message); }
   };
@@ -253,7 +253,7 @@ const MissionInterface = () => {
     if (!targetTeam) return;
     try {
       await usePowerStone(targetTeam);
-      showToast("POWER STONE ACTIVE", "success", "Orbital Strike Launched");
+      showToast("POWER STONE ACTIVE", "success", "Attack launched");
       setShowPowerModal(false);
       setTargetTeam("");
       fetchStones();
@@ -266,7 +266,7 @@ const MissionInterface = () => {
       await useRealityStone();
       // ✅ Only activate the visual state AFTER the backend confirms success
       setRealityActive(true);
-      showToast("REALITY STONE ACTIVE", "success", "Physics Engine Rewritten. Your next answer will be accepted regardless of correctness.");
+      showToast("REALITY STONE ACTIVE", "success", "Reality changed");
       fetchStones(); // refresh cooldown state
     } catch (e: any) {
       showToast("Reality Stone activation failed", "error", e.message);
@@ -471,7 +471,7 @@ const MissionInterface = () => {
                 <Zap size={12} /> {activeMission?.difficulty || "UNKNOWN"} // {theme.name}_PROTOCOL
               </span>
               <span className="text-[10px] text-white/40 uppercase animate-in fade-in">
-                Priority: <span className={theme.primary}>{activeMission?.points || 0} PTS</span>
+                Points: <span className={theme.primary}>{activeMission?.points || 0} PTS</span>
               </span>
             </div>
 

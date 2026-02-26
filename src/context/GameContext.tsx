@@ -436,12 +436,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         showToast("[SYSTEM_LOCKED]", "error", "Answer the challenge puzzle to unlock your system.");
       });
 
-      s.on("STONE_ATTACK_BLOCKED", (data?: any) => {
-        // Shield blocked the incoming Power Surge
-        setIsBlocked(false);
-        setStones((prev) => ({ ...prev, shieldActive: false }));
-        showToast("[DEFENSE_SUCCESSFUL]", "success", "Shield blocked the incoming attack.");
-      });
+      // s.on("STONE_ATTACK_BLOCKED", (data?: any) => {
+      //   // Shield blocked the incoming Power Surge
+      //   setIsBlocked(false);
+      //   setStones((prev) => ({ ...prev, shieldActive: false }));
+      //   showToast("[DEFENSE_SUCCESSFUL]", "success", "Shield blocked the incoming attack.");
+      // });
 
       s.on("ADMIN_FREEZE", (data: any) => {
         setIsFrozen(true);
@@ -451,12 +451,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         addNotification(data.message || "You are frozen by the commander", "attack");
       });
 
-      s.on("ATTACK_OFFER_SHIELD", (data: { attackerId: string; attackerName?: string; message?: string }) => {
-        setPendingAttackerId(data?.attackerId || null);
-        setShowShieldOffer(true);
-        addNotification(`Incoming attack from ${data?.attackerName || "an opponent"}`, "attack");
-        showToast("INCOMING_ATTACK", "info", (data?.message) || "Incoming attack - choose defend or continue");
-      });
+      // s.on("ATTACK_OFFER_SHIELD", (data: { attackerId: string; attackerName?: string; message?: string }) => {
+      //   setPendingAttackerId(data?.attackerId || null);
+      //   setShowShieldOffer(true);
+      //   addNotification(`Incoming attack from ${data?.attackerName || "an opponent"}`, "attack");
+      //   showToast("INCOMING_ATTACK", "info", (data?.message) || "Incoming attack - choose defend or continue");
+      // });
 
       // BLIP puzzle delivered directly to team
       s.on("BLIP_PUZZLE", (puzzle: { question?: string; answer?: string; freezeDurationSec?: number }) => {
@@ -485,10 +485,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         showToast("[SYSTEM_RESTORED]", "success", "Lockout removed. System fully operational.");
       });
 
-      s.on("SHIELD_CONSUMED", () => {
-        setStones((prev) => ({ ...prev, shieldActive: false, shieldCount: 0 }));
-        showToast("[DEFENSE_SUCCESSFUL]", "success", "Shield blocked incoming attack.");
-      });
+      // s.on("SHIELD_CONSUMED", () => {
+      //   setStones((prev) => ({ ...prev, shieldActive: false, shieldCount: 0 }));
+      //   showToast("[DEFENSE_SUCCESSFUL]", "success", "Shield blocked incoming attack.");
+      // });
     }
 
     setSocket(s);

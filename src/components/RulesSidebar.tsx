@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Shield, Zap, Skull, Lock, Target, Activity, ChevronRight } from "lucide-react";
+import { X, Shield, Zap, Skull, Lock, Target, Activity, ChevronRight, Clock, Globe, Flame, Brain, Eye } from "lucide-react";
 
 interface RulesSidebarProps {
   isOpen: boolean;
@@ -7,12 +7,12 @@ interface RulesSidebarProps {
 }
 
 const RULES = [
-  { title: "Mission Critical", desc: "Solve objectives to earn points. One-shot opportunities.", icon: <Target className="text-cyan-400" size={18} /> },
-  { title: "Infinity Stones", desc: "300/600 pts. Limit 2 per squad. Watch the cooldown.", icon: <Zap className="text-amber-400" size={18} /> },
-  { title: "Power Surge", desc: "120s UI lock. Solve bypass sequence to regain control.", icon: <Lock className="text-purple-500" size={18} /> },
-  { title: "Vibranium Shield", desc: "Blocks one stone attack, then shatters.", icon: <Shield className="text-blue-300" size={18} /> },
-  { title: "The Blip", desc: "Global freeze. Only 'Gauntlet' puzzle restores access.", icon: <Skull className="text-emerald-400" size={18} /> },
-  { title: "Endgame Phase", desc: "T-15:00. Stones offline. Pure skill execution only.", icon: <Activity className="text-red-500" size={18} /> },
+  { title: "Time Stone", desc: "Leave your current challenge without losing it. You can return later.", icon: <Clock className="text-[#34d399]" size={18} /> },
+  { title: "Space Stone", desc: "Use this to go back to challenges you left using the Time Stone.", icon: <Globe className="text-[#60a5fa]" size={18} /> },
+  { title: "Power Stone", desc: "Attack another team and freeze their screen to slow them down.", icon: <Flame className="text-[#c084fc]" size={18} /> },
+  { title: "Mind Stone", desc: "Get a very helpful hint for the problem you are working on.", icon: <Brain className="text-[#fbbf24]" size={18} /> },
+  { title: "Reality Stone", desc: "Skip a problem. Your next answer will automatically be marked correct.", icon: <Eye className="text-[#f87171]" size={18} /> },
+  { title: "Soul Stone", desc: "Give up one of your other stones to get a huge amount of points.", icon: <Skull className="text-[#fb923c]" size={18} /> },
 ];
 
 const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -22,12 +22,12 @@ const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed left-0 top-32 z-[55] flex items-center gap-2 px-1 py-4 bg-[#0a0a1a] border-y border-r border-cyan-500/30 rounded-r-xl group hover:bg-cyan-500/10 transition-all duration-300 shadow-[5px_0_15px_rgba(0,0,0,0.5)]"
+          className="fixed left-0 top-32 z-[55] flex items-center gap-2 px-1.5 py-5 bg-[#0a0a1a]/90 backdrop-blur-md border-y border-r border-cyan-400/50 rounded-r-xl group hover:bg-cyan-500/20 transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:border-cyan-300"
         >
-          <span className="[writing-mode:vertical-lr] rotate-180 text-[10px] font-black uppercase tracking-[0.4em] text-cyan-500/70 group-hover:text-cyan-400">
+          <span className="[writing-mode:vertical-lr] rotate-180 text-[12px] font-black uppercase tracking-[0.5em] text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] group-hover:text-cyan-100 group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,1)] transition-all duration-300">
             Rules_Protocol
           </span>
-          <ChevronRight size={14} className="text-cyan-500/50 group-hover:translate-x-0.5 transition-transform" />
+          <ChevronRight size={16} className="text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] group-hover:text-cyan-100 group-hover:translate-x-0.5 transition-all duration-300" />
         </button>
       )}
 

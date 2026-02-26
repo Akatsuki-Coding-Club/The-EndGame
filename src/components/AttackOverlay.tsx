@@ -50,7 +50,7 @@ const AttackOverlay = () => {
       // Wrong answer - show error but keep overlay visible
       setIsError(true);
       setTimeout(() => setIsError(false), 500);
-      showToast("DECRYPTION_FAILED", "error", "Incompatible sequence detected. Rearming security protocol.");
+      showToast("Failed to unlock", "error", "Incorrect answer, Try again.");
       setAnswer("");
     } finally {
       setLoading(false);

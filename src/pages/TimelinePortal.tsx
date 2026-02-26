@@ -277,11 +277,11 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick, onSoulStoneClick }
     showToast("Warp", "info", "Calculating Quantum Coordinates...");
     try {
       await enterTimeline(id);
-      showToast("WARP SUCCESSFUL", "success", `Destination ${id.toUpperCase()}`);
+      showToast("Entered Timeline", "success", `Destination ${id.toUpperCase()}`);
       onRefresh();
       navigate(`/mission/${id}`);
     } catch (e: any) {
-      showToast("Warp Drive Failure", "error", e.message || "Coordinates Invalid");
+      showToast("Failed to Enter Timeline", "error", e.message || "Coordinates Invalid");
     }
   };
 
@@ -291,7 +291,7 @@ const TimelinePortal = ({ data, onRefresh, onPowerStoneClick, onSoulStoneClick }
     showToast("Tesseract Protocol", "info", "Initiating Tesseract Protocol...");
     try {
       await useSpaceStone(spaceStoneTarget);
-      showToast("SPACE_STONE_ACTIVATED", "success", `Re-entering ${spaceStoneTarget.toUpperCase()}. Quantum warp coordinates recalculated.`);
+      showToast("Re-entered Timeline", "success", `Re-entering ${spaceStoneTarget.toUpperCase()}. Quantum warp coordinates recalculated.`);
       setSpaceStoneTarget(null);
       onRefresh();
       navigate(`/mission/${spaceStoneTarget}`);
