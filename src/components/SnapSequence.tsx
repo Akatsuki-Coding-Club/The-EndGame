@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
 import { Trophy, Zap } from "lucide-react";
+import { customToast } from "./ToastProvider";
 
 const STONE_COLORS = {
     time: "#22c55e",
@@ -19,23 +20,10 @@ export const SnapSequence = () => {
     const { team, isAdmin } = useAuth();
     if (isAdmin) return null;
 
-    const [phase, setPhase] = useState<"idle" | "buildup" | "snap" | "dissolve">("idle");
+    const [phase, setPhase] = useState<"idle" | "buildup" | "snap" | "dissolve" | "rival-snap" | "rival-snap-close">("idle");
     const [activeStoneIndex, setActiveStoneIndex] = useState(-1);
-    const [showNotification, setShowNotification] = useState(true);
     const [hasPlayedRivalSnap, setHasPlayedRivalSnap] = useState(false);
-
-    useEffect(() => {
-        if (snapWinner && !hasPlayedRivalSnap) {
-            setShowNotification(true);
-        }
-    }, [snapWinner, hasPlayedRivalSnap]);
-
-    useEffect(() => {
-        if (phase === "idle" && (hasPlayedRivalSnap || phase === "idle") && showNotification && snapWinner) {
-            const timer = setTimeout(() => setShowNotification(false), 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [phase, hasPlayedRivalSnap, showNotification, snapWinner]);
+    const [toastFired, setToastFired] = useState(false);
 
     useEffect(() => {
         if (isAdmin) return;
@@ -44,12 +32,12 @@ export const SnapSequence = () => {
         } else if (snapWinner && snapWinner.teamId !== team?._id && phase === "idle" && !hasPlayedRivalSnap) {
             // Rival snap detected - show a brief white flash before the notification
             setHasPlayedRivalSnap(true);
-            setPhase("snap");
-            setTimeout(() => setPhase("idle"), 1000); // Return to idle so notification shows
+            setPhase("rival-snap");
+            setTimeout(() => setPhase("rival-snap-close"), 6000); // 6 sec white screen for rival teams
         }
     }, [isSnapping, phase, snapWinner, team?._id, hasPlayedRivalSnap, isAdmin]);
 
-    const isOtherTeamSnap = snapWinner && snapWinner.teamId !== team?._id;
+    // const isOtherTeamSnap = snapWinner && snapWinner.teamId !== team?._id;
 
     useEffect(() => {
         if (phase === "buildup") {
@@ -75,33 +63,26 @@ export const SnapSequence = () => {
         if (phase === "dissolve") {
             setTimeout(() => setPhase("idle"), 3000);
         }
+
+        if (phase === "rival-snap-close") {
+            setTimeout(() => setPhase("idle"), 500);
+        }
     }, [phase]);
 
-    // Non-blocking notification for everyone
-    if (snapWinner && !isSnapping && phase === "idle" && showNotification) {
-        return (
-            <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xl animate-in fade-in slide-in-from-top-10 duration-1000 pointer-events-none">
-                <div className="bg-red-950/40 backdrop-blur-xl border border-red-500/50 p-6 rounded-2xl shadow-[0_0_80px_rgba(239,68,68,0.3)] flex items-center gap-6 animate-pulse">
-                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shrink-0 shadow-[0_0_40px_rgba(239,68,68,0.6)]">
-                        <Zap size={32} className="text-white fill-current" />
-                    </div>
-                    <div className="text-left">
-                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-white">Timeline Breach</h2>
-                        <div className="space-y-1">
-                            <p className="text-red-400 font-mono text-[10px] tracking-widest leading-relaxed uppercase">
-                                Snap Executed by <span className="text-white font-black">{snapWinner.teamId === team?._id ? "YOUR TEAM" : snapWinner.teamName}</span>
-                            </p>
-                            <p className="text-white/60 font-mono text-[9px] tracking-widest leading-relaxed uppercase animate-pulse">
-                                {snapWinner.teamId === team?._id
-                                    ? "Reality reconfiguration complete. Continue stabilization."
-                                    : "Stabilize your timeline before the game timer expires."}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    useEffect(() => {
+        if (!snapWinner || toastFired || isSnapping) return;
+
+        const isRival = snapWinner.teamId !== team?._id;
+
+        if (phase === "idle") {
+            if (!isRival || hasPlayedRivalSnap) {
+                setToastFired(true);
+                customToast.error("Snap effect activated.", { description: "Use of stones is not allowed anymore." });
+            }
+        }
+    }, [snapWinner, toastFired, isSnapping, phase, team?._id, hasPlayedRivalSnap]);
+
+
 
     if (phase === "idle") return null;
 
@@ -195,6 +176,29 @@ export const SnapSequence = () => {
                           @keyframes particle-float {
                             0% { transform: translateY(0) translateX(0); opacity: 0.8; }
                             100% { transform: translateY(-100vh) translateX(${Math.random() * 100 - 50}px); opacity: 0; }
+                          }
+                        `}
+                    </style>
+                </div>
+            )}
+
+            {/* PHASE 4: Rival Snap (Long White-out) */}
+            {phase === "rival-snap" && (
+                <div className="absolute inset-0 bg-white z-[11000] flex items-center justify-center animate-in fade-in duration-500">
+                    <div className="w-full h-full bg-white" />
+                </div>
+            )}
+
+            {/* PHASE 5: Rival Snap Close (TV Close Animation) */}
+            {phase === "rival-snap-close" && (
+                <div className="absolute inset-0 z-[11000] flex items-center justify-center origin-center">
+                    <div className="w-full h-full bg-white animate-[tv-close_0.5s_cubic-bezier(0.23,1,0.32,1)_forwards]" />
+                    <style>
+                        {`
+                          @keyframes tv-close {
+                            0% { transform: scale(1, 1); opacity: 1; }
+                            50% { transform: scale(1, 0.01); opacity: 1; }
+                            100% { transform: scale(0, 0); opacity: 0; }
                           }
                         `}
                     </style>

@@ -19,7 +19,7 @@ import {
 import {
   Terminal, Loader2, Target, Zap, Clock, Brain, Globe, Flame, Eye, Skull,
   ChevronUp, ChevronDown, AlertTriangle, Sparkles, Shield, X,
-  Info
+  Info, ExternalLink
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { STONE_PROPERTIES } from "@/lib/stoneConfig";
@@ -55,7 +55,7 @@ const TIMELINE_THEMES: Record<string, TimelineTheme> = {
     name: "ASGARD",
     primary: "text-amber-400",
     secondary: "bg-amber-500 hover:bg-amber-400",
-    font: "font-sans tracking-normal uppercase",
+    font: "font-sans tracking-normal",
     glow: "shadow-[0_0_50px_rgba(245,158,11,0.15)]",
     videoBg: "https://res.cloudinary.com/dhavg3hov/video/upload/v1771870884/asgard_gd52ji.mp4",
     shadow: "shadow-[0_0_30px_rgba(245,158,11,0.1)]", // Added missing property
@@ -478,9 +478,38 @@ const MissionInterface = () => {
             {/* Question Body */}
             <div className="flex-1 p-2 lg:p-3 overflow-y-auto custom-scrollbar relative">
               <div className={`bg-black/60 border border-white/10 p-5 rounded-xl relative shadow-2xl group transition-colors hover:border-white/20`}>
-                <p className={`text-lg lg:text-xl leading-relaxed whitespace-pre-wrap ${theme.font} ${theme.primary.replace('text-', 'text-opacity-90 ')}`}>
-                  {activeMission?.question}
-                </p>
+                {/* Render optional explicit link field if provided */}
+                {activeMission?.link && (
+                  <div className="mb-4">
+                    {activeMission.link.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                      <img src={activeMission.link} alt="Mission Resource" className="max-w-full h-auto rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-white/10" />
+                    ) : (
+                      <a href={activeMission.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 uppercase tracking-widest text-[10px] bg-cyan-950/30 px-4 py-2 rounded-lg border border-cyan-500/30 transition-all hover:bg-cyan-900/40 w-fit">
+                        <ExternalLink size={12} /> Click Here
+                      </a>
+                    )}
+                  </div>
+                )}
+                {/* Render question text with embedded links converted to clickable elements */}
+                <div className={`text-lg lg:text-xl leading-relaxed whitespace-pre-wrap ${theme.font} ${theme.primary.replace('text-', 'text-opacity-90 ')}`}>
+                  {activeMission?.question?.split(/(\bhttps?:\/\/[^\s]+)/g).map((part: string, i: number) => {
+                    if (part.match(/^https?:\/\//)) {
+                      if (part.match(/\.(jpeg|jpg|gif|png)$/i)) {
+                        return (
+                          <div key={i} className="my-4">
+                            <img src={part} alt="Embedded Resource" className="max-w-full h-auto rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-white/10" />
+                          </div>
+                        );
+                      }
+                      return (
+                        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 underline underline-offset-4 decoration-cyan-500/50 hover:decoration-cyan-400 font-sans text-sm mx-1">
+                          <ExternalLink size={14} /> Click Here
+                        </a>
+                      );
+                    }
+                    return <span key={i}>{part}</span>;
+                  })}
+                </div>
                 {/* Hint Display */}
                 {activeHint && (
                   <div className="mt-6 pt-4 border-t border-yellow-500/20 animate-in fade-in zoom-in duration-300">

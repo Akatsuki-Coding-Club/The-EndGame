@@ -260,10 +260,10 @@ const Dashboard = () => {
               </div>
 
               {/* Central 3D Visualizer */}
-              <div className={`w-full ${isSnapping ? 'max-w-4xl h-[600px]' : 'max-w-2xl h-[450px]'} relative mb-16 animate-in zoom-in duration-1500 transition-all duration-1000 ease-in-out`}>
+              <div className={`w-full ${isSnapping ? 'max-w-4xl h-[600px]' : 'max-w-2xl h-[450px]'} relative mt-4 animate-in zoom-in duration-1500 transition-all duration-1000 ease-in-out`}>
                 <div className={`absolute -inset-10 ${isSnapping ? 'bg-yellow-500/20 blur-[120px]' : 'bg-yellow-500/5 blur-[80px]'} rounded-full animate-pulse`} />
                 <model-viewer
-                  src={isSnapActive ? "/model/QWERT.glb" : "/model/G.glb"}
+                  src="/model/G.glb"
                   auto-rotate
                   camera-controls
                   disable-zoom
@@ -273,13 +273,6 @@ const Dashboard = () => {
                   rotation-per-second={isSnapping ? "60deg" : "15deg"}
                   style={{ width: '100%', height: '100%', outline: 'none' }}
                 />
-
-                {/* HUD Overlay for Model */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-30 font-sans text-[8px] tracking-[0.2em] uppercase">
-                  <span>Rotation: Synchronized</span>
-                  <span className="w-1 h-1 bg-yellow-500 rounded-full animate-ping" />
-                  <span>Resonance: Maximum</span>
-                </div>
               </div>
 
               {/* Interaction / Status */}
@@ -320,23 +313,19 @@ const Dashboard = () => {
 
                     <div className="space-y-4">
                       <h2 className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-yellow-200 to-yellow-600 uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                        Reality Anchored
+                        Snapped
                       </h2>
 
-                      <div className="flex flex-col items-center gap-4">
+                      <div className="flex flex-col mb-[2rem] items-center gap-4">
                         <div className="h-px w-32 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
                         <div className="inline-flex items-center gap-4 bg-yellow-500/5 px-8 py-3 rounded-full border border-yellow-500/20 backdrop-blur-md">
                           <Sparkles className="text-yellow-500 animate-pulse" size={16} />
                           <p className="text-yellow-500 font-sans tracking-[0.4em] font-black uppercase text-[10px]">
-                            Ascended Status Active
+                            Snap Protocol Active
                           </p>
                         </div>
                       </div>
                     </div>
-
-                    <p className="text-white/30 font-sans text-[8px] tracking-[0.5em] uppercase max-w-[250px] mx-auto leading-relaxed pt-4">
-                      Protocol fulfilled. Temporal stability maintained at 100% capacity.
-                    </p>
                   </div>
                 )}
               </div>
@@ -344,7 +333,7 @@ const Dashboard = () => {
               {/* HUD Perimeter */}
               <div className="absolute inset-12 border border-white/5 pointer-events-none rounded-[40px]">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-1 bg-[#020205] border border-white/10 rounded-full">
-                  <span className="text-[8px] font-sans text-white/30 tracking-[0.5em] uppercase">Singularity Point</span>
+                  <span className="text-[8px] font-sans text-white/30 tracking-[0.5em] uppercase mb-2">Singularity Point</span>
                 </div>
               </div>
             </div>
