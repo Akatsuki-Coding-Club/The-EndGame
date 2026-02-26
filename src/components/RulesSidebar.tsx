@@ -7,12 +7,12 @@ interface RulesSidebarProps {
 }
 
 const RULES = [
-  { title: "Time Stone", desc: "Leave your current challenge without losing it. You can return later.", icon: <Clock className="text-[#34d399]" size={18} /> },
-  { title: "Space Stone", desc: "Use this to go back to challenges you left using the Time Stone.", icon: <Globe className="text-[#60a5fa]" size={18} /> },
-  { title: "Power Stone", desc: "Attack another team and freeze their screen to slow them down.", icon: <Flame className="text-[#c084fc]" size={18} /> },
-  { title: "Mind Stone", desc: "Get a very helpful hint for the problem you are working on.", icon: <Brain className="text-[#fbbf24]" size={18} /> },
-  { title: "Reality Stone", desc: "Skip a problem. Your next answer will automatically be marked correct.", icon: <Eye className="text-[#f87171]" size={18} /> },
-  { title: "Soul Stone", desc: "Give up one of your other stones to get a huge amount of points.", icon: <Skull className="text-[#fb923c]" size={18} /> },
+  { title: "Time Stone", desc: "Save your current puzzle so you can return to it later.", image: "/time-stone.png" },
+  { title: "Space Stone", desc: "Go back to a puzzle you previously saved with the Time Stone.", image: "/space-stone.png" },
+  { title: "Power Stone", desc: "Freeze another team's screen to stop them from playing.", image: "/power-stone.png" },
+  { title: "Mind Stone", desc: "Reveal a useful hint for the puzzle you are stuck on.", image: "/mind_stone.png" },
+  { title: "Reality Stone", desc: "Instantly solve and skip your current puzzle without answering.", image: "/reality-stone.png" },
+  { title: "Soul Stone", desc: "Destroy one of your other stones to gain lots of points.", image: "/soul_stone.jpg" },
 ];
 
 const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -63,14 +63,14 @@ const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
           <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
             {RULES.map((rule, idx) => (
               <div key={idx} className="group flex items-start gap-4 p-3 rounded-lg hover:bg-white/[0.02] transition-colors">
-                <div className="mt-1 p-2 rounded-md bg-black border border-white/5 group-hover:border-cyan-500/30 transition-colors shadow-inner">
-                  {rule.icon}
+                <div className="mt-1 w-12 h-12 rounded-full border border-white/10 group-hover:border-white/30 transition-all duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)] overflow-hidden shrink-0 bg-black/50 group-hover:scale-110">
+                  <img src={rule.image} alt={rule.title} className="w-full h-full object-cover" />
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-white group-hover:text-cyan-400 transition-colors">
+                <div className="space-y-1.5 mt-0.5">
+                  <h4 className="text-sm font-black uppercase tracking-wider text-white group-hover:text-cyan-400 transition-colors">
                     {rule.title}
                   </h4>
-                  <p className="text-[11px] font-semibold leading-relaxed text-slate-400 group-hover:text-slate-200 transition-colors">
+                  <p className="text-[13px] font-medium leading-relaxed text-slate-300 group-hover:text-white transition-colors">
                     {rule.desc}
                   </p>
                 </div>
