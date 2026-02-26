@@ -93,6 +93,7 @@ export async function getMe() {
     blockedUntil?: string | null;
     missionsCompleted?: number;
     buildMissionsCompleted?: number;
+    cooldownUntil?: string | null;
     stoneType?: Record<string, number>;
     stonesEarned?: number;
     pendingStoneCount?: number;
@@ -605,6 +606,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     isFrozen: !!rawMe.isFrozen,
     frozenUntil: rawMe.frozenUntil,
     blockedUntil: rawMe.blockedUntil,
+    cooldownUntil: rawMe.cooldownUntil,
     activeEffects: rawMe.activeEffects || [],
     snapActivated: (rawMe as any).snapActivated || false,
     gameStarted: (rawMe as any).gameStarted || false,
