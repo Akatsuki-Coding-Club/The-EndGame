@@ -724,26 +724,28 @@ const MissionInterface = () => {
               </p>
 
               <div className="grid grid-cols-3 gap-3 mb-8">
-                {["space", "power", "reality"].map(stone => {
-                  if (!hasStone(stone)) return null;
-                  const cfg = STONE_PROPERTIES[stone];
-                  return (
-                    <button
-                      key={stone}
-                      onClick={() => setSacrificeStone(stone)}
-                      className={`p-5 rounded-xl border flex flex-col items-center gap-3 transition-all ${sacrificeStone === stone
-                        ? "border-orange-500/50 bg-orange-900/20"
-                        : "border-white/5 bg-white/[0.03] opacity-60 hover:opacity-100 hover:bg-white/[0.06]"
-                        }`}
-                    >
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110" style={{ boxShadow: `0 0 10px ${cfg.glow}` }}>
-                        <img src={cfg.image} alt={cfg.label} className="w-full h-full object-cover rounded-full" />
-                      </div>
-                      <span className="uppercase text-[10px] font-black tracking-widest text-white/80">{cfg.label}</span>
-                    </button>
-                  );
-                })}
-                {!hasStone("space") && !hasStone("power") && !hasStone("reality") && (
+                {myStones
+                  .filter(stone => stone !== "soul" && stone !== "time" && stone !== "mind")
+                  .map(stone => {
+                    const cfg = STONE_PROPERTIES[stone];
+                    if (!cfg) return null;
+                    return (
+                      <button
+                        key={stone}
+                        onClick={() => setSacrificeStone(stone)}
+                        className={`p-5 rounded-xl border flex flex-col items-center gap-3 transition-all ${sacrificeStone === stone
+                          ? "border-orange-500/50 bg-orange-900/20"
+                          : "border-white/5 bg-white/[0.03] opacity-60 hover:opacity-100 hover:bg-white/[0.06]"
+                          }`}
+                      >
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110" style={{ boxShadow: `0 0 10px ${cfg.glow}` }}>
+                          <img src={cfg.image} alt={cfg.label} className="w-full h-full object-cover rounded-full" />
+                        </div>
+                        <span className="uppercase text-[10px] font-black tracking-widest text-white/80">{cfg.label}</span>
+                      </button>
+                    );
+                  })}
+                {myStones.filter(s => s !== "soul" && s !== "time" && s !== "mind").length === 0 && (
                   <div className="col-span-3 text-center py-6 text-white/30 text-xs font-sans">
                     No sacrificial stones available.
                   </div>

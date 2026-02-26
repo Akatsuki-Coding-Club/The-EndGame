@@ -628,7 +628,7 @@ const Dashboard = () => {
                     <p className="text-white/30 text-center py-4 text-xs font-sans">NO_STONES_AVAILABLE_FOR_SACRIFICE</p>
                   )}
                   {(me?.stones || [])
-                    .filter(s => s !== "soul")
+                    .filter(s => s !== "soul" && s !== "time" && s !== "mind")
                     .map(stoneKey => {
                       const cfg = STONE_PROPERTIES[stoneKey];
                       if (!cfg) return null;
