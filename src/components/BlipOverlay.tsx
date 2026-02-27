@@ -4,7 +4,7 @@ import { Shield, Zap, Loader2, Lock } from "lucide-react";
 import * as api from "@/services/api";
 
 const BlipOverlay = () => {
-  const { submitBlipAnswer, frozenUntil, setIsFrozen, blipPuzzleQuestion } = useGame();
+  const { submitBlipAnswer, frozenUntil, setIsFrozen, blipPuzzleQuestion, showToast } = useGame();
   const [answer, setAnswer] = useState("");
   const [timeLeft, setTimeLeft] = useState(0);
   const [fetchedQuestion, setFetchedQuestion] = useState<string | null>(null);
@@ -23,15 +23,28 @@ const BlipOverlay = () => {
     return () => clearInterval(timer);
   }, [frozenUntil, setIsFrozen]);
 
+  // Reset local fetching state if the global question or the blip period changes
+  useEffect(() => {
+    setFetchedQuestion(null);
+    setIsAdminFreeze(false);
+  }, [blipPuzzleQuestion, frozenUntil]);
+
   useEffect(() => {
     if (blipPuzzleQuestion) {
       setFetchedQuestion(blipPuzzleQuestion);
     } else if (frozenUntil && !fetchedQuestion && !isAdminFreeze) {
-      api.getBlipPuzzle().then((res) => {
-        if (res?.question) setFetchedQuestion(res.question);
-      }).catch(() => {
-        setIsAdminFreeze(true);
-      });
+      // Check if we are still within the freeze period before fetching
+      if (Date.now() < frozenUntil) {
+        api.getBlipPuzzle().then((res) => {
+          if (res?.question) {
+            setFetchedQuestion(res.question);
+          } else {
+            setIsAdminFreeze(true);
+          }
+        }).catch(() => {
+          setIsAdminFreeze(true);
+        });
+      }
     }
   }, [blipPuzzleQuestion, frozenUntil, fetchedQuestion, isAdminFreeze]);
 
@@ -100,7 +113,11 @@ const BlipOverlay = () => {
                   e.preventDefault();
                   if (!answer.trim()) return;
                   const ok = await submitBlipAnswer(answer);
-                  if (ok) setAnswer("");
+                  if (ok) {
+                    setAnswer("");
+                  } else {
+                    showToast("Wrong Answer", "error", "The code you entered is incorrect. Try again.");
+                  }
                 }}
                 className="w-full space-y-4"
               >
