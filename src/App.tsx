@@ -71,7 +71,7 @@ const GlobalOverlays = () => {
 };
 
 const App = () => (
-  // <ExtensionBlocker>
+  <ExtensionBlocker>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AppToastContainer />
@@ -90,7 +90,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
-  // </ExtensionBlocker>
+  </ExtensionBlocker>
 );
 
 
