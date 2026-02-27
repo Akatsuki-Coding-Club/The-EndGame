@@ -184,6 +184,7 @@ export interface Mission {
   points: number;
   answer?: string;
   isActive?: boolean;
+  link?: string | null;
   timeline?: { key: string; name: string };
   difficulty?: string;
   options?: string[];

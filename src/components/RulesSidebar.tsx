@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Shield, Zap, Skull, Lock, Target, Activity, ChevronRight } from "lucide-react";
+import { X, Shield, Zap, Skull, Lock, Target, Activity, ChevronRight, Clock, Globe, Flame, Brain, Eye } from "lucide-react";
 
 interface RulesSidebarProps {
   isOpen: boolean;
@@ -7,12 +7,12 @@ interface RulesSidebarProps {
 }
 
 const RULES = [
-  { title: "Mission Critical", desc: "Solve objectives to earn points. One-shot opportunities.", icon: <Target className="text-cyan-400" size={18} /> },
-  { title: "Infinity Stones", desc: "300/600 pts. Limit 2 per squad. Watch the cooldown.", icon: <Zap className="text-amber-400" size={18} /> },
-  { title: "Power Surge", desc: "120s UI lock. Solve bypass sequence to regain control.", icon: <Lock className="text-purple-500" size={18} /> },
-  { title: "Vibranium Shield", desc: "Blocks one stone attack, then shatters.", icon: <Shield className="text-blue-300" size={18} /> },
-  { title: "The Blip", desc: "Global freeze. Only 'Gauntlet' puzzle restores access.", icon: <Skull className="text-emerald-400" size={18} /> },
-  { title: "Endgame Phase", desc: "T-15:00. Stones offline. Pure skill execution only.", icon: <Activity className="text-red-500" size={18} /> },
+  { title: "Time Stone", desc: "Save your current puzzle so you can return to it later.", image: "/time-stone.png" },
+  { title: "Space Stone", desc: "Go back to a puzzle you previously saved with the Time Stone.", image: "/space-stone.png" },
+  { title: "Power Stone", desc: "Freeze another team's screen to stop them from playing.", image: "/power-stone.png" },
+  { title: "Mind Stone", desc: "Reveal a useful hint for the puzzle you are stuck on.", image: "/mind_stone.png" },
+  { title: "Reality Stone", desc: "Instantly solve and skip your current puzzle without answering.", image: "/reality-stone.png" },
+  { title: "Soul Stone", desc: "Destroy one of your other stones to gain lots of points.", image: "/soul_stone.jpg" },
 ];
 
 const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -22,12 +22,12 @@ const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed left-0 top-32 z-[55] flex items-center gap-2 px-1 py-4 bg-[#0a0a1a] border-y border-r border-cyan-500/30 rounded-r-xl group hover:bg-cyan-500/10 transition-all duration-300 shadow-[5px_0_15px_rgba(0,0,0,0.5)]"
+          className="fixed left-0 top-32 z-[55] flex items-center gap-2 px-1.5 py-5 bg-[#0a0a1a]/90 backdrop-blur-md border-y border-r border-cyan-400/50 rounded-r-xl group hover:bg-cyan-500/20 transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:border-cyan-300"
         >
-          <span className="[writing-mode:vertical-lr] rotate-180 text-[10px] font-black uppercase tracking-[0.4em] text-cyan-500/70 group-hover:text-cyan-400">
+          <span className="[writing-mode:vertical-lr] rotate-180 text-[12px] font-black uppercase tracking-[0.5em] text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] group-hover:text-cyan-100 group-hover:drop-shadow-[0_0_12px_rgba(34,211,238,1)] transition-all duration-300">
             Rules_Protocol
           </span>
-          <ChevronRight size={14} className="text-cyan-500/50 group-hover:translate-x-0.5 transition-transform" />
+          <ChevronRight size={16} className="text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] group-hover:text-cyan-100 group-hover:translate-x-0.5 transition-all duration-300" />
         </button>
       )}
 
@@ -63,14 +63,14 @@ const RulesSidebar: React.FC<RulesSidebarProps> = ({ isOpen, setIsOpen }) => {
           <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
             {RULES.map((rule, idx) => (
               <div key={idx} className="group flex items-start gap-4 p-3 rounded-lg hover:bg-white/[0.02] transition-colors">
-                <div className="mt-1 p-2 rounded-md bg-black border border-white/5 group-hover:border-cyan-500/30 transition-colors shadow-inner">
-                  {rule.icon}
+                <div className="mt-1 w-12 h-12 rounded-full border border-white/10 group-hover:border-white/30 transition-all duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)] overflow-hidden shrink-0 bg-black/50 group-hover:scale-110">
+                  <img src={rule.image} alt={rule.title} className="w-full h-full object-cover" />
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-white group-hover:text-cyan-400 transition-colors">
+                <div className="space-y-1.5 mt-0.5">
+                  <h4 className="text-sm font-black uppercase tracking-wider text-white group-hover:text-cyan-400 transition-colors">
                     {rule.title}
                   </h4>
-                  <p className="text-[11px] font-semibold leading-relaxed text-slate-400 group-hover:text-slate-200 transition-colors">
+                  <p className="text-[13px] font-medium leading-relaxed text-slate-300 group-hover:text-white transition-colors">
                     {rule.desc}
                   </p>
                 </div>

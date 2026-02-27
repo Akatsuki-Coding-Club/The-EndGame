@@ -42,6 +42,7 @@ const AdminDashboard = () => {
     const [qTitle, setQTitle] = useState("");
     const [qContent, setQContent] = useState("");
     const [qAnswer, setQAnswer] = useState("");
+    const [qLink, setQLink] = useState("");
     const [qPoints, setQPoints] = useState(100);
     const [qTimeline, setQTimeline] = useState("1");
     const [jsonBulkInput, setJsonBulkInput] = useState("");
@@ -207,6 +208,7 @@ const AdminDashboard = () => {
                 timeline: parseInt(qTimeline) || 1,
                 difficulty: "normal",
                 question: qContent,
+                link: qLink,
                 options: [],
                 answer: qAnswer,
                 points: qPoints,
@@ -214,6 +216,7 @@ const AdminDashboard = () => {
             });
             showToast("SUCCESS", "success", "INTEL UPLOADED TO SERVER");
             setQContent("");
+            setQLink("");
             setQAnswer("");
             setQPoints(100);
             refreshQuestions();
@@ -584,6 +587,12 @@ const AdminDashboard = () => {
                                         placeholder="ENCRYPTED DATA (QUESTION)..."
                                         value={qContent}
                                         onChange={e => setQContent(e.target.value)}
+                                    />
+                                    <input
+                                        className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 tracking-wider"
+                                        placeholder="RESOURCE/IMAGE LINK (OPTIONAL)..."
+                                        value={qLink}
+                                        onChange={e => setQLink(e.target.value)}
                                     />
                                     <input
                                         className="w-full bg-cyan-950/10 border border-cyan-900/50 p-3 text-xs outline-none focus:border-cyan-500/50 text-cyan-100 placeholder-cyan-900 tracking-wider"

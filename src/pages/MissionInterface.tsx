@@ -19,7 +19,7 @@ import {
 import {
   Terminal, Loader2, Target, Zap, Clock, Brain, Globe, Flame, Eye, Skull,
   ChevronUp, ChevronDown, AlertTriangle, Sparkles, Shield, X,
-  Info
+  Info, ExternalLink
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { STONE_PROPERTIES } from "@/lib/stoneConfig";
@@ -221,7 +221,7 @@ const MissionInterface = () => {
           await fetchProgress();
         }
       } else {
-        showToast("KEY_REJECTED", "error", "Unauthorized decryption code");
+        showToast("INCORRECT_ANSWER", "error", "Try again");
         setAnswer("");
       }
     } catch {
@@ -235,7 +235,7 @@ const MissionInterface = () => {
   const executeTime = async () => {
     try {
       await useTimeStone();
-      showToast("TIME STONE ACTIVATED", "success", "Temporal Shift Initiated");
+      showToast("TIME STONE ACTIVATED", "success", "Time escaped");
       navigate("/dashboard");
     } catch (e: any) { showToast("Failed to activate Time Stone", "error", e.message); }
   };
@@ -244,7 +244,7 @@ const MissionInterface = () => {
     try {
       const res = await useMindStone();
       setActiveHint(res.hint);
-      showToast("MIND STONE ACTIVE", "success", "Neural Pathway Illuminated");
+      showToast("MIND STONE ACTIVE", "success", "Hint revealed");
       fetchStones();
     } catch (e: any) { showToast("Mind Stone activation failed", "error", e.message); }
   };
@@ -253,7 +253,7 @@ const MissionInterface = () => {
     if (!targetTeam) return;
     try {
       await usePowerStone(targetTeam);
-      showToast("POWER STONE ACTIVE", "success", "Orbital Strike Launched");
+      showToast("POWER STONE ACTIVE", "success", "Attack launched");
       setShowPowerModal(false);
       setTargetTeam("");
       fetchStones();
@@ -266,7 +266,7 @@ const MissionInterface = () => {
       await useRealityStone();
       // ✅ Only activate the visual state AFTER the backend confirms success
       setRealityActive(true);
-      showToast("REALITY STONE ACTIVE", "success", "Physics Engine Rewritten. Your next answer will be accepted regardless of correctness.");
+      showToast("REALITY STONE ACTIVE", "success", "Reality changed");
       fetchStones(); // refresh cooldown state
     } catch (e: any) {
       showToast("Reality Stone activation failed", "error", e.message);
@@ -471,16 +471,45 @@ const MissionInterface = () => {
                 <Zap size={12} /> {activeMission?.difficulty || "UNKNOWN"} // {theme.name}_PROTOCOL
               </span>
               <span className="text-[10px] text-white/40 uppercase animate-in fade-in">
-                Priority: <span className={theme.primary}>{activeMission?.points || 0} PTS</span>
+                Points: <span className={theme.primary}>{activeMission?.points || 0} PTS</span>
               </span>
             </div>
 
             {/* Question Body */}
             <div className="flex-1 p-2 lg:p-3 overflow-y-auto custom-scrollbar relative">
               <div className={`bg-black/60 border border-white/10 p-5 rounded-xl relative shadow-2xl group transition-colors hover:border-white/20`}>
-                <p className={`text-lg lg:text-xl leading-relaxed whitespace-pre-wrap ${theme.font} ${theme.primary.replace('text-', 'text-opacity-90 ')}`}>
-                  {activeMission?.question}
-                </p>
+                {/* Render optional explicit link field if provided */}
+                {activeMission?.link && (
+                  <div className="mb-4">
+                    {activeMission.link.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                      <img src={activeMission.link} alt="Mission Resource" className="max-w-full h-auto rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-white/10" />
+                    ) : (
+                      <a href={activeMission.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 uppercase tracking-widest text-[10px] bg-cyan-950/30 px-4 py-2 rounded-lg border border-cyan-500/30 transition-all hover:bg-cyan-900/40 w-fit">
+                        <ExternalLink size={12} /> Click Here
+                      </a>
+                    )}
+                  </div>
+                )}
+                {/* Render question text with embedded links converted to clickable elements */}
+                <div className={`text-lg lg:text-xl leading-relaxed whitespace-pre-wrap ${theme.font} ${theme.primary.replace('text-', 'text-opacity-90 ')}`}>
+                  {activeMission?.question?.split(/(\bhttps?:\/\/[^\s]+)/g).map((part: string, i: number) => {
+                    if (part.match(/^https?:\/\//)) {
+                      if (part.match(/\.(jpeg|jpg|gif|png)$/i)) {
+                        return (
+                          <div key={i} className="my-4">
+                            <img src={part} alt="Embedded Resource" className="max-w-full h-auto rounded-lg shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-white/10" />
+                          </div>
+                        );
+                      }
+                      return (
+                        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 underline underline-offset-4 decoration-cyan-500/50 hover:decoration-cyan-400 font-sans text-sm mx-1">
+                          <ExternalLink size={14} /> Click Here
+                        </a>
+                      );
+                    }
+                    return <span key={i}>{part}</span>;
+                  })}
+                </div>
                 {/* Hint Display */}
                 {activeHint && (
                   <div className="mt-6 pt-4 border-t border-yellow-500/20 animate-in fade-in zoom-in duration-300">
@@ -724,26 +753,28 @@ const MissionInterface = () => {
               </p>
 
               <div className="grid grid-cols-3 gap-3 mb-8">
-                {["space", "power", "reality"].map(stone => {
-                  if (!hasStone(stone)) return null;
-                  const cfg = STONE_PROPERTIES[stone];
-                  return (
-                    <button
-                      key={stone}
-                      onClick={() => setSacrificeStone(stone)}
-                      className={`p-5 rounded-xl border flex flex-col items-center gap-3 transition-all ${sacrificeStone === stone
-                        ? "border-orange-500/50 bg-orange-900/20"
-                        : "border-white/5 bg-white/[0.03] opacity-60 hover:opacity-100 hover:bg-white/[0.06]"
-                        }`}
-                    >
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110" style={{ boxShadow: `0 0 10px ${cfg.glow}` }}>
-                        <img src={cfg.image} alt={cfg.label} className="w-full h-full object-cover rounded-full" />
-                      </div>
-                      <span className="uppercase text-[10px] font-black tracking-widest text-white/80">{cfg.label}</span>
-                    </button>
-                  );
-                })}
-                {!hasStone("space") && !hasStone("power") && !hasStone("reality") && (
+                {myStones
+                  .filter(stone => stone !== "soul" && stone !== "time" && stone !== "mind")
+                  .map(stone => {
+                    const cfg = STONE_PROPERTIES[stone];
+                    if (!cfg) return null;
+                    return (
+                      <button
+                        key={stone}
+                        onClick={() => setSacrificeStone(stone)}
+                        className={`p-5 rounded-xl border flex flex-col items-center gap-3 transition-all ${sacrificeStone === stone
+                          ? "border-orange-500/50 bg-orange-900/20"
+                          : "border-white/5 bg-white/[0.03] opacity-60 hover:opacity-100 hover:bg-white/[0.06]"
+                          }`}
+                      >
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110" style={{ boxShadow: `0 0 10px ${cfg.glow}` }}>
+                          <img src={cfg.image} alt={cfg.label} className="w-full h-full object-cover rounded-full" />
+                        </div>
+                        <span className="uppercase text-[10px] font-black tracking-widest text-white/80">{cfg.label}</span>
+                      </button>
+                    );
+                  })}
+                {myStones.filter(s => s !== "soul" && s !== "time" && s !== "mind").length === 0 && (
                   <div className="col-span-3 text-center py-6 text-white/30 text-xs font-sans">
                     No sacrificial stones available.
                   </div>
