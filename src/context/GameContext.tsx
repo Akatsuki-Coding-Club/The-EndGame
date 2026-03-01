@@ -445,7 +445,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       s.on("ADMIN_FREEZE", (data: any) => {
         setIsFrozen(true);
-        const freezeDurationMs = 5 * 60 * 1000;
+        const freezeDurationMs = data.duration ? data.duration * 1000 : 5 * 60 * 1000;
         setFrozenUntil(Date.now() + freezeDurationMs);
         showToast("[FROZEN]", "error", data.message || "You are frozen by the commander");
         addNotification(data.message || "You are frozen by the commander", "attack");

@@ -84,7 +84,7 @@ export const AppToastContainer = () => {
             style={{
                 top: '72px', // Below the 64px navbar, plus 8px gap
                 right: '8px', // Little margin on the right side
-                // Remove generic paddings from library container to fit perfectly next to the edge
+                zIndex: 100000,
             }}
         />
     );

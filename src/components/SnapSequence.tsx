@@ -88,7 +88,12 @@ export const SnapSequence = () => {
         }
 
         if (phase === "rival-snap-close") {
-            setTimeout(() => setPhase("idle"), 500);
+            setTimeout(() => {
+                setPhase("idle");
+                customToast.error("REALITY REWRITTEN", {
+                    description: "A Supreme Snap just wiped the board. Your Infinity Stones are disabled."
+                });
+            }, 500);
         }
     }, [phase]);
 
