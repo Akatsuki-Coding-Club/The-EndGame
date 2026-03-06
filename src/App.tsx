@@ -61,36 +61,35 @@ const AppRoutes = () => (
 
 const GlobalOverlays = () => {
   const { isFrozen, isBlocked } = useGame();
+  const location = window.location.pathname;
   return (
     <>
       {isFrozen && <BlipOverlay />}
       {isBlocked && <AttackOverlay />}
-      <SnapSequence />
+      {location !== "/rules" && location !== "/dashboard" && <SnapSequence />}
     </>
   );
 };
 
 const App = () => (
-  <ExtensionBlocker>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AppToastContainer />
-        <BrowserRouter>
-          {/* <ThemeDecorations /> */}
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <AppToastContainer />
+      <BrowserRouter>
+        {/* <ThemeDecorations /> */}
 
-          <AuthProvider>
-            <GameProvider>
-              <TimerProvider>
-                <AppRoutes />
-              </TimerProvider>
-              <GlobalOverlays />
-              <StoneSelectModal />
-            </GameProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ExtensionBlocker>
+        <AuthProvider>
+          <GameProvider>
+            <TimerProvider>
+              <AppRoutes />
+            </TimerProvider>
+            <GlobalOverlays />
+            <StoneSelectModal />
+          </GameProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 

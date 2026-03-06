@@ -234,7 +234,8 @@ const Dashboard = () => {
 
   const requiredStones = ["space", "power", "reality", "soul", "time", "mind"];
   const hasAllStones = requiredStones.every((s) => (me?.stones || []).includes(s));
-  const isSnapActive = me?.snapActivated || isSnapping;
+  const isSnapActive = me?.snapActivated;
+  const showStones = me?.snapActivated || isSnapping;
   const showSnapCenter = hasAllStones && !me?.currentTimeline;
 
   const timelineMeta = me?.currentTimeline ? (DASHBOARD_TIMELINE_META[me.currentTimeline] || {
@@ -419,7 +420,7 @@ const Dashboard = () => {
             {/* 3D Infinity Gauntlet Model */}
             <div className="w-full h-48 mb-6 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center relative shadow-[inset_0_0_30px_rgba(0,0,0,0.6)] group shrink-0">
               <model-viewer
-                src="/model/Gws.glb"
+                src={showStones ? "/model/G.glb" : "/model/Gws.glb"}
                 auto-rotate
                 camera-controls
                 disable-zoom
