@@ -6,6 +6,7 @@ import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
 import * as api from "@/services/api";
 import { title } from "process";
+import RulesSidebar from "../components/RulesSidebar";
 
 const RulesPage = () => {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ const RulesPage = () => {
     const [bgImageUrl, setBgImageUrl] = useState("");
     const [showSecurityAlert, setShowSecurityAlert] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [isRulesOpen, setIsRulesOpen] = useState(false);
 
     useEffect(() => {
         const savedBg = localStorage.getItem("team_session_bg");
@@ -64,7 +66,7 @@ const RulesPage = () => {
 
     return (
         <div className="relative h-screen w-full flex flex-col items-center bg-[#050505] font-sans overflow-x-hidden overflow-y-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-y-contain">
-
+            <RulesSidebar isOpen={isRulesOpen} setIsOpen={setIsRulesOpen} />
             {/* BACKGROUND */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div
