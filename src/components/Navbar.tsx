@@ -139,7 +139,7 @@ const Navbar = () => {
                         Remaining Time
                     </span>
                     <span className={`text-lg font-bold font-sans leading-none drop-shadow-md ${gameStarted ? 'text-red-500' : 'text-slate-500'}`}>
-                        {gameStarted ? formatted : "02:00:00"}
+                        {gameStarted ? formatted : "01:30:00"}
                     </span>
                 </div>
 
