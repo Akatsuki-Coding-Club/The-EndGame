@@ -90,7 +90,7 @@ const RulesPage = () => {
                                     { name: "Om Borle", image: "https://akatsuki.rcpit.ac.in/images/members/om.png" },
                                     { name: "Jinesh Jain", image: "https://akatsuki.rcpit.ac.in/images/members/jinesh.jpg" },
                                     { name: "Gaurav Chaudhari", image: "https://akatsuki.rcpit.ac.in/images/members/gauravc.jpg" },
-                                    { name: "Yash Chaudhari", image: "	https://akatsuki.rcpit.ac.in/images/members/yash.jpg" }
+                                    { name: "Yash Chaudhari", image: "https://akatsuki.rcpit.ac.in/images/members/yash.jpg" }
                                 ].map((dev) => (
                                     <div key={dev.name} className="flex flex-col items-center gap-3 group">
                                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/5 flex items-center justify-center shrink-0 border-2 border-white/10 shadow-lg group-hover:border-red-500/50 group-hover:shadow-[0_0_20px_rgba(230,36,41,0.3)] transition-all duration-300 overflow-hidden">
