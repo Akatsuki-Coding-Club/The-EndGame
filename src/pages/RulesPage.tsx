@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Zap, Skull, Lock, Info, Play, Terminal, ShieldAlert, Clock, CheckCircle } from "lucide-react";
+import { Shield, Zap, Skull, Lock, Info, Play, Terminal, ShieldAlert, Clock, CheckCircle, User } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
@@ -72,7 +72,7 @@ const RulesPage = () => {
             {/* Developer Alert Pop-up */}
             {showDeveloperAlert && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                    <div className="relative w-full max-w-md bg-[#0a0a0a] border border-red-600/30 rounded-2xl p-6 shadow-[0_0_40px_rgba(230,36,41,0.15)] flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+                    <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-red-600/30 rounded-2xl p-8 shadow-[0_0_40px_rgba(230,36,41,0.15)] flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
                         <div className="w-12 h-12 bg-red-600/10 rounded-full border border-red-600/20 flex items-center justify-center mb-4 shadow-inner">
                             <Info size={24} className="text-red-500" />
                         </div>
@@ -81,15 +81,28 @@ const RulesPage = () => {
                         </h2>
                         <div className="h-[2px] w-16 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-50 mb-5" />
                         
-                        <div className="text-[13px] text-slate-300 font-medium leading-relaxed mb-6 w-full px-2">
-                            <p className="text-center mb-5">This application is developed by:</p>
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-white font-bold text-[13px] sm:text-[14px] max-w-[360px] mx-auto text-left">
-                                <p>1. Varad Patel</p>
-                                <p>2. Aditya Tallhari</p>
-                                <p>3. Om Borle</p>
-                                <p>4. Jinesh Jain</p>
-                                <p>5. Gaurav Chaudhari</p>
-                                <p>6. Yash Chaudhari</p>
+                        <div className="text-[13px] text-slate-300 font-medium leading-relaxed mb-8 w-full px-2">
+                            <p className="text-center mb-6">This application is developed by:</p>
+                            <div className="grid grid-cols-3 gap-x-2 sm:gap-x-4 gap-y-6 text-white max-w-[480px] mx-auto text-center">
+                                {[
+                                    { name: "Varad Patel", image: "https://akatsuki.rcpit.ac.in/images/members/varad.jpeg" },
+                                    { name: "Aditya Tallhari", image: "https://akatsuki.rcpit.ac.in/images/members/aditya.jpg" },
+                                    { name: "Om Borle", image: "https://akatsuki.rcpit.ac.in/images/members/om.png" },
+                                    { name: "Jinesh Jain", image: "https://akatsuki.rcpit.ac.in/images/members/jinesh.jpg" },
+                                    { name: "Gaurav Chaudhari", image: "https://akatsuki.rcpit.ac.in/images/members/gauravc.jpg" },
+                                    { name: "Yash Chaudhari", image: "	https://akatsuki.rcpit.ac.in/images/members/yash.jpg" }
+                                ].map((dev) => (
+                                    <div key={dev.name} className="flex flex-col items-center gap-3 group">
+                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/5 flex items-center justify-center shrink-0 border-2 border-white/10 shadow-lg group-hover:border-red-500/50 group-hover:shadow-[0_0_20px_rgba(230,36,41,0.3)] transition-all duration-300 overflow-hidden">
+                                            {dev.image ? (
+                                                <img src={dev.image} alt={dev.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                            ) : (
+                                                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(dev.name)}&background=1a1a1a&color=e62429&size=128&bold=true`} alt={dev.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                            )}
+                                        </div>
+                                        <p className="font-bold text-[12px] sm:text-[13px] text-white tracking-wide whitespace-nowrap drop-shadow-md">{dev.name}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
