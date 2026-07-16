@@ -1,4 +1,4 @@
-import React from "react";
+  import React from "react";
 import { X, Shield, Zap, Skull, Lock, Target, Activity, ChevronRight, Clock, Globe, Flame, Brain, Eye } from "lucide-react";
 
 interface RulesSidebarProps {

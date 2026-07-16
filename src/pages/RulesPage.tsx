@@ -16,6 +16,7 @@ const RulesPage = () => {
     const [showSecurityAlert, setShowSecurityAlert] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isRulesOpen, setIsRulesOpen] = useState(false);
+    const [showDeveloperAlert, setShowDeveloperAlert] = useState(true);
 
     useEffect(() => {
         const savedBg = localStorage.getItem("team_session_bg");
@@ -67,6 +68,42 @@ const RulesPage = () => {
     return (
         <div className="relative h-screen w-full flex flex-col items-center bg-[#050505] font-sans overflow-x-hidden overflow-y-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-y-contain">
             <RulesSidebar isOpen={isRulesOpen} setIsOpen={setIsRulesOpen} />
+            
+            {/* Developer Alert Pop-up */}
+            {showDeveloperAlert && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className="relative w-full max-w-md bg-[#0a0a0a] border border-red-600/30 rounded-2xl p-6 shadow-[0_0_40px_rgba(230,36,41,0.15)] flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+                        <div className="w-12 h-12 bg-red-600/10 rounded-full border border-red-600/20 flex items-center justify-center mb-4 shadow-inner">
+                            <Info size={24} className="text-red-500" />
+                        </div>
+                        <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">
+                            Development <span className="text-[#e62429]">Team</span>
+                        </h2>
+                        <div className="h-[2px] w-16 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-50 mb-5" />
+                        
+                        <div className="text-[13px] text-slate-300 font-medium leading-relaxed mb-6 w-full px-2">
+                            <p className="text-center mb-5">This application is developed by:</p>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-white font-bold text-[13px] sm:text-[14px] max-w-[360px] mx-auto text-left">
+                                <p>1. Varad Patel</p>
+                                <p>2. Aditya Tallhari</p>
+                                <p>3. Om Borle</p>
+                                <p>4. Jinesh Jain</p>
+                                <p>5. Gaurav Chaudhari</p>
+                                <p>6. Yash Chaudhari</p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowDeveloperAlert(false)}
+                            className="group relative px-8 py-3 font-black text-[12px] uppercase tracking-[0.2em] overflow-hidden transition-all rounded-xl shadow-lg bg-[#e62429] text-white hover:shadow-[0_0_20px_rgba(230,36,41,0.5)] active:scale-95 w-full"
+                        >
+                            <span className="relative z-10">Acknowledge</span>
+                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* BACKGROUND */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div
