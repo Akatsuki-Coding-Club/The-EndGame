@@ -24,7 +24,6 @@ import GameCompletion from "./pages/GameCompletion";
 import BlipOverlay from "./components/BlipOverlay";
 import AttackOverlay from "./components/AttackOverlay";
 import { SnapSequence } from "./components/SnapSequence";
-import ExtensionBlocker from "./components/ExtensionBlocker";
 
 const queryClient = new QueryClient();
 
