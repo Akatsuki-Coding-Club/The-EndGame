@@ -27,7 +27,6 @@ import { SnapSequence } from "./components/SnapSequence";
 
 const queryClient = new QueryClient();
 
-/* Protected route wrapper */
 const ProtectedRoute = ({ children, admin = false }: { children: React.ReactNode; admin?: boolean }) => {
   const { isLoggedIn, isAdmin } = useAuth();
   const { gameStarted } = useGame();
