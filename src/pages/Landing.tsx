@@ -1,13 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Info } from "lucide-react";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [showDeveloperAlert, setShowDeveloperAlert] = useState(false);
 
   const handleStartRound = () => {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => { });
     }
+    setShowDeveloperAlert(true);
+  };
+
+  const handleAcknowledge = () => {
+    setShowDeveloperAlert(false);
     navigate("/login", { replace: true });
   };
 
@@ -104,6 +111,54 @@ const Landing = () => {
 
       {/* Scanline Effect */}
       <div className="pointer-events-none absolute inset-0 z-20 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]" />
+
+      {/* Developer Alert Pop-up */}
+      {showDeveloperAlert && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-lg bg-[#0a0a0a] border border-red-600/30 rounded-2xl p-8 shadow-[0_0_40px_rgba(230,36,41,0.15)] flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+            <div className="w-12 h-12 bg-red-600/10 rounded-full border border-red-600/20 flex items-center justify-center mb-4 shadow-inner">
+              <Info size={24} className="text-red-500" />
+            </div>
+            <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">
+              Development <span className="text-[#e62429]">Team</span>
+            </h2>
+            <div className="h-[2px] w-16 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-50 mb-5" />
+
+            <div className="text-[13px] text-slate-300 font-medium leading-relaxed mb-8 w-full px-2">
+              <p className="text-center mb-6">This application is developed by:</p>
+              <div className="grid grid-cols-3 gap-x-2 sm:gap-x-4 gap-y-6 text-white max-w-[480px] mx-auto text-center">
+                {[
+                  { name: "Varad Patel", image: "https://akatsuki.rcpit.ac.in/images/members/varad.jpeg" },
+                  { name: "Aditya Tallhari", image: "https://akatsuki.rcpit.ac.in/images/members/aditya.jpg" },
+                  { name: "Om Borle", image: "https://akatsuki.rcpit.ac.in/images/members/om.png" },
+                  { name: "Jinesh Jain", image: "https://akatsuki.rcpit.ac.in/images/members/jinesh.jpg" },
+                  { name: "Gaurav Chaudhari", image: "https://akatsuki.rcpit.ac.in/images/members/gauravc.jpg" },
+                  { name: "Yash Chaudhari", image: "https://akatsuki.rcpit.ac.in/images/members/yash.jpg" }
+                ].map((dev) => (
+                  <div key={dev.name} className="flex flex-col items-center gap-3 group">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/5 flex items-center justify-center shrink-0 border-2 border-white/10 shadow-lg group-hover:border-red-500/50 group-hover:shadow-[0_0_20px_rgba(230,36,41,0.3)] transition-all duration-300 overflow-hidden">
+                      {dev.image ? (
+                        <img src={dev.image} alt={dev.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      ) : (
+                        <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(dev.name)}&background=1a1a1a&color=e62429&size=128&bold=true`} alt={dev.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      )}
+                    </div>
+                    <p className="font-bold text-[12px] sm:text-[13px] text-white tracking-wide whitespace-nowrap drop-shadow-md">{dev.name}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={handleAcknowledge}
+              className="group relative px-8 py-3 font-black text-[12px] uppercase tracking-[0.2em] overflow-hidden transition-all rounded-xl shadow-lg bg-[#e62429] text-white hover:shadow-[0_0_20px_rgba(230,36,41,0.5)] active:scale-95 w-full"
+            >
+              <span className="relative z-10">Acknowledge</span>
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
